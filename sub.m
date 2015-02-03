@@ -1,4 +1,4 @@
-function s  = sub(s,I),
+function s  = sub(s,I)
 % s = sub(s,I)
 % Returns a subset of the structure s
 

@@ -1,6 +1,6 @@
 % This function calls c implementation of push-relabel algorithm. It is downloaded from http://www.igsystems.com/cs2/index.html and then we mex'ed it to run faster in matlab.
 % dat_in = [tail head cost lb ub];
-% dat_out = [frail fhead flow];
+% dat_out = [ftail fhead flow];
 % excess_node = [source_num   sink_num];
 % excess_flow = [sourec_flow  sink_flow];
 

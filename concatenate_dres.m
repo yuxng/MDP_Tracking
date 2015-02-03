@@ -6,3 +6,6 @@ dres_new.w = [dres1.w; dres2.w];
 dres_new.h = [dres1.h; dres2.h];
 dres_new.r = [dres1.r; dres2.r];
 dres_new.fr = [dres1.fr; dres2.fr];
+dres_new.status = [dres1.status; dres2.status];
+dres_new.id = [dres1.id; dres2.id];
+dres_new.lost = [dres1.lost; dres2.lost];
