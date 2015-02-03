@@ -69,5 +69,20 @@ for i = 1:seq_num
     end
     hold off;
     
-    pause;
+    % build the dres structure for network flow tracking
+    dres.x = C{3}(index);
+    dres.y = C{4}(index);
+    dres.w = C{5}(index);
+    dres.h = C{6}(index);
+    dres.r = C{7}(index);
+    dres.fr = i * ones(numel(index), 1);
+    
+    if i == 1
+        dres_track = dres;
+    else
+        % network flow tracking
+        dres = concatenate_dres(dres_track, dres);
+        dres_track = tracking(dres);
+    end
+%     pause;
 end

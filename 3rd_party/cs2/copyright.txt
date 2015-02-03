@@ -1,0 +1,14 @@
+Copyright (C) 1995-2006 IG Systems, Inc.
+
+Permission to use for pure academic research or for evaluation purposes
+is granted provided that proper acknowledgments are given.
+
+For information regarding a commercial license, send e-mail to cs2@igsystems.com
+
+This software comes with no warranty, expressed or implied. By way 
+of example, but not limitation, IG Systems, Inc. makes no
+representations of warranties of merchantability or fitness for
+any particular purpose or that the use of the software components
+or documentation will not infringe any patents, copyrights,
+trademarks, or other rights.
+
