@@ -17,5 +17,5 @@ opt.mot2d_test_nums = [201, 436, 440, 1194, 219, 450, 500, 625, 209, 1059, 450];
 % tracking parameters
 opt.lost = 3;
 
-addpath(genpath('3rd_party/cs2'));
+addpath(genpath('../cs2'));
 addpath(fullfile(opt.mot, 'devkit', 'utils'));

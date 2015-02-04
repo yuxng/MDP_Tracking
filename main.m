@@ -1,9 +1,9 @@
-function demo
+function main
 
 opt = globals();
 
 is_train = 1;
-seq_idx = 1;
+seq_idx = 4;
 
 if is_train
     seq_name = opt.mot2d_train_seqs{seq_idx};
@@ -22,56 +22,14 @@ fid = fopen(filename, 'r');
 C = textscan(fid, '%d %d %f %f %f %f %f %f %f %f', 'Delimiter', ',');
 fclose(fid);
 
-% read ground truth
-filename = fullfile(opt.mot, opt.mot2d, seq_set, seq_name, 'gt', 'gt.txt');
-fid = fopen(filename, 'r');
-% <frame>, <id>, <bb_left>, <bb_top>, <bb_width>, <bb_height>, <conf>, <x>, <y>, <z>
-Cgt = textscan(fid, '%d %d %f %f %f %f %f %f %f %f', 'Delimiter', ',');
-fclose(fid);
-
-figure(1);
-cmap = colormap;
 ID = 0;
-
 % show detection results
 for i = 1:seq_num
-    % show image
     filename = fullfile(opt.mot, opt.mot2d, seq_set, seq_name, 'img1', sprintf('%06d.jpg', i));
-    I = imread(filename);
-    
-    subplot(1, 3, 1);
-    imshow(I);
-    hold on;
-    
-    % show ground truth
-    index = find(Cgt{1} == i);
-    for j = 1:numel(index)
-        x = Cgt{3}(index(j));
-        y = Cgt{4}(index(j));
-        w = Cgt{5}(index(j));
-        h = Cgt{6}(index(j));
-        rectangle('Position', [x y w h], 'EdgeColor', 'g', 'LineWidth', 2);
-    end
-    hold off;
-    
-    subplot(1, 3, 2);
-    imshow(I);
-    hold on;    
-    
-    % show detections
-    index = find(C{1} == i);
-    for j = 1:numel(index)
-        x = C{3}(index(j));
-        y = C{4}(index(j));
-        w = C{5}(index(j));
-        h = C{6}(index(j));
-        r = C{7}(index(j));
-        rectangle('Position', [x y w h], 'EdgeColor', 'g', 'LineWidth', 2);
-        text(x, y, sprintf('%.2f', r), 'BackgroundColor',[.7 .9 .7]);
-    end
-    hold off;
+    disp(filename);
     
     % build the dres structure for network flow tracking
+    index = find(C{1} == i);
     dres.x = C{3}(index);
     dres.y = C{4}(index);
     dres.w = C{5}(index);
@@ -126,25 +84,13 @@ for i = 1:seq_num
             end
         end
     end
-    
-    % show tracking results
-    subplot(1, 3, 3);
-    imshow(I);
-    hold on;
-    index = find(dres_track.fr == i);
-    for j = 1:numel(index)
-        x = dres_track.x(index(j));
-        y = dres_track.y(index(j));
-        w = dres_track.w(index(j));
-        h = dres_track.h(index(j));
-        id = dres_track.id(index(j));
-        
-        index_color = 1 + floor((id-1) * size(cmap,1) / 1000);
-        rectangle('Position', [x y w h], 'EdgeColor', cmap(index_color,:), 'LineWidth', 2);
-        
-        text(x, y, sprintf('%d', id), 'BackgroundColor',[.7 .9 .7]);
-    end
-    hold off;    
-    
-    pause;
 end
+
+% write tracking results
+filename = sprintf('%s/%s.txt', opt.results, seq_name);
+fprintf('write results: %s\n', filename);
+write_tracking_results(filename, dres_track);
+
+% evaluation
+benchmark_dir = fullfile(opt.mot, opt.mot2d, seq_set, filesep);
+allMets = evaluateTracking({seq_name}, opt.results, benchmark_dir);
