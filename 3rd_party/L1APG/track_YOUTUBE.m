@@ -22,12 +22,12 @@ x2 = bbox(3);
 y2 = bbox(4);
 fclose(fid);
 img = imread(s_frames{1});
-[model, para] = L1APG_initialize(img, x1, y1, x2, y2);
+model = L1APG_initialize(img, x1, y1, x2, y2);
 
 % main function for tracking
 for t = 2:nframes
     img = imread(s_frames{t});
-    [track_res, model] = L1APG_track_frame(img, model, para);
+    [track_res, model] = L1APG_track_frame(img, model);
     disp(track_res);
     pause;
 end

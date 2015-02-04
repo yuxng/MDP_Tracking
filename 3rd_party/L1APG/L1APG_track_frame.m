@@ -1,5 +1,6 @@
-function [track_res, model] = L1APG_track_frame(img, model, paraT)
+function [track_res, model] = L1APG_track_frame(img, model)
 
+paraT = model.para;
 if paraT.bDebug
     img_color = img;
 end

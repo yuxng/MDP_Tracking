@@ -1,7 +1,8 @@
-function [model, para] = L1APG_initialize(img, x1, y1, x2, y2)
+function model = L1APG_initialize(img, x1, y1, x2, y2)
 
 init_pos = [y1, y2, y1; x1 x1 x2];
-sz_T = [12 15];
+% sz_T = [12 15];
+sz_T = [24 12];
 
 % parameters setting for tracking
 para.lambda = [0.2,0.001,10]; % lambda 1, lambda 2 for a_T and a_I respectively, lambda 3 for the L2 norm parameter
@@ -10,11 +11,12 @@ para.angle_threshold = 40;
 para.Lip	= 8;
 para.Maxit	= 5;
 para.nT		= 10; % number of templates for the sparse representation
-para.rel_std_afnv = [0.03,0.0005,0.0005,0.03,1,1]; % diviation of the sampling of particle filter
+% para.rel_std_afnv = [0.03,0.0005,0.0005,0.03,1,1]; % diviation of the sampling of particle filter
+para.rel_std_afnv = [0.003,0.0005,0.0005,0.003,2,2];
 para.n_sample	= 600;		% number of particles
 para.sz_T		= sz_T;
 para.init_pos	= init_pos;
-para.bDebug		= 0;		% debugging indicator
+para.bDebug		= 1;		% debugging indicator
 
 % generate the initial templates for the 1st frame
 if(size(img,3) == 3)
@@ -47,3 +49,4 @@ model.Temp = Temp;
 model.Dict = Dict;
 model.Temp1 = Temp1;
 model.Lambda = para.lambda;
+model.para = para;
