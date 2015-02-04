@@ -47,7 +47,7 @@ for i = 1:seq_num
     
     if i == 1
         dres_track = dres;
-        for j = 1:numel(index)
+        for j = 1:numel(dres.x)
             ID = ID + 1;
             dres_track.id(j) = ID;
         end
@@ -93,4 +93,4 @@ write_tracking_results(filename, dres_track);
 
 % evaluation
 benchmark_dir = fullfile(opt.mot, opt.mot2d, seq_set, filesep);
-allMets = evaluateTracking({seq_name}, opt.results, benchmark_dir);
+evaluateTracking({seq_name}, opt.results, benchmark_dir);
