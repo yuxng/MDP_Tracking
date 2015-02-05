@@ -2,7 +2,7 @@ function evaluate_cem
 
 opt = globals();
 seq_set = 'train';
-seq_name = 'ETH-Bahnhof';
+seq_name = 'TUD-Stadtmitte';
 results = '/home/yuxiang/Projects/Multitarget_Tracking/MOTbenchmark/devkit/res/data';
 
 

@@ -1,4 +1,4 @@
-function res = tracking_push_relabel(dres, c_en, c_ex, c_ij, betta, tr_num)
+function res = tracking_push_relabel(dres, c_en, c_ex, betta, tr_num)
 
 dnum = length(dres.x);
 
@@ -9,7 +9,6 @@ dres.c = betta - dres.r;
 dres.c  = dres.c  *1e6;
 c_en    = c_en    *1e6;
 c_ex    = c_ex    *1e6;
-c_ij    = c_ij    *1e6;
 
 % number of nodes in the graph
 n_nodes = 2*dnum+2; 
@@ -31,7 +30,8 @@ end
 for i=1:dnum
     f2 = dres.nei(i).inds;
     for j = 1:length(f2)
-        k_dat = k_dat+1;
+        c_ij = dres.nei(i).scores(j) * (-1e6);
+        k_dat = k_dat + 1;
         dat_in(k_dat,:) = [2*f2(j)+1 2*i c_ij];  % transition edge
     end
 end
@@ -51,7 +51,8 @@ start = dat1(tmp, 2);       % starting nodes; is even
 tmp   = find( ~mod(dat1(:, 1), 2) .* (dat1(:, 2)-dat1(:, 1) == 1) );
 detcs = dat1(tmp, 1);       % detection nodes; is even
 
-tmp   = find( mod(dat1(:, 1), 2) .* ~mod(dat1(:, 2), 2) .* (dat1(:, 2)-dat1(:, 1) ~= 1) );
+% tmp   = find( mod(dat1(:, 1), 2) .* ~mod(dat1(:, 2), 2) .* (dat1(:, 2)-dat1(:, 1) ~= 1) );
+tmp   = find( mod(dat1(:, 1), 2) .* ~mod(dat1(:, 2), 2) );
 links = dat1(tmp, 1:2);     % links; is [even  odd]
 
 res_inds  = zeros(1, 1e5);
@@ -72,19 +73,6 @@ end
 res_inds  = res_inds(1:k);    % only these detection windows are used in tracks.
 res_ids   = res_ids(1:k);     % track id for each detection window
 
-% Calculate the cost value to sort tracks
-track_cost = zeros(1, max(res_ids));
-for i = 1:max(res_ids)  % for each track
-    inds = find(res_ids == i);
-    len1= length(inds);
-    track_cost(i) = sum(dres.c(res_inds(inds))) + (len1-1) * c_ij + c_en + c_ex;
-end
-[~, sort_inds] = sort(track_cost);
-
-for i = 1:length(sort_inds)
-  res_ids_sorted(res_ids == sort_inds(i)) = i;
-end
-
 % res = sub(dres, res_inds);
 % res.id = res_ids_sorted(:);
 
@@ -96,4 +84,4 @@ res.r = dres.r;
 res.fr = dres.fr;
 res.status = dres.status;
 res.id = -1 * ones(numel(dres.x), 1);
-res.id(res_inds) = res_ids_sorted;
+res.id(res_inds) = res_ids;

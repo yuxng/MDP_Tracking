@@ -15,8 +15,9 @@ opt.mot2d_test_seqs = {'TUD-Crossing', 'PETS09-S2L2', 'ETH-Jelmoli', ...
 opt.mot2d_test_nums = [201, 436, 440, 1194, 219, 450, 500, 625, 209, 1059, 450];
 
 % tracking parameters
-opt.lost = 3;
+opt.lost = 30;
 opt.tracked = 3;
+opt.min_err_threshold = 0.8;
 
 addpath(genpath('3rd_party/cs2'));
 addpath(fullfile(opt.mot, 'devkit', 'utils'));

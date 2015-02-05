@@ -12,11 +12,11 @@ para.Lip	= 8;
 para.Maxit	= 5;
 para.nT		= 10; % number of templates for the sparse representation
 % para.rel_std_afnv = [0.03,0.0005,0.0005,0.03,1,1]; % diviation of the sampling of particle filter
-para.rel_std_afnv = [0.003,0.0005,0.0005,0.003,2,2];
+para.rel_std_afnv = [0.003,0.0005,0.0005,0.003,1,1];
 para.n_sample	= 600;		% number of particles
 para.sz_T		= sz_T;
 para.init_pos	= init_pos;
-para.bDebug		= 1;		% debugging indicator
+para.bDebug		= 0;		% debugging indicator
 
 % generate the initial templates for the 1st frame
 if(size(img,3) == 3)

@@ -1,4 +1,4 @@
-function [ov ov_n1 ov_n2] = calc_overlap(dres1, f1, dres2, f2)
+function [ov, ov_n1, ov_n2] = calc_overlap(dres1, f1, dres2, f2)
 %%f2 can be an array and f1 should be a scalar.
 %%% this will find the overlap between dres1(f1) (only one) and all detection windows in dres2(f2(:))
 

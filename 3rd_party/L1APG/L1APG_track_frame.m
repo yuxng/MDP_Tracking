@@ -1,4 +1,4 @@
-function [track_res, model] = L1APG_track_frame(img, model)
+function [track_res, min_err, model] = L1APG_track_frame(img, model)
 
 paraT = model.para;
 if paraT.bDebug
@@ -29,6 +29,7 @@ fixT = model.fixT;
 Temp = model.Temp;
 Dict = model.Dict;
 Temp1 = model.Temp1;
+min_err = 0;
 
 if(size(img,3) == 3)
     img = double(rgb2gray(img));
@@ -50,7 +51,7 @@ if(sum(Y_inrange==0) == n_sample)
     sprintf('Target is out of the frame!\n');
 end
 
-[Y,Y_crop_mean,Y_crop_std] = whitening(Y);	 % zero-mean-unit-variance
+[Y, Y_crop_mean, Y_crop_std] = whitening(Y);	 % zero-mean-unit-variance
 [Y, Y_crop_norm] = normalizeTemplates(Y);    % norm one
 
 %-L1-LS for each candidate target
@@ -88,6 +89,7 @@ while (n < n_sample) && (q(n) >= tau)
         id_max	= indq(n);
         c_max	= c;
         eta_max = p(indq(n));
+        min_err = sum(D_s);
     end
     n = n + 1;
 end
