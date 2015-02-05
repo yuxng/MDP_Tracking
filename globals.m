@@ -17,7 +17,8 @@ opt.mot2d_test_nums = [201, 436, 440, 1194, 219, 450, 500, 625, 209, 1059, 450];
 % tracking parameters
 opt.lost = 30;
 opt.tracked = 3;
-opt.min_err_threshold = 0.8;
+opt.min_err_threshold = 0.6;
+opt.exit_threshold = 0.7;
 
 addpath(genpath('3rd_party/cs2'));
 addpath(fullfile(opt.mot, 'devkit', 'utils'));

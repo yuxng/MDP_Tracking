@@ -78,7 +78,11 @@ for i = 1:seq_num
     % nms
     bbox = [dres.x dres.y dres.x+dres.w dres.y+dres.h dres.r];
     index_nms = nms(bbox, 0.5);
-    dres = sub(dres, index_nms);    
+    dres = sub(dres, index_nms);
+    
+    % remove truncated detections
+    index_trunc = find(dres.x > 0 & dres.y > 0);
+    dres = sub(dres, index_trunc);
     
     % apply online model
     dres_online_all = [];
@@ -88,29 +92,36 @@ for i = 1:seq_num
             id = dres_track.id(index(j));
             if isempty(models{id}) == 0
                 [track_res, min_err, model_new] = L1APG_track_frame(I, models{id});
+                rect = aff2image(track_res, models{id}.para.sz_T);
+                inp	= reshape(rect, 2, 4);
+                dres_online.x = inp(2,1);
+                dres_online.y = inp(1,1);
+                dres_online.w = inp(2,4) - inp(2,1); 
+                dres_online.h = inp(1,4) - inp(1,1);
+                dres_online.r = min_err;
+                dres_online.fr = i;
+                dres_online.status = 2;
+                dres_online.id = id;
+                dres_online.lost = 0;
+                dres_online.tracked = dres_track.tracked(index(j))+1;
+
+                % check if outside image
+                [~, ov] = calc_overlap(dres_online, 1, dres_image, 1);
                 
                 % check if the online detection is good or not
                 if min_err > opt.min_err_threshold
-                    dres_track.status(index(j)) = 1;
+                    if ov < opt.exit_threshold
+                        dres_track.status(index(j)) = 0;  % end the track
+                        fprintf('target %d exit\n', id);
+                    else                    
+                        dres_track.status(index(j)) = 1;
+                        fprintf('target %d end online\n', id);
+                    end
                 else
                     models{id} = model_new;
-                    rect = aff2image(track_res, models{id}.para.sz_T);
-                    inp	= reshape(rect, 2, 4);
-                    dres_online.x = inp(2,1);
-                    dres_online.y = inp(1,1);
-                    dres_online.w = inp(2,4) - inp(2,1); 
-                    dres_online.h = inp(1,4) - inp(1,1);
-                    dres_online.r = min_err;
-                    dres_online.fr = i;
-                    dres_online.status = 2;
-                    dres_online.id = id;
-                    dres_online.lost = 0;
-                    dres_online.tracked = dres_track.tracked(index(j))+1;
-                    
-                    % check if outside image
-                    [~, ov] = calc_overlap(dres_online, 1, dres_image, 1);
-                    if ov < 0.1
+                    if ov < opt.exit_threshold
                         dres_online.status = 0;  % end the track
+                        fprintf('target %d exit\n', id);
                     end
                     if isempty(dres_online_all) == 1
                         dres_online_all = dres_online;
@@ -145,8 +156,8 @@ for i = 1:seq_num
     if isempty(dres_online_all) == 0
         flag = zeros(numel(dres.x),1);
         for j = 1:numel(dres.x)
-            overlap = calc_overlap(dres, j, dres_online_all, 1:numel(dres_online_all.x));
-            if max(overlap) > 0.5
+            [overlap, ov1] = calc_overlap(dres, j, dres_online_all, 1:numel(dres_online_all.x));
+            if max(overlap) > 0.5 || max(ov1) > 0.9
                 flag(j) = 1;
             end
         end
