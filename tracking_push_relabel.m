@@ -30,7 +30,7 @@ end
 for i=1:dnum
     f2 = dres.nei(i).inds;
     for j = 1:length(f2)
-        c_ij = dres.nei(i).scores(j) * (-1e6);
+        c_ij = dres.nei(i).scores(j) * (1e6);
         k_dat = k_dat + 1;
         dat_in(k_dat,:) = [2*f2(j)+1 2*i c_ij];  % transition edge
     end

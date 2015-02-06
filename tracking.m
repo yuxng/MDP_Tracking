@@ -1,9 +1,9 @@
 % network flow tracking
-function dres_push_relabel = tracking(img, dres_track, models)
+function [dres_push_relabel, models] = tracking(img, dres_track, models)
 
 fmax = max(dres_track.fr);
 % apply motion model and predict next location
-index = find(dres_track.status == 1 & dres_track.id ~= -1);
+index = find((dres_track.status == 1 | dres_track.status == 4) & dres_track.id ~= -1);
 for i = 1:numel(index)
     id = dres_track.id(index(i));
     ind = find(dres_track.id == id);
@@ -30,7 +30,7 @@ for i = 1:numel(index)
     models{id}.prediction = [cx_new cy_new];
 end
 
-index = find(dres_track.status == 1);
+index = find(dres_track.status == 1 | dres_track.status == 4);
 dres = sub(dres_track, index);
 
 %%% Adding transition links to the graph by fiding overlapping detections in consequent frames.
