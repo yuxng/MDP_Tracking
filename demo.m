@@ -4,6 +4,7 @@ opt = globals();
 
 is_train = 1;
 seq_idx = 1;
+is_show = 1;
 
 if is_train
     seq_name = opt.mot2d_train_seqs{seq_idx};
@@ -29,8 +30,10 @@ fid = fopen(filename, 'r');
 Cgt = textscan(fid, '%d %d %f %f %f %f %f %f %f %f', 'Delimiter', ',');
 fclose(fid);
 
-figure(1);
-cmap = colormap;
+if is_show
+    figure(1);
+    cmap = colormap;
+end
 ID = 0;
 models = cell(10000, 1);
 dres_track = [];
@@ -48,19 +51,21 @@ for i = 1:seq_num
     dres_image.h = size(I, 1);
     
     % show ground truth
-    subplot(2, 3, 1);
-    imshow(I);
-    title('GT');
-    hold on;
-    index = find(Cgt{1} == i);
-    for j = 1:numel(index)
-        x = Cgt{3}(index(j));
-        y = Cgt{4}(index(j));
-        w = Cgt{5}(index(j));
-        h = Cgt{6}(index(j));
-        rectangle('Position', [x y w h], 'EdgeColor', 'g', 'LineWidth', 2);
+    if is_show
+        subplot(2, 3, 1);
+        imshow(I);
+        title('GT');
+        hold on;
+        index = find(Cgt{1} == i);
+        for j = 1:numel(index)
+            x = Cgt{3}(index(j));
+            y = Cgt{4}(index(j));
+            w = Cgt{5}(index(j));
+            h = Cgt{6}(index(j));
+            rectangle('Position', [x y w h], 'EdgeColor', 'g', 'LineWidth', 2);
+        end
+        hold off;
     end
-    hold off;
     
     % show detections
 %     subplot(2, 3, 2);
@@ -106,20 +111,22 @@ for i = 1:seq_num
     dres = sub(dres, index_trunc);
     
     % show detections
-    subplot(2, 3, 2);
-    imshow(I);
-    title('Detections');
-    hold on;    
-    for j = 1:numel(dres.x)
-        x = dres.x(j);
-        y = dres.y(j);
-        w = dres.w(j);
-        h = dres.h(j);
-        r = dres.r(j);
-        rectangle('Position', [x y w h], 'EdgeColor', 'g', 'LineWidth', 2);
-        text(x, y, sprintf('%.2f', r), 'BackgroundColor',[.7 .9 .7]);
+    if is_show
+        subplot(2, 3, 2);
+        imshow(I);
+        title('Detections');
+        hold on;    
+        for j = 1:numel(dres.x)
+            x = dres.x(j);
+            y = dres.y(j);
+            w = dres.w(j);
+            h = dres.h(j);
+            r = dres.r(j);
+            rectangle('Position', [x y w h], 'EdgeColor', 'g', 'LineWidth', 2);
+            text(x, y, sprintf('%.2f', r), 'BackgroundColor',[.7 .9 .7]);
+        end
+        hold off;
     end
-    hold off;      
     
     % apply online model
     dres_online_all = [];
@@ -165,22 +172,24 @@ for i = 1:seq_num
         end
         
         % show online detections
-        subplot(2, 3, 3);
-        imshow(I);
-        title('Online Detections');
-        hold on;
-        if isempty(dres_online_all) == 0
-            for j = 1:numel(dres_online_all.x)
-                x = dres_online_all.x(j);
-                y = dres_online_all.y(j);
-                w = dres_online_all.w(j);
-                h = dres_online_all.h(j);
-                r = dres_online_all.r(j);
-                rectangle('Position', [x y w h], 'EdgeColor', 'g', 'LineWidth', 2);
-                text(x, y, sprintf('%.2f', r), 'BackgroundColor',[.7 .9 .7]);
+        if is_show
+            subplot(2, 3, 3);
+            imshow(I);
+            title('Online Detections');
+            hold on;
+            if isempty(dres_online_all) == 0
+                for j = 1:numel(dres_online_all.x)
+                    x = dres_online_all.x(j);
+                    y = dres_online_all.y(j);
+                    w = dres_online_all.w(j);
+                    h = dres_online_all.h(j);
+                    r = dres_online_all.r(j);
+                    rectangle('Position', [x y w h], 'EdgeColor', 'g', 'LineWidth', 2);
+                    text(x, y, sprintf('%.2f', r), 'BackgroundColor',[.7 .9 .7]);
+                end
             end
+            hold off;    
         end
-        hold off;         
     end
     
     if isempty(dres_online_all) == 0
@@ -231,20 +240,22 @@ for i = 1:seq_num
     end
     
     % show detections
-    subplot(2, 3, 4);
-    imshow(I);
-    title('Offline Detections');
-    hold on;    
-    for j = 1:numel(dres.x)
-        x = dres.x(j);
-        y = dres.y(j);
-        w = dres.w(j);
-        h = dres.h(j);
-        r = dres.r(j);
-        rectangle('Position', [x y w h], 'EdgeColor', 'g', 'LineWidth', 2);
-        text(x, y, sprintf('%.2f', r), 'BackgroundColor',[.7 .9 .7]);
+    if is_show
+        subplot(2, 3, 4);
+        imshow(I);
+        title('Offline Detections');
+        hold on;    
+        for j = 1:numel(dres.x)
+            x = dres.x(j);
+            y = dres.y(j);
+            w = dres.w(j);
+            h = dres.h(j);
+            r = dres.r(j);
+            rectangle('Position', [x y w h], 'EdgeColor', 'g', 'LineWidth', 2);
+            text(x, y, sprintf('%.2f', r), 'BackgroundColor',[.7 .9 .7]);
+        end
+        hold off;    
     end
-    hold off;    
     
     if i == 1
         dres_track = dres;
@@ -364,58 +375,62 @@ for i = 1:seq_num
     models = apply_motion_prediction(i, dres_track, models);
     
     % show tracking results
-    subplot(2, 3, 5);
-    imshow(I);
-    title('Tracking');
-    hold on;
-    index = find(dres_track.fr == i);
-    for j = 1:numel(index)
-        x = dres_track.x(index(j));
-        y = dres_track.y(index(j));
-        w = dres_track.w(index(j));
-        h = dres_track.h(index(j));
-        id = dres_track.id(index(j));
-        index_color = 1 + floor((id-1) * size(cmap,1) / ID);
-        rectangle('Position', [x y w h], 'EdgeColor', cmap(index_color,:), 'LineWidth', 2);
-        text(x, y, sprintf('%d', id), 'BackgroundColor',[.7 .9 .7]);
-        % show the prediction
-        plot(x+w/2, y+h/2, 'ro', 'LineWidth', 2);
-        plot([x+w/2 models{id}.prediction(1)], [y+h/2 models{id}.prediction(2)], 'LineWidth', 2, 'Color', 'y');
-        % show the previous path
-        ind = find(dres_track.id == id);
-        centers = [dres_track.x(ind)+dres_track.w(ind)/2 ...
-            dres_track.y(ind)+dres_track.h(ind)/2];
-        plot(centers(:,1), centers(:,2), 'LineWidth', 2, 'Color', cmap(index_color,:));
+    if is_show
+        subplot(2, 3, 5);
+        imshow(I);
+        title('Tracking');
+        hold on;
+        index = find(dres_track.fr == i);
+        for j = 1:numel(index)
+            x = dres_track.x(index(j));
+            y = dres_track.y(index(j));
+            w = dres_track.w(index(j));
+            h = dres_track.h(index(j));
+            id = dres_track.id(index(j));
+            index_color = 1 + floor((id-1) * size(cmap,1) / ID);
+            rectangle('Position', [x y w h], 'EdgeColor', cmap(index_color,:), 'LineWidth', 2);
+            text(x, y, sprintf('%d', id), 'BackgroundColor',[.7 .9 .7]);
+            % show the prediction
+            plot(x+w/2, y+h/2, 'ro', 'LineWidth', 2);
+            plot([x+w/2 models{id}.prediction(1)], [y+h/2 models{id}.prediction(2)], 'LineWidth', 2, 'Color', 'y');
+            % show the previous path
+            ind = find(dres_track.id == id);
+            centers = [dres_track.x(ind)+dres_track.w(ind)/2 ...
+                dres_track.y(ind)+dres_track.h(ind)/2];
+            plot(centers(:,1), centers(:,2), 'LineWidth', 2, 'Color', cmap(index_color,:));
+        end
+        hold off;
+
+        % show lost targets
+        subplot(2, 3, 6);
+        imshow(I);
+        title('Lost Tracks');
+        hold on;
+        index = find(dres_track.fr ~= i & (dres_track.status == 1 | dres_track.status == 4));
+        for j = 1:numel(index)
+            x = dres_track.x(index(j));
+            y = dres_track.y(index(j));
+            w = dres_track.w(index(j));
+            h = dres_track.h(index(j));
+            id = dres_track.id(index(j));
+            index_color = 1 + floor((id-1) * size(cmap,1) / ID);
+            rectangle('Position', [x y w h], 'EdgeColor', cmap(index_color,:), 'LineWidth', 2);
+            text(x, y, sprintf('%d', id), 'BackgroundColor',[.7 .9 .7]);
+            % show the prediction
+            plot(x+w/2, y+h/2, 'ro', 'LineWidth', 2);
+            plot([x+w/2 models{id}.prediction(1)], [y+h/2 models{id}.prediction(2)], 'LineWidth', 2, 'Color', 'y');
+            % show the previous path
+            ind = find(dres_track.id == id);
+            centers = [dres_track.x(ind)+dres_track.w(ind)/2 ...
+                dres_track.y(ind)+dres_track.h(ind)/2];
+            plot(centers(:,1), centers(:,2), 'LineWidth', 2, 'Color', cmap(index_color,:));        
+        end
+        hold off;    
     end
-    hold off;
     
-    % show lost targets
-    subplot(2, 3, 6);
-    imshow(I);
-    title('Lost Tracks');
-    hold on;
-    index = find(dres_track.fr ~= i & (dres_track.status == 1 | dres_track.status == 4));
-    for j = 1:numel(index)
-        x = dres_track.x(index(j));
-        y = dres_track.y(index(j));
-        w = dres_track.w(index(j));
-        h = dres_track.h(index(j));
-        id = dres_track.id(index(j));
-        index_color = 1 + floor((id-1) * size(cmap,1) / ID);
-        rectangle('Position', [x y w h], 'EdgeColor', cmap(index_color,:), 'LineWidth', 2);
-        text(x, y, sprintf('%d', id), 'BackgroundColor',[.7 .9 .7]);
-        % show the prediction
-        plot(x+w/2, y+h/2, 'ro', 'LineWidth', 2);
-        plot([x+w/2 models{id}.prediction(1)], [y+h/2 models{id}.prediction(2)], 'LineWidth', 2, 'Color', 'y');
-        % show the previous path
-        ind = find(dres_track.id == id);
-        centers = [dres_track.x(ind)+dres_track.w(ind)/2 ...
-            dres_track.y(ind)+dres_track.h(ind)/2];
-        plot(centers(:,1), centers(:,2), 'LineWidth', 2, 'Color', cmap(index_color,:));        
+    if is_show
+        pause;
     end
-    hold off;    
-    
-%     pause(0.5);
 end
 
 % save results
