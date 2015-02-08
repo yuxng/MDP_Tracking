@@ -22,7 +22,7 @@ for i = 1:length(f1)
     
     % we ignore transitions with large change in the size of bounding boxes.
     ratio1 = dres.h(f1(i)) ./ dres.h(f2);
-    inds  = find(min(ratio1, 1./ratio1) > 0.8 & dis < 50);          
+    inds  = find(min(ratio1, 1./ratio1) > 0.7 & dis < 50);          
 
     % each detction window will have a list of indices pointing to its neighbors in the previous frame.
     dres.nei(f1(i),1).inds  = f2(inds)';
@@ -33,7 +33,7 @@ for i = 1:length(f1)
     for j = 1:num
         id = dres.id(inds(j));
         err = L1APG_reconstruction_error(img, models{id}, x1, y1, x2, y2); % appearance affinity
-        dres.nei(f1(i),1).scores(j) = 10/err * pdf('Normal', dis(inds(j)), 0, 10);
+        dres.nei(f1(i),1).scores(j) = err * (1 - pdf('Normal', dis(inds(j)), 0, 10));
     end
 end
 

@@ -26,20 +26,16 @@ nT = para.nT;
 
 temp_lambda = zeros(ColDim,1);
 temp_lambda(1:nT) = lambda(1);
-temp_lambda(end) = lambda(1);  % fixT template
-
-
 
 %% main loop
 for iter =1:maxit
     tem_t = (tPrev-1)/t;
     tem_y = (1+tem_t)*x - tem_t*xPrev;
-    temp_lambda(nT+1:end-1) = lambda(3)*tem_y(nT+1:end-1);
+    temp_lambda(nT+1:end) = lambda(3)*tem_y(nT+1:end);
     tem_y = tem_y - (A*tem_y-b+temp_lambda)/Lip; % update residual
     xPrev = x;
     x(1:nT) = max(tem_y(1:nT),0);
-    x(end) = max(tem_y(end),0);
-    x(nT+1:end-1) = softthres(tem_y(nT+1:end-1),lambda(2)/Lip);
+    x(nT+1:end) = softthres(tem_y(nT+1:end),lambda(2)/Lip);
     tPrev = t;
     t = (1+sqrt(1+4*t^2))/2;
 end
@@ -48,6 +44,3 @@ c = x;
 %% soft thresholding operator
 function y = softthres(x,lambda)
 y = max(x-lambda,0)-max(-x-lambda,0);
-
-
-    

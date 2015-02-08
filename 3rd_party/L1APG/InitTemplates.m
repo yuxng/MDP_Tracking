@@ -24,10 +24,9 @@ end
 % p{10} = cpt + [0 0 0; 0 1 0];
 
 %% Initializating templates and image
-T	= zeros(prod(tsize),10);
+T	= zeros(prod([tsize 3]),numT);
 
 %% cropping and normalizing templates
-for n=1:numT
-    [T(:,n),T_norm(n),T_mean(n),T_std(n)] = ...
-		corner2image(img, p{n}, tsize);   
+for n = 1:numT
+    [T(:,n), T_norm(n), T_mean(n), T_std(n)] = corner2image(img, p{n}, tsize);   
 end

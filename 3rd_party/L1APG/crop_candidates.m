@@ -2,7 +2,7 @@ function [gly_crop, gly_inrange] = crop_candidates(img_frame, curr_samples, temp
 %create gly_crop, gly_inrange
 
 nsamples = size(curr_samples,1);
-c = prod(template_size);
+c = prod([template_size 3]);
 gly_inrange = zeros(nsamples,1);
 gly_crop = zeros(c,nsamples);
 

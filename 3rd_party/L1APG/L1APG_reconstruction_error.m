@@ -1,12 +1,6 @@
 % compute the reconstruction error
 function err = L1APG_reconstruction_error(img, model, x1, y1, x2, y2)
 
-if(size(img,3) == 3)
-    img = double(rgb2gray(img));
-else
-    img = double(img);
-end
-
 para = model.para;
 para.Lambda = model.Lambda;
 pos = [y1, y2, y1; x1 x1 x2];
@@ -26,5 +20,5 @@ end
 Y = whitening(Y); % zero-mean-unit-variance
 Y = normalizeTemplates(Y);    % norm one
 c = APGLASSOup(model.Temp'*Y, model.Dict, para);
-D_s = (Y - [model.A(:,1:nT) model.fixT]*[c(1:nT); c(end)]).^2; % reconstruction error
+D_s = (Y - model.A(:,1:nT)*c(1:nT)).^2; % reconstruction error
 err = sum(D_s);

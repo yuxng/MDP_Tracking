@@ -3,7 +3,7 @@ function main
 opt = globals();
 
 is_train = 1;
-seq_idx = 4;
+seq_idx = 1;
 
 if is_train
     seq_name = opt.mot2d_train_seqs{seq_idx};

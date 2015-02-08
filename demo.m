@@ -63,21 +63,21 @@ for i = 1:seq_num
     hold off;
     
     % show detections
-    subplot(2, 3, 2);
-    imshow(I);
-    title('Detections');
-    hold on;
-    index = find(C{1} == i);
-    for j = 1:numel(index)
-        x = C{3}(index(j));
-        y = C{4}(index(j));
-        w = C{5}(index(j));
-        h = C{6}(index(j));
-        r = C{7}(index(j));
-        rectangle('Position', [x y w h], 'EdgeColor', 'g', 'LineWidth', 2);
-        text(x, y, sprintf('%.2f', r), 'BackgroundColor',[.7 .9 .7]);
-    end
-    hold off;    
+%     subplot(2, 3, 2);
+%     imshow(I);
+%     title('Detections');
+%     hold on;
+%     index = find(C{1} == i);
+%     for j = 1:numel(index)
+%         x = C{3}(index(j));
+%         y = C{4}(index(j));
+%         w = C{5}(index(j));
+%         h = C{6}(index(j));
+%         r = C{7}(index(j));
+%         rectangle('Position', [x y w h], 'EdgeColor', 'g', 'LineWidth', 2);
+%         text(x, y, sprintf('%.2f', r), 'BackgroundColor',[.7 .9 .7]);
+%     end
+%     hold off;    
     
     % build the dres structure for network flow tracking
     index = find(C{1} == i);
@@ -89,8 +89,8 @@ for i = 1:seq_num
     dres.fr = i * ones(numel(index), 1);
     dres.status = ones(numel(index), 1);  % 0 inactive 1 association 2 online 3 occluded
     dres.id = -1 * ones(numel(index), 1);
-    dres.lost = zeros(numel(index), 1);
-    dres.tracked = zeros(numel(index), 1);
+    dres.lost = zeros(numel(index), 1);    % in streak
+    dres.tracked = zeros(numel(index), 1); % in streak
     
     % thresholding
     index_threshold = find(dres.r > opt.det_threshold);
@@ -104,6 +104,22 @@ for i = 1:seq_num
     % remove truncated detections
     index_trunc = find(dres.x > 0 & dres.y > 0);
     dres = sub(dres, index_trunc);
+    
+    % show detections
+    subplot(2, 3, 2);
+    imshow(I);
+    title('Detections');
+    hold on;    
+    for j = 1:numel(dres.x)
+        x = dres.x(j);
+        y = dres.y(j);
+        w = dres.w(j);
+        h = dres.h(j);
+        r = dres.r(j);
+        rectangle('Position', [x y w h], 'EdgeColor', 'g', 'LineWidth', 2);
+        text(x, y, sprintf('%.2f', r), 'BackgroundColor',[.7 .9 .7]);
+    end
+    hold off;      
     
     % apply online model
     dres_online_all = [];
@@ -119,7 +135,7 @@ for i = 1:seq_num
                 dres_online.y = inp(1,1);
                 dres_online.w = inp(2,4) - inp(2,1); 
                 dres_online.h = inp(1,4) - inp(1,1);
-                dres_online.r = min_err*1000;
+                dres_online.r = min_err;
                 dres_online.fr = i;
                 dres_online.status = 2;
                 dres_online.id = id;
@@ -130,7 +146,7 @@ for i = 1:seq_num
                 [~, ov] = calc_overlap(dres_online, 1, dres_image, 1);
                 if ov < opt.exit_threshold
                     dres_online.status = 0;  % end the track
-                    fprintf('target %d exit\n', id);
+                    fprintf('target %d exit from online\n', id);
                 end                
                 
                 % check if the online detection is good or not
@@ -167,21 +183,46 @@ for i = 1:seq_num
         hold off;         
     end
     
-    % occlusion reasoning between online tracked targets
-    % suppress detections covered by online prediction
     if isempty(dres_online_all) == 0
-        occ = reason_occlusions(dres_online_all);
+        % occlusion reasoning between online tracked targets
+        occ = reason_occlusions(I, dres_online_all, models);
         for j = 1:size(occ,1)
-            if dres_online_all.status(j) == 1 && sum(occ(j,:)) > 0
+            if sum(occ(j,:)) > 0
                 dres_online_all.status(j) = 4;
-                fprintf('target %d occluded (exit)\n', dres_online_all.id(j));
+                fprintf('target %d occluded (hold)\n', dres_online_all.id(j));
             end
         end
         
+        % use detection to update the online model
+        x1 = dres.x;
+        y1 = dres.y;
+        x2 = dres.x + dres.w;
+        y2 = dres.y + dres.h;
+        for j = 1:size(occ,1)
+            overlap = calc_overlap(dres_online_all, j, dres, 1:numel(dres.x));
+            ind = find(overlap > 0.5);
+            if isempty(ind) == 0
+                id = dres_online_all.id(j);
+                [models{id}, tmp] = L1APG_update(I, models{id}, x1(ind), y1(ind), x2(ind), y2(ind));
+                fprintf('Online target %d updated by detection with conf %.2f among %d detections\n', ...
+                    id, dres.r(ind(tmp)), numel(ind));
+                models{id}.lost = 0;
+            else
+                id = dres_online_all.id(j);
+                fprintf('No detection for online target %d\n', id);
+                models{id}.lost = models{id}.lost + 1;
+                if models{id}.lost  > opt.lost_online
+                    dres_online_all.status(j) = 1;
+                    fprintf('target %d exit online mode\n', id);
+                end
+            end
+        end        
+        
+        % suppress detections covered by online prediction
         flag = zeros(numel(dres.x),1);
         for j = 1:numel(dres.x)
-            [~, ov1] = calc_overlap(dres, j, dres_online_all, 1:numel(dres_online_all.x));
-            if max(ov1) > 0.6
+            [overlap, ov1] = calc_overlap(dres, j, dres_online_all, 1:numel(dres_online_all.x));
+            if sum(ov1) > 0.6
                 flag(j) = 1;
             end
         end
@@ -216,15 +257,19 @@ for i = 1:seq_num
             y1 = dres_track.y(j);
             x2 = dres_track.x(j) + dres_track.w(j);
             y2 = dres_track.y(j) + dres_track.h(j);
-            models{ID} = L1APG_initialize(I, x1, y1, x2, y2);           
+            models{ID} = L1APG_initialize(I, ID, x1, y1, x2, y2);
+            fprintf('target %d enter\n', ID);
         end
     else
         if isempty(dres) == 1 || isempty(dres.x) == 1  % no incoming detection
-            index = find(dres_track.status == 1);
+            index = find(dres_track.status == 1 | dres_track.status == 4);
             for j = 1:numel(index)
+                fprintf('target %d unmatched due to no detection\n', dres_track.id(index(j)));
                 dres_track.lost(index(j)) = dres_track.lost(index(j)) + 1;
-                if dres_track.lost(index(j)) > opt.lost
+                dres_track.tracked(index(j)) = 0;
+                if dres_track.lost(index(j)) > opt.lost && dres_track.status(index(j)) ~= 4
                     dres_track.status(index(j)) = 0;
+                    fprintf('target %d ended\n', dres_track.id(index(j)));
                 end
             end
         elseif isempty(find(dres_track.status == 1)) == 1 % no active tracks
@@ -237,13 +282,14 @@ for i = 1:seq_num
                 y1 = dres_track.y(j);
                 x2 = dres_track.x(j) + dres_track.w(j);
                 y2 = dres_track.y(j) + dres_track.h(j);
-                models{ID} = L1APG_initialize(I, x1, y1, x2, y2);                    
+                models{ID} = L1APG_initialize(I, ID, x1, y1, x2, y2);
+                fprintf('target %d enter\n', ID);
             end
             dres_track = concatenate_dres(dres_track, dres);
         else
             % network flow tracking
             dres_track = concatenate_dres(dres_track, dres);
-            [dres_track_tmp, models] = tracking(I, dres_track, models);
+            dres_track_tmp = tracking(I, dres_track, models);
 
             % process tracking results
             index = find(dres_track.status == 1 | dres_track.status == 4);
@@ -261,14 +307,18 @@ for i = 1:seq_num
                         y1 = dres_track.y(index(index_unmatched(k)));
                         x2 = dres_track.x(index(index_unmatched(k))) + dres_track.w(index(index_unmatched(k)));
                         y2 = dres_track.y(index(index_unmatched(k))) + dres_track.h(index(index_unmatched(k)));
-                        models{ID} = L1APG_initialize(I, x1, y1, x2, y2);                         
+                        models{ID} = L1APG_initialize(I, ID, x1, y1, x2, y2);
+                        fprintf('target %d enter\n', ID);
                     end
                 else
                     matched = find(dres_track_tmp.id == ids(j));
                     if numel(matched) == 1  % unmatched track
+                        fprintf('target %d unmatched\n', dres_track.id(index(matched)));
                         dres_track.lost(index(matched)) = dres_track.lost(index(matched)) + 1;
+                        dres_track.tracked(index(matched)) = 0;
                         if dres_track.lost(index(matched)) > opt.lost && dres_track.status(index(matched)) ~= 4
                             dres_track.status(index(matched)) = 0;  % end target
+                            fprintf('target %d ended\n', dres_track.id(index(matched)));
                         end
                         % check if target exit
                         id = dres_track.id(index(matched));
@@ -278,7 +328,7 @@ for i = 1:seq_num
                         y2 = models{id}.prediction(2) + dres_track.h(index(matched))/2;
                         if x1 < 0 || y1 < 0 || x2 > size(I,2) || y2 > size(I,1)
                             dres_track.status(index(matched)) = 0;  % end target
-                            fprintf('target %d exit\n', id);
+                            fprintf('target %d exit from matching\n', id);
                         end
                     else  % matched track and detection
                         ind1 = index(matched(1));
@@ -288,6 +338,7 @@ for i = 1:seq_num
                         dres_track.tracked(ind2) = dres_track.tracked(ind1) + 1;
                         dres_track.lost(ind2) = 0;
                         dres_track.status(ind2) = 1;
+                        fprintf('target %d matched\n', dres_track.id(ind2));
 
                         % re-initialize the online model
                         id = dres_track.id(ind2);
@@ -295,10 +346,11 @@ for i = 1:seq_num
                         y1 = dres_track.y(ind2);
                         x2 = dres_track.x(ind2) + dres_track.w(ind2);
                         y2 = dres_track.y(ind2) + dres_track.h(ind2);
-                        models{id} = L1APG_initialize(I, x1, y1, x2, y2);
+                        models{id} = L1APG_initialize(I, id, x1, y1, x2, y2);
                         if dres_track.tracked(ind2) > opt.tracked
                             % switch to online mode
                             dres_track.status(ind2) = 2;
+                            fprintf('target %d switch to online mode\n', id);
                         end
                     end
                 end
@@ -308,6 +360,8 @@ for i = 1:seq_num
         % add online tracks
         dres_track = concatenate_dres(dres_track, dres_online_all);
     end
+    % apply motion
+    models = apply_motion_prediction(i, dres_track, models);
     
     % show tracking results
     subplot(2, 3, 5);
@@ -324,10 +378,18 @@ for i = 1:seq_num
         index_color = 1 + floor((id-1) * size(cmap,1) / ID);
         rectangle('Position', [x y w h], 'EdgeColor', cmap(index_color,:), 'LineWidth', 2);
         text(x, y, sprintf('%d', id), 'BackgroundColor',[.7 .9 .7]);
+        % show the prediction
+        plot(x+w/2, y+h/2, 'ro', 'LineWidth', 2);
+        plot([x+w/2 models{id}.prediction(1)], [y+h/2 models{id}.prediction(2)], 'LineWidth', 2, 'Color', 'y');
+        % show the previous path
+        ind = find(dres_track.id == id);
+        centers = [dres_track.x(ind)+dres_track.w(ind)/2 ...
+            dres_track.y(ind)+dres_track.h(ind)/2];
+        plot(centers(:,1), centers(:,2), 'LineWidth', 2, 'Color', cmap(index_color,:));
     end
     hold off;
     
-    % show tracking results
+    % show lost targets
     subplot(2, 3, 6);
     imshow(I);
     title('Lost Tracks');
@@ -342,11 +404,23 @@ for i = 1:seq_num
         index_color = 1 + floor((id-1) * size(cmap,1) / ID);
         rectangle('Position', [x y w h], 'EdgeColor', cmap(index_color,:), 'LineWidth', 2);
         text(x, y, sprintf('%d', id), 'BackgroundColor',[.7 .9 .7]);
+        % show the prediction
+        plot(x+w/2, y+h/2, 'ro', 'LineWidth', 2);
+        plot([x+w/2 models{id}.prediction(1)], [y+h/2 models{id}.prediction(2)], 'LineWidth', 2, 'Color', 'y');
+        % show the previous path
+        ind = find(dres_track.id == id);
+        centers = [dres_track.x(ind)+dres_track.w(ind)/2 ...
+            dres_track.y(ind)+dres_track.h(ind)/2];
+        plot(centers(:,1), centers(:,2), 'LineWidth', 2, 'Color', cmap(index_color,:));        
     end
     hold off;    
     
-    pause;
+%     pause(0.5);
 end
+
+% save results
+filename = sprintf('%s/%s.mat', opt.results, seq_name);
+save(filename, 'dres_track');
 
 % write tracking results
 filename = sprintf('%s/%s.txt', opt.results, seq_name);
