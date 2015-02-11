@@ -16,11 +16,16 @@ opt.mot2d_test_nums = [201, 436, 440, 1194, 219, 450, 500, 625, 209, 1059, 450];
 
 % tracking parameters
 opt.lost = 2;
-opt.lost_online = 4;
+opt.lost_online = 2;
 opt.tracked = 4;
 opt.min_err_threshold = 2;
-opt.exit_threshold = 0.8;
-opt.det_threshold = 20;
+opt.exit_threshold = 0.7;
+opt.det_threshold = 10;
+opt.det_confident = 50;
+
+% parameters in building graph for network flow
+opt.ratio_threshold = 0.7;
+opt.dis_threshold = 50;
 
 addpath(genpath('3rd_party/cs2'));
 addpath(fullfile(opt.mot, 'devkit', 'utils'));

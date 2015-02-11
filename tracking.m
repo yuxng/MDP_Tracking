@@ -1,11 +1,11 @@
 % network flow tracking
-function dres_push_relabel = tracking(img, dres_track, models)
+function dres_push_relabel = tracking(img, dres_track, models, opt)
 
 index = find(dres_track.status == 1 | dres_track.status == 4);
 dres = sub(dres_track, index);
 
 %%% Adding transition links to the graph by fiding overlapping detections in consequent frames.
-[dres, tr_num] = build_graph(img, dres, models);
+[dres, tr_num] = build_graph(img, dres, models, opt);
 
 %%% setting parameters for tracking
 c_en      = 10;     %% birth cost

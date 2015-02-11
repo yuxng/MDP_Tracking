@@ -97,19 +97,6 @@ for i = 1:seq_num
     dres.lost = zeros(numel(index), 1);    % in streak
     dres.tracked = zeros(numel(index), 1); % in streak
     
-    % thresholding
-    index_threshold = find(dres.r > opt.det_threshold);
-    dres = sub(dres, index_threshold);
-    
-    % nms
-    bbox = [dres.x dres.y dres.x+dres.w dres.y+dres.h dres.r];
-    index_nms = nms_new(bbox, 0.6);
-    dres = sub(dres, index_nms);
-    
-    % remove truncated detections
-    index_trunc = find(dres.x > 0 & dres.y > 0);
-    dres = sub(dres, index_trunc);
-    
     % show detections
     if is_show
         subplot(2, 3, 2);
@@ -126,7 +113,16 @@ for i = 1:seq_num
             text(x, y, sprintf('%.2f', r), 'BackgroundColor',[.7 .9 .7]);
         end
         hold off;
-    end
+    end    
+    
+    % thresholding
+    % index_threshold = find(dres.r > opt.det_threshold);
+    % dres = sub(dres, index_threshold);
+    
+    % nms
+    bbox = [dres.x dres.y dres.x+dres.w dres.y+dres.h dres.r];
+    index_nms = nms_new(bbox, 0.6);
+    dres = sub(dres, index_nms);
     
     % apply online model
     dres_online_all = [];
@@ -207,6 +203,7 @@ for i = 1:seq_num
         y1 = dres.y;
         x2 = dres.x + dres.w;
         y2 = dres.y + dres.h;
+        flag = zeros(numel(dres.x),1);
         for j = 1:size(occ,1)
             overlap = calc_overlap(dres_online_all, j, dres, 1:numel(dres.x));
             ind = find(overlap > 0.5);
@@ -216,6 +213,7 @@ for i = 1:seq_num
                 fprintf('Online target %d updated by detection with conf %.2f among %d detections\n', ...
                     id, dres.r(ind(tmp)), numel(ind));
                 models{id}.lost = 0;
+                flag(ind(tmp)) = 1;
             else
                 id = dres_online_all.id(j);
                 fprintf('No detection for online target %d\n', id);
@@ -228,11 +226,13 @@ for i = 1:seq_num
         end        
         
         % suppress detections covered by online prediction
-        flag = zeros(numel(dres.x),1);
         for j = 1:numel(dres.x)
-            [overlap, ov1] = calc_overlap(dres, j, dres_online_all, 1:numel(dres_online_all.x));
-            if sum(ov1) > 0.6
-                flag(j) = 1;
+            % only suppress unconfident detections
+            if dres.r(j) < opt.det_confident
+                [overlap, ov1, ov2] = calc_overlap(dres, j, dres_online_all, 1:numel(dres_online_all.x));
+                if isempty(find(overlap > 0.6 | ov1 > 0.95 | ov2 > 0.95 | sum(ov1) > 0.6)) == 0
+                    flag(j) = 1;
+                end
             end
         end
         index = find(flag == 0);
@@ -258,6 +258,7 @@ for i = 1:seq_num
     end
     
     if i == 1
+        % initialization
         dres_track = dres;
         for j = 1:numel(dres.x)
             ID = ID + 1;
@@ -277,13 +278,30 @@ for i = 1:seq_num
             for j = 1:numel(index)
                 fprintf('target %d unmatched due to no detection\n', dres_track.id(index(j)));
                 dres_track.lost(index(j)) = dres_track.lost(index(j)) + 1;
-                dres_track.tracked(index(j)) = 0;
-                if dres_track.lost(index(j)) > opt.lost && dres_track.status(index(j)) ~= 4
-                    dres_track.status(index(j)) = 0;
-                    fprintf('target %d ended\n', dres_track.id(index(j)));
+                % check if target exit
+                id = dres_track.id(index(j));
+                x1 = models{id}.prediction(1) - dres_track.w(index(j))/2;
+                y1 = models{id}.prediction(2) - dres_track.h(index(j))/2;
+                x2 = models{id}.prediction(1) + dres_track.w(index(j))/2;
+                y2 = models{id}.prediction(2) + dres_track.h(index(j))/2;
+                if x1 < 0 || y1 < 0 || x2 > size(I,2) || y2 > size(I,1)
+                    dres_track.status(index(j)) = 0;  % end target
+                    fprintf('target %d exit from matching\n', id);
+                    if dres_track.tracked(index(j)) < opt.tracked
+                        fprintf('target %d is tracked less than %d frames\n', id, opt.tracked);
+                    end                    
+                else
+                    if dres_track.lost(index(j)) > opt.lost && dres_track.status(index(j)) ~= 4
+                        dres_track.status(index(j)) = 0;
+                        fprintf('target %d ended\n', id);
+                        % check if removing the target
+                        if dres_track.tracked(index(j)) < opt.tracked
+                            fprintf('target %d is tracked less than %d frames\n', id, opt.tracked);
+                        end
+                    end
                 end
             end
-        elseif isempty(find(dres_track.status == 1)) == 1 % no active tracks
+        elseif isempty(find(dres_track.status == 1 | dres_track.status == 4)) == 1 % no active tracks
             for j = 1:numel(dres.x)
                 ID = ID + 1;
                 dres.id(j) = ID;
@@ -300,7 +318,7 @@ for i = 1:seq_num
         else
             % network flow tracking
             dres_track = concatenate_dres(dres_track, dres);
-            dres_track_tmp = tracking(I, dres_track, models);
+            dres_track_tmp = tracking(I, dres_track, models, opt);
 
             % process tracking results
             index = find(dres_track.status == 1 | dres_track.status == 4);
@@ -325,12 +343,6 @@ for i = 1:seq_num
                     matched = find(dres_track_tmp.id == ids(j));
                     if numel(matched) == 1  % unmatched track
                         fprintf('target %d unmatched\n', dres_track.id(index(matched)));
-                        dres_track.lost(index(matched)) = dres_track.lost(index(matched)) + 1;
-                        dres_track.tracked(index(matched)) = 0;
-                        if dres_track.lost(index(matched)) > opt.lost && dres_track.status(index(matched)) ~= 4
-                            dres_track.status(index(matched)) = 0;  % end target
-                            fprintf('target %d ended\n', dres_track.id(index(matched)));
-                        end
                         % check if target exit
                         id = dres_track.id(index(matched));
                         x1 = models{id}.prediction(1) - dres_track.w(index(matched))/2;
@@ -340,6 +352,20 @@ for i = 1:seq_num
                         if x1 < 0 || y1 < 0 || x2 > size(I,2) || y2 > size(I,1)
                             dres_track.status(index(matched)) = 0;  % end target
                             fprintf('target %d exit from matching\n', id);
+                            if dres_track.tracked(index(matched)) < opt.tracked
+                                fprintf('target %d is tracked less than %d frames\n', id, opt.tracked);
+                            end                            
+                        else                        
+                            % target lost
+                            dres_track.lost(index(matched)) = dres_track.lost(index(matched)) + 1;
+                            if dres_track.lost(index(matched)) > opt.lost && dres_track.status(index(matched)) ~= 4
+                                dres_track.status(index(matched)) = 0;  % end target
+                                fprintf('target %d ended\n', dres_track.id(index(matched)));
+                                % check if removing the target
+                                if dres_track.tracked(index(matched)) < opt.tracked
+                                    fprintf('target %d is tracked less than %d frames\n', id, opt.tracked);
+                                end
+                            end
                         end
                     else  % matched track and detection
                         ind1 = index(matched(1));
@@ -440,7 +466,7 @@ save(filename, 'dres_track');
 % write tracking results
 filename = sprintf('%s/%s.txt', opt.results, seq_name);
 fprintf('write results: %s\n', filename);
-write_tracking_results(filename, dres_track);
+write_tracking_results(filename, dres_track, opt.tracked);
 
 % evaluation
 benchmark_dir = fullfile(opt.mot, opt.mot2d, seq_set, filesep);

@@ -8,7 +8,7 @@ for i = 1:num
     [~, ov] = calc_overlap(dres, i, dres, 1:num);
     % check if target i is occluded
     ov(i) = 0;
-    ind = find(ov > 0.7);
+    ind = find(ov > 0.6);
     for j = 1:numel(ind)
         if (y(ind(j)) - y(i)) / y(ind(j)) > 0.1
             occ(i, ind(j)) = 1;
