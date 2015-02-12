@@ -23,6 +23,15 @@ fid = fopen(filename, 'r');
 Cgt = textscan(fid, '%d %d %f %f %f %f %f %f %f %f', 'Delimiter', ',');
 fclose(fid);
 
+% build the dres structure for ground truth
+dres_gt.fr = Cgt{1};
+dres_gt.id = Cgt{2};
+dres_gt.x = Cgt{3};
+dres_gt.y = Cgt{4};
+dres_gt.w = Cgt{5};
+dres_gt.h = Cgt{6};
+dres_gt.r = Cgt{7};
+
 if is_show
     figure(1);
     cmap = colormap;
@@ -96,11 +105,15 @@ for i = 1:seq_num
             dres_track.state{j} = 'active';
             fprintf('target %d enter\n', ID);
         end
+        mota = MDP_mota(i, dres_gt, dres_track);
+        fprintf('mota %f\n', mota);
     else
         % find targets in the previous frame
-        index = find(dres_track.fr == i-1 & ~strcmp('inactive', dres_track.state));
+        index = find(~strcmp('inactive', dres_track.state));
         % select an action for each target
         num = numel(index);
+        actions_all = cell(num, 1);
+        index_det_all = zeros(num, 1);
         for j = 1:num
             % find the possible actions for this target
             actions = MDP.actable_actions(MDP, dres_track.state{index(j)});
@@ -112,7 +125,16 @@ for i = 1:seq_num
             for k = 1:num_action
                 qscores(k) = MDP_qscore(MDP, dres_track, index(j), dres, index_det(k), actions{k});
             end
+            [~, ind] = max(qscores);
+            actions_all{j} = actions{ind};
+            index_det_all(j) = index_det(ind);
         end
+        % execuate the actions
+        dres_track = MDP_execute_action(MDP, dres_track, index, dres, actions_all, index_det_all);
+        % compute reward
+        mota_new = MDP_mota(i, dres_gt, dres_track);
+        reward = mota_new - mota;
+        fprintf('mota %f, reward %f\n', mota_new, reward);
     end
     
     % show tracking results
