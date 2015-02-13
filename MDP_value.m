@@ -1,10 +1,12 @@
 % compute the value function
-function [qscores_all, actions_all, index_det_all] = MDP_value(MDP, dres_track, index, dres)
+function [qscore, f, actions_all, index_det_all] = MDP_value(MDP, dres_track, dres, dres_image, is_random)
 
+index = find(~strcmp('inactive', dres_track.state));
 num_det = numel(dres.x);
 % select an action for each target
 num = numel(index);
 qscores_all = zeros(num, 1);
+fs_all = cell(num, 1);
 actions_all = cell(num, 1);
 index_det_all = zeros(num, 1);
 for i = 1:num
@@ -14,12 +16,32 @@ for i = 1:num
     [actions, index_det] = MDP.expand_link(actions, num_det);
     % select the action maximizing the Q-function
     num_action = numel(actions);
-    qscores = zeros(num_action, 1);
-    for k = 1:num_action
-        qscores(k) = MDP_qscore(MDP, dres_track, index(i), dres, index_det(k), actions{k});
+    if is_random == 0
+        qscores = zeros(num_action, 1);
+        fs = cell(num_action, 1);
+        for k = 1:num_action
+            [qscores(k), fs{k}] = MDP_qscore(MDP, dres_track, index(i), dres, index_det(k), actions{k}, dres_image);
+        end
+        [q, ind] = max(qscores);
+        qscores_all(i) = q;
+        fs_all{i} = fs{ind};
+        actions_all{i} = actions{ind};
+        index_det_all(i) = index_det(ind);
+    else
+        ind = randi(num_action, 1);
+        actions_all{i} = actions{ind};
+        index_det_all(i) = index_det(ind);        
+        [qscores_all(i), fs_all{i}] = MDP_qscore(MDP, dres_track, index(i), dres, ...
+            index_det(ind), actions{ind}, dres_image);
     end
-    [q, ind] = max(qscores);
-    qscores_all(i) = q;
-    actions_all{i} = actions{ind};
-    index_det_all(i) = index_det(ind);
+end
+
+% sum qscore and features
+qscore = mean(qscores_all);
+f = zeros(MDP.fnum, 1);
+for i = 1:num
+    f = f + fs_all{i};
+end
+if num
+    f = f/num;
 end

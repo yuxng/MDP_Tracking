@@ -2,7 +2,11 @@ function MDP = MDP_initialize()
 
 MDP.states = {'active', 'tracked', 'lost', 'inactive'};
 MDP.actions = {'link', 'hold', 'terminate'}; % link action is composite
-MDP.fnum = 6;
+MDP.T = 100;
+MDP.gamma = 0.5;
+MDP.alpha = 0.01;
+MDP.epsilon = 0.1;
+MDP.fnum = 8;
 MDP.weights = rand(MDP.fnum, 1); 
 MDP.actable_actions = @MDP_actable_actions;  % function handler
 MDP.transition = @MDP_transition;  % function handler
