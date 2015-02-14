@@ -23,7 +23,7 @@ dres_all.x = C{3};
 dres_all.y = C{4};
 dres_all.w = C{5};
 dres_all.h = C{6};
-dres_all.r = C{7};
+dres_all.r = C{7} / opt.det_normalization;
 num_det = numel(dres_all.fr);
 dres_all.state = cell(num_det, 1);
 dres_all.lost = zeros(num_det, 1);
@@ -49,11 +49,9 @@ if is_show
     figure(1);
     cmap = colormap;
 end
-ID = 0;
-dres_track = [];
-
 
 for t = 1:MDP.T
+    dres_track = [];
     fprintf('iter %d\n', t);
     for i = 1:seq_num
         % extract detections
@@ -69,7 +67,8 @@ for t = 1:MDP.T
         dres_image.x = 1;
         dres_image.y = 1;
         dres_image.w = size(I, 2);
-        dres_image.h = size(I, 1);    
+        dres_image.h = size(I, 1);
+        dres_image.I = I;
 
         % show ground truth
         if is_show
@@ -109,6 +108,7 @@ for t = 1:MDP.T
         if i == 1
             % initialization
             dres_track = dres;
+            ID = 0;
             for j = 1:num_det
                 ID = ID + 1;
                 dres_track.id(j) = ID;
@@ -118,21 +118,13 @@ for t = 1:MDP.T
             end
         else
             % compute value function
-            if rand(1) < MDP.epsilon
-                is_random = 1;
-                fprintf('random action\n');
-            else
-                is_random = 0;
-            end
-            [qscore, f, actions_all, index_det_all] = MDP_value(MDP, dres_track, dres, dres_image, is_random);
-            % execuate the actions
-            dres_track = MDP_execute(MDP, dres_track, dres, actions_all, index_det_all);
+            [qscore, f, dres_track] = MDP_value(MDP, dres_track, dres, dres_image, opt, 1);
 
             % compute the value for the new state
             if i ~= seq_num
                 reward = -1;
                 dres_next = sub(dres_all, find(dres_all.fr == i+1)); 
-                qscore_new = MDP_value(MDP, dres_track, dres_next, dres_image, 0);
+                qscore_new = MDP_value(MDP, dres_track, dres_next, dres_image, opt, 0);
                 fprintf('qscore %f, qscore_new %f, reward %f\n', qscore, qscore_new, reward);
                 difference = reward + MDP.gamma * qscore_new - qscore;
             else
@@ -151,7 +143,8 @@ for t = 1:MDP.T
             imshow(I);
             title('Tracking');
             hold on;
-            index = find(dres_track.fr == i & strcmp('tracked', dres_track.state));
+            index = find(dres_track.fr == i & ...
+                (strcmp('tracked', dres_track.state) | strcmp('active', dres_track.state)));
             for j = 1:numel(index)
                 x = dres_track.x(index(j));
                 y = dres_track.y(index(j));
@@ -194,7 +187,7 @@ for t = 1:MDP.T
         end
 
         if is_show
-            pause(0.5);
+            pause();
         end
     end
 end

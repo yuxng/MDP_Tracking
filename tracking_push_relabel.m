@@ -3,7 +3,7 @@ function res = tracking_push_relabel(dres, c_en, c_ex, betta, tr_num)
 dnum = length(dres.x);
 
 % cost for each detection window
-dres.c = betta - dres.r; 
+dres.c = -betta * dres.r; 
 
 % The mex function works with large numbers.
 dres.c  = dres.c  *1e6;
@@ -30,7 +30,7 @@ end
 for i=1:dnum
     f2 = dres.nei(i).inds;
     for j = 1:length(f2)
-        c_ij = dres.nei(i).scores(j) * (1e6);
+        c_ij = -dres.nei(i).scores(j) * 1e6;
         k_dat = k_dat + 1;
         dat_in(k_dat,:) = [2*f2(j)+1 2*i c_ij];  % transition edge
     end
@@ -73,15 +73,13 @@ end
 res_inds  = res_inds(1:k);    % only these detection windows are used in tracks.
 res_ids   = res_ids(1:k);     % track id for each detection window
 
-% res = sub(dres, res_inds);
-% res.id = res_ids_sorted(:);
-
 res.x = dres.x;
 res.y = dres.y;
 res.w = dres.w;
 res.h = dres.h;
 res.r = dres.r;
 res.fr = dres.fr;
-res.status = dres.status;
+res.state = dres.state;
 res.id = -1 * ones(numel(dres.x), 1);
 res.id(res_inds) = res_ids;
+res.nei = dres.nei;

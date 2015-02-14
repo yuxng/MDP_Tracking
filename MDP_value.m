@@ -1,47 +1,86 @@
 % compute the value function
-function [qscore, f, actions_all, index_det_all] = MDP_value(MDP, dres_track, dres, dres_image, is_random)
+function [qscore, f, dres_track] = MDP_value(MDP, dres_track, dres_det, dres_image, opt, is_display)
 
+for i = 1:numel(dres_det.x)
+    dres_det.state{i} = 'active';
+end
+dres_track = concatenate_dres(dres_track, dres_det);
 index = find(~strcmp('inactive', dres_track.state));
-num_det = numel(dres.x);
-% select an action for each target
-num = numel(index);
-qscores_all = zeros(num, 1);
-fs_all = cell(num, 1);
-actions_all = cell(num, 1);
-index_det_all = zeros(num, 1);
-for i = 1:num
-    % find the possible actions for this target
-    actions = MDP.actable_actions(MDP, dres_track.state{index(i)});
-    % for link action, it should be expanded according to detections
-    [actions, index_det] = MDP.expand_link(actions, num_det);
-    % select the action maximizing the Q-function
-    num_action = numel(actions);
-    if is_random == 0
-        qscores = zeros(num_action, 1);
-        fs = cell(num_action, 1);
-        for k = 1:num_action
-            [qscores(k), fs{k}] = MDP_qscore(MDP, dres_track, index(i), dres, index_det(k), actions{k}, dres_image);
+dres = sub(dres_track, index);
+
+% select the action with network flow
+% adding transition links to the graph by fiding overlapping detections in consequent frames.
+[dres, tr_num] = build_graph(MDP, dres, dres_image);
+
+% setting parameters for tracking
+c_en = 10;     % birth cost
+c_ex = 10;     % death cost
+betta_index = 5;
+betta = MDP.weights(betta_index);   % betta
+
+dres_track_tmp = tracking_push_relabel(dres, c_en, c_ex, betta, tr_num);
+
+% compute feature vector
+f = zeros(MDP.fnum, 1);
+
+% process tracking results
+ids = unique(dres_track_tmp.id);
+% for each track
+for i = 1:numel(ids)
+    if ids(i) == -1  % unmatched detection
+        index_unmatched = find(dres_track_tmp.id == -1);
+        ID = max(dres_track.id);
+        for j = 1:numel(index_unmatched)
+            dres_track.id(index(index_unmatched(j))) = ID + j;
+            dres_track.tracked(index(index_unmatched(j))) = 1;
+            if is_display
+                fprintf('target %d enter\n', ID+j);
+            end
         end
-        [q, ind] = max(qscores);
-        qscores_all(i) = q;
-        fs_all{i} = fs{ind};
-        actions_all{i} = actions{ind};
-        index_det_all(i) = index_det(ind);
     else
-        ind = randi(num_action, 1);
-        actions_all{i} = actions{ind};
-        index_det_all(i) = index_det(ind);        
-        [qscores_all(i), fs_all{i}] = MDP_qscore(MDP, dres_track, index(i), dres, ...
-            index_det(ind), actions{ind}, dres_image);
+        matched = find(dres_track_tmp.id == ids(i));
+        if numel(matched) == 1  % unmatched track
+            if is_display
+                fprintf('target %d unmatched\n', dres_track.id(index(matched)));
+            end
+            % target lost
+            dres_track.lost(index(matched)) = dres_track.lost(index(matched)) + 1;
+            if dres_track.lost(index(matched)) > opt.lost
+                dres_track.state{index(matched)} = 'inactive';  % end target
+                if is_display
+                    fprintf('target %d ended\n', dres_track.id(index(matched)));
+                end
+                % check if removing the target
+                if dres_track.tracked(index(matched)) < opt.tracked
+                    if is_display
+                        fprintf('target %d is tracked less than %d frames\n', ...
+                            dres_track.id(index(matched)), opt.tracked);
+                    end
+                end
+            else
+                dres_track.state{index(matched)} = 'lost';
+            end
+            % update feature
+            f(betta_index) = f(betta_index) + dres_track.r(index(matched));
+        else  % matched track and detection
+            ind1 = index(matched(1));
+            ind2 = index(matched(2));
+            dres_track.id(ind2) = dres_track.id(ind1);
+            dres_track.state{ind1} = 'inactive';
+            dres_track.tracked(ind2) = dres_track.tracked(ind1) + 1;
+            dres_track.lost(ind2) = 0;
+            dres_track.state{ind2} = 'tracked';
+            if is_display
+                fprintf('target %d matched to detection with score %.2f\n', ...
+                    dres_track.id(ind2), dres_track.r(ind2));
+            end
+            % update feature
+            f(1:4) = f(1:4) + dres_track_tmp.nei(matched(2)).features{matched(1)}';
+            f(betta_index) = f(betta_index) + dres_track.r(ind1) + dres_track.r(ind2);
+        end
     end
 end
+f = f / tr_num;
 
-% sum qscore and features
-qscore = mean(qscores_all);
-f = zeros(MDP.fnum, 1);
-for i = 1:num
-    f = f + fs_all{i};
-end
-if num
-    f = f/num;
-end
+% compute qscore
+qscore = dot(MDP.weights, f);
