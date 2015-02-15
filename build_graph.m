@@ -60,4 +60,4 @@ for i = 1:length(f1)
 end
 
 % detection scores
-dres.c = MDP.weights(5) * dres.r + MDP.weights(6);
+dres.c = MDP.weights(5) * dres.r;

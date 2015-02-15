@@ -8,13 +8,12 @@ MDP.expand_link = @MDP_expand_link;  % function handler
 
 % learning parameters
 MDP.T = 3;
-MDP.intervals = [10, 20, 30];
+MDP.intervals = [5, 20, 30];
 MDP.gamma = 0.5;
 MDP.alpha = 0.01;
 MDP.epsilon = 0.1;
-MDP.fnum = 6;
+MDP.fnum = 5;
 MDP.weights = rand(MDP.fnum, 1);
-MDP.weights(6) = 0;  % bias for detection score
 
 % tracking parameters
 MDP.threshold_dis = 50;

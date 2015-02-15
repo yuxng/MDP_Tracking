@@ -90,7 +90,6 @@ for i = 1:numel(ids)
             end
             % update feature
             f(betta_index) = f(betta_index) + dres_track.r(ind);
-            f(betta_index+1) = f(betta_index+1) + 1;
         else  % matched track and detection
             ind1 = index(matched(1));
             ind2 = index(matched(2));
@@ -107,7 +106,6 @@ for i = 1:numel(ids)
             ind = dres_track_tmp.nei(matched(2)).inds == matched(1);
             f(1:4) = f(1:4) + dres_track_tmp.nei(matched(2)).features{ind}';
             f(betta_index) = f(betta_index) + 0.5*dres_track.r(ind1) + 0.5*dres_track.r(ind2);
-            f(betta_index+1) = f(betta_index+1) + 1;
         end
     end
 end

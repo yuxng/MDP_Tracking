@@ -129,7 +129,7 @@ for t = 1:MDP.T
                 difference = reward + MDP.gamma * qscore_new - qscore;
             else
                 reward = MDP_mota(i-MDP.intervals(t)+1, i, dres_gt, dres_track);
-                fprintf('qscore %f, qscore_new %f, \n\nreward %f\n\n', qscore, qscore_new, reward);
+                fprintf('qscore %f, \n\nreward %f\n\n', qscore, reward);
                 difference = reward - qscore;
             end
 
