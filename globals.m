@@ -15,7 +15,7 @@ opt.mot2d_test_seqs = {'TUD-Crossing', 'PETS09-S2L2', 'ETH-Jelmoli', ...
 opt.mot2d_test_nums = [201, 436, 440, 1194, 219, 450, 500, 625, 209, 1059, 450];
 
 % tracking parameters
-opt.lost = 50;
+opt.lost = 10;
 opt.lost_online = 2;
 opt.tracked = 4;
 opt.min_err_threshold = 2;

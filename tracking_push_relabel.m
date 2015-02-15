@@ -1,12 +1,9 @@
-function res = tracking_push_relabel(dres, c_en, c_ex, betta, tr_num)
+function res = tracking_push_relabel(dres, c_en, c_ex)
 
 dnum = length(dres.x);
 
-% cost for each detection window
-dres.c = -betta * dres.r; 
-
 % The mex function works with large numbers.
-dres.c  = dres.c  *1e6;
+dres.c  = -dres.c  *1e6;
 c_en    = c_en    *1e6;
 c_ex    = c_ex    *1e6;
 
@@ -16,14 +13,9 @@ n_nodes = 2*dnum+2;
 % each row represents an edge from node in column 1 to node in column 2 with cost in column 3
 dat_in = zeros(10000, 3); 
 k_dat = 0;
-for i = 1:tr_num
+for i = 1:dnum
     k_dat = k_dat+3;
     dat_in(k_dat-2,:) = [1      2*i     c_en      ];  % source edge
-    dat_in(k_dat-1,:) = [2*i    2*i+1   dres.c(i) ];  % detection edge
-    dat_in(k_dat,:)   = [2*i+1  n_nodes c_ex      ];  % sink edge
-end
-for i = tr_num+1:dnum
-    k_dat = k_dat+2;
     dat_in(k_dat-1,:) = [2*i    2*i+1   dres.c(i) ];  % detection edge
     dat_in(k_dat,:)   = [2*i+1  n_nodes c_ex      ];  % sink edge
 end
@@ -41,8 +33,29 @@ dat_in = [dat_in repmat([0 1],size(dat_in,1),1)];
 % push flow in the first node and collect it in the last node
 excess_node = [1 n_nodes];
 
-% run push-relabel algorithm
-[~, dat1] = cs2_func(dat_in(1:k_dat,:), excess_node, [tr_num -tr_num]);
+k = 0;
+lb = 1;
+ub = dnum;
+% bisection search for the optimum amount of flow. 
+% This can be implemented by Golden section search more efficiently.
+while ub - lb > 1     
+    tr_num = round((lb + ub) / 2);
+    % run push-relabel algorithm
+    [cost_l, dat_l] = cs2_func(dat_in(1:k_dat,:), excess_node, [tr_num -tr_num]);      %% try flow = tr_num
+    [cost_u, dat_u] = cs2_func(dat_in(1:k_dat,:), excess_node, [tr_num+1 -tr_num-1]);  %% try flow = tr_num+1
+    if cost_u - cost_l > 0
+        ub = tr_num;
+    else
+        lb = tr_num;
+    end
+    k = k + 1;
+end
+
+if cost_u < cost_l
+    dat1 = dat_u;
+else
+    dat1 = dat_l;
+end
 
 % backtrack tracks to get ids
 tmp   = find( dat1(:, 1) == 1);

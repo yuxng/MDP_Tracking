@@ -51,8 +51,7 @@ if is_show
 end
 
 for t = 1:MDP.T
-    dres_track = [];
-    fprintf('iter %d\n', t);
+    fprintf('iter %d, interval %d\n', t, MDP.intervals(t));
     for i = 1:seq_num
         % extract detections
         index = find(dres_all.fr == i);
@@ -105,7 +104,8 @@ for t = 1:MDP.T
             hold off;
         end
 
-        if i == 1
+        if mod(i, MDP.intervals(t)) == 1
+            fprintf('initialization\n');
             % initialization
             dres_track = dres;
             ID = 0;
@@ -118,17 +118,17 @@ for t = 1:MDP.T
             end
         else
             % compute value function
-            [qscore, f, dres_track] = MDP_value(MDP, dres_track, dres, dres_image, opt, 1);
+            [qscore, f, dres_track] = MDP_value(MDP, dres_track, dres, dres_image, 1);
 
             % compute the value for the new state
-            if i ~= seq_num
+            if mod(i, MDP.intervals(t)) ~= 0 && i ~= seq_num
                 reward = -1;
                 dres_next = sub(dres_all, find(dres_all.fr == i+1)); 
-                qscore_new = MDP_value(MDP, dres_track, dres_next, dres_image, opt, 0);
+                qscore_new = MDP_value(MDP, dres_track, dres_next, dres_image, 0);
                 fprintf('qscore %f, qscore_new %f, reward %f\n', qscore, qscore_new, reward);
                 difference = reward + MDP.gamma * qscore_new - qscore;
             else
-                reward = MDP_mota(i, dres_gt, dres_track);
+                reward = MDP_mota(i-MDP.intervals(t)+1, i, dres_gt, dres_track);
                 fprintf('qscore %f, qscore_new %f, \n\nreward %f\n\n', qscore, qscore_new, reward);
                 difference = reward - qscore;
             end
