@@ -1,33 +1,20 @@
 % build the graph between two consecutive frames
-function dres = build_graph(MDP, dres, dres_image)
+function dres = build_graph(model, dres, dres_image, opt)
 
 fmax = max(dres.fr);
 f1 = find(dres.fr == fmax);   % indices for detections on this frame
 f2 = find(dres.fr < fmax);   % indices for detections on the previous frames
 tr_num = numel(f2);
 
-% compute features for the dres
-n = numel(dres.x);
-centers = cell(n, 1);
-hists = cell(n, 1);
-for i = 1:n
-    centers{i} = [dres.x(i)+dres.w(i)/2 dres.y(i)+dres.h(i)/2];
-    I = imcrop(dres_image.I, [dres.x(i) dres.y(i) dres.w(i) dres.h(i)]);
-    I = imresize(I, [24 12]);
-    hists{i} = rgbhist(I, 4, 1)';
-end
-
 for i = 1:length(f1)
-    % detection center
-    cdet = centers{f1(i)};
-    
     % compute distances
+    cdet = dres.centers{f1(i)};
     distances = zeros(tr_num, 1);
     for j = 1:tr_num
-        ctrack = centers{f2(j)};
+        ctrack = dres.centers{f2(j)};
         distances(j) = norm(cdet - ctrack);
     end
-    index = find(distances < MDP.threshold_dis);
+    index = find(distances < opt.threshold_dis);
     num = numel(index);
     
     % each detction window will have a list of indices pointing to its neighbors in the previous frame.
@@ -46,18 +33,19 @@ for i = 1:length(f1)
         
         % aspect ratio between detection and track
         ratio = dres.h(f1(i)) ./ dres.h(f2(ind));
-        ratio  = min(ratio, 1/ratio);
+        ratio = min(ratio, 1/ratio);
         
         % chi square distance between color histogram
-        chisq = -distChiSq(hists{f1(i)}, hists{f2(ind)});
+        chisq = -distChiSq(dres.hists{f1(i)}, dres.hists{f2(ind)});
         
         dres.nei(f1(i),1).features{j} = [overlap, distance, ratio, chisq];
-        dres.nei(f1(i),1).scores(j) = MDP.weights(1) * overlap + ...
-            MDP.weights(2) * distance + ...
-            MDP.weights(3) * ratio + ...
-            MDP.weights(4) * chisq;
+        dres.nei(f1(i),1).scores(j) = model.weights(model.f_overlap) * overlap + ...
+            model.weights(model.f_distance) * distance + ...
+            model.weights(model.f_ratio) * ratio + ...
+            model.weights(model.f_color) * chisq;
     end
 end
 
 % detection scores
-dres.c = MDP.weights(5) * dres.r;
+dres.c = model.weights(model.f_det) * dres.r + ...
+    model.weights(model.f_cover) * dres.covers + model.weights(model.f_bias);

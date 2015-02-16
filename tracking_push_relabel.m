@@ -4,8 +4,8 @@ dnum = length(dres.x);
 
 % The mex function works with large numbers.
 dres.c  = -dres.c  *1e6;
-c_en    = c_en    *1e6;
-c_ex    = c_ex    *1e6;
+c_en    = -c_en    *1e6;
+c_ex    = -c_ex    *1e6;
 
 % number of nodes in the graph
 n_nodes = 2*dnum+2; 
@@ -83,8 +83,8 @@ for i = 1:length(start)    % for each track
         end
     end
 end
-res_inds  = res_inds(1:k);    % only these detection windows are used in tracks.
-res_ids   = res_ids(1:k);     % track id for each detection window
+res_inds = res_inds(1:k);    % only these detection windows are used in tracks.
+res_ids = res_ids(1:k);     % track id for each detection window
 
 res.x = dres.x;
 res.y = dres.y;
