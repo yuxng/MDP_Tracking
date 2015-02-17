@@ -116,7 +116,9 @@ for i = 1:numel(ids)
             % aspect ratio between detection and track
             features(model.f_ratio) = features(model.f_ratio) + dres_track_tmp.nei(matched(2)).features{ind}(3);
             % chi square distance between color histogram
-            features(model.f_color) = features(model.f_color) + dres_track_tmp.nei(matched(2)).features{ind}(4);            
+            features(model.f_color) = features(model.f_color) + dres_track_tmp.nei(matched(2)).features{ind}(4);
+            % reconstruction error
+            features(model.f_recon) = features(model.f_recon) + dres_track_tmp.nei(matched(2)).features{ind}(5);            
         end
     end
 end

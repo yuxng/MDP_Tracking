@@ -92,12 +92,14 @@ for i = 1:size(match_track,1)
             features(model.f_cover) = features(model.f_cover) + dres_track.covers(ind);
             features(model.f_bias) = features(model.f_bias) + 1;
         else  % matched track and detection
+            fprintf('target %d matched with detection %f\n', ...
+                dres_track.id(ind), dres_det.r(ind_det));
+            
             dres_det.id(ind_det) = dres_track.id(ind);
+            dres_det.lost(ind_det) = 0;
             dres_det.tracked(ind_det) = dres_track.tracked(ind) + 1;
             dres_det.state(ind_det) = 1;
             dres_track.state(ind) = 0;
-            fprintf('target %d matched with detection %f\n', ...
-                dres_track.id(ind), dres_det.r(ind_det));
             
             % update features
             features(model.f_start) = features(model.f_start) + 1;
@@ -110,7 +112,7 @@ for i = 1:size(match_track,1)
             overlap = calc_overlap(dres_track, ind, dres_det, ind_det);
             features(model.f_overlap) = features(model.f_overlap) + overlap;
             % distance between detection and track
-            ctrack = dres_track.centers{ind};
+            ctrack = apply_motion_prediction(dres_image.fr, dres_track, dres_track.id(ind));
             cdet = dres_det.centers{ind_det};
             distance = -norm(ctrack-cdet) / dres_image.h;
             features(model.f_distance) = features(model.f_distance) + distance;
@@ -121,6 +123,14 @@ for i = 1:size(match_track,1)
             % chi square distance between color histogram
             chisq = -distChiSq(dres_track.hists{ind}, dres_det.hists{ind_det});
             features(model.f_color) = features(model.f_color) + chisq;
+            % reconstruction error
+            id = dres_det.id(ind_det);
+            x1 = dres_det.x(ind_det);
+            y1 = dres_det.y(ind_det);
+            x2 = dres_det.x(ind_det) + dres_det.w(ind_det);
+            y2 = dres_det.y(ind_det) + dres_det.h(ind_det);            
+            err = 1 - L1APG_reconstruction_error(dres_image.I, model.templates{id}, x1, y1, x2, y2);
+            features(model.f_recon) = features(model.f_recon) + err;
         end
     end
 end
@@ -131,7 +141,7 @@ for i = 1:size(match_det,1)
         ID = ID + 1;
         dres_det.id(i) = ID;
         dres_det.tracked(i) = 1;
-        dres_det.state(i) = 1;
+        dres_det.state(i) = 1;  
         fprintf('target %d enter\n', ID);
         
         % update features

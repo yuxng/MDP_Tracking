@@ -1,4 +1,4 @@
-function [track_res, min_err, model] = L1APG_track_frame(img, model)
+function [track_res, min_err] = L1APG_track_frame(img, model)
 
 paraT = model.para;
 
@@ -9,7 +9,6 @@ rel_std_afnv = paraT.rel_std_afnv;
 nT = paraT.nT;
 
 % L1 function settings
-angle_threshold = paraT.angle_threshold;
 para.Lambda = model.Lambda;
 para.nT = paraT.nT;
 para.Lip = paraT.Lip;
@@ -27,7 +26,6 @@ Dict = model.Dict;
 Temp1 = model.Temp1;
 min_err = 0;
 
-tic
 %-Draw transformation samples from a Gaussian distribution
 aff_samples = ones(n_sample,1)*map_aff;
 sc			= sqrt(sum(map_aff(1:4).^2)/2);
@@ -40,12 +38,12 @@ if(sum(Y_inrange==0) == n_sample)
     sprintf('Target is out of the frame!\n');
 end
 
-[Y, Y_crop_mean, Y_crop_std] = whitening(Y);	 % zero-mean-unit-variance
-[Y, Y_crop_norm] = normalizeTemplates(Y);    % norm one
+Y = whitening(Y);	 % zero-mean-unit-variance
+Y = normalizeTemplates(Y);    % norm one
 
 %-L1-LS for each candidate target
 eta_max	= -inf;
-q   = zeros(n_sample,1); % minimal error bound initialization
+q = zeros(n_sample,1); % minimal error bound initialization
 
 % first stage L2-norm bounding
 for j = 1:n_sample
@@ -61,7 +59,7 @@ end
 [q, indq] = sort(q, 'descend');    
 
 % second stage
-p	= zeros(n_sample,1); % observation likelihood initialization
+p = zeros(n_sample,1); % observation likelihood initialization
 n = 1;
 tau = 0;
 while (n < n_sample) && (q(n) >= tau)        
@@ -76,76 +74,14 @@ while (n < n_sample) && (q(n) >= tau)
         continue;
     elseif(p(indq(n)) > eta_max)
         id_max	= indq(n);
-        c_max	= c;
         eta_max = p(indq(n));
         min_err = sum(D_s);
     end
     n = n + 1;
 end
 
-% resample according to probability
-map_aff = aff_samples(id_max,1:6); % target transformation parameters with the maximum probability
-a_max	= c_max(1:nT);
-[~, indA] = max(a_max);
-min_angle = images_angle(Y(:,id_max),A(:,indA));  
-
-%-Template update
-model.occlusionNf = model.occlusionNf - 1;
-level = 0.03;
-if( min_angle > angle_threshold && model.occlusionNf < 0 )
-    trivial_coef = c_max(nT+1:end);
-    trivial_coef = reshape(trivial_coef, [sz_T 3]);
-
-    trivial_coef = im2bw(trivial_coef, level);
-
-    se = [0 0 0 0 0;
-        0 0 1 0 0;
-        0 1 1 1 0;
-        0 0 1 0 0'
-        0 0 0 0 0];
-    trivial_coef = imclose(trivial_coef, se);
-
-    cc = bwconncomp(trivial_coef);
-    stats = regionprops(cc, 'Area');
-    areas = [stats.Area];
-
-    % occlusion detection 
-    if (max(areas) < round(0.25*prod(sz_T)))
-        fprintf('target %d update!\n', model.id);     
-        % find the tempalte to be replaced
-        [~,indW] = min(a_max(1:nT));
-
-        % insert new template
-        T(:,indW)	= Y(:,id_max);
-        T_mean(indW)= Y_crop_mean(id_max);
-        norms(indW) = Y_crop_std(id_max)*Y_crop_norm(id_max);
-
-        [T, ~] = normalizeTemplates(T);
-        A(:,1:nT)	= T;
-
-        %Temaplate Matrix
-        Temp = A;
-        Dict = Temp'*Temp;
-        Temp1 = T*pinv(T);
-
-        model.T = T;
-        model.T_mean = T_mean;
-        model.norms = norms;
-        model.A = A;
-        model.Temp = Temp;
-        model.Dict = Dict;
-        model.Temp1 = Temp1;
-    else
-        fprintf('target %d occlusion!\n', model.id);
-        model.occlusionNf = 5;
-        % update L2 regularized term
-        para.Lambda(3) = 0;
-    end
-elseif model.occlusionNf < 0
-    para.Lambda(3) = paraT.lambda(3);
-end
-model.Lambda = para.Lambda;
-model.map_aff = map_aff;
+% target transformation parameters with the maximum probability
+map_aff = aff_samples(id_max,1:6); 
 
 %-Store tracking result
 track_res = map_aff';

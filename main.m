@@ -2,13 +2,14 @@ function main
 
 opt = globals();
 
-is_train = 0;
+is_train = 1;
 if is_train
     model = model_initialize();
 else
     fprintf('load model\n');
     object = load('model.mat');
     model = object.model;
+    model.templates = cell(10000, 1);
 end
 
 seq_idx = 1;
@@ -64,8 +65,10 @@ else
     T = 1;
 end
 
+iter = 0;
 for t = 1:T
     for i = 1:seq_num
+        iter = iter + 1;
         % show image
         filename = fullfile(opt.mot, opt.mot2d, seq_set, seq_name, 'img1', sprintf('%06d.jpg', i));
         disp(filename);
@@ -76,10 +79,13 @@ for t = 1:T
         dres_image.w = size(I, 2);
         dres_image.h = size(I, 1);
         dres_image.I = I;
+        dres_image.fr = i;
 
         % extract detections
         index = find(dres_det.fr == i);
         dres = sub(dres_det, index);
+        % compute features
+        dres = model_compute_features(dres, dres_image);
         num_det = numel(index);    
 
         % show ground truth
@@ -98,14 +104,14 @@ for t = 1:T
             end
             hold off;
         end
-
+        
         % show detections
         if is_show
             subplot(2, 2, 2);
             imshow(I);
             title('Detections');
             hold on;    
-            for j = 1:num_det
+            for j = 1:numel(dres.x)
                 x = dres.x(j);
                 y = dres.y(j);
                 w = dres.w(j);
@@ -115,8 +121,7 @@ for t = 1:T
                 text(x, y, sprintf('%.2f', r), 'BackgroundColor',[.7 .9 .7]);
             end
             hold off;
-        end
-        dres = model_compute_features(dres, dres_image);
+        end        
 
         if i == 1
             fprintf('initialization\n');
@@ -128,6 +133,12 @@ for t = 1:T
                 dres_track.id(j) = ID;
                 dres_track.tracked(j) = 1;
                 dres_track.state(j) = 1;
+                % build appearance model for the initial targets
+                x1 = dres_track.x(j);
+                y1 = dres_track.y(j);
+                x2 = dres_track.x(j) + dres_track.w(j);
+                y2 = dres_track.y(j) + dres_track.h(j);
+                model.templates{ID} = L1APG_initialize(I, ID, x1, y1, x2, y2);                
                 fprintf('target %d enter\n', ID);
             end
             dres_track_gt = dres_track;
@@ -140,15 +151,48 @@ for t = 1:T
                 % update weights
                 X = features_gt - features;
                 if norm(X) > 0.001 && model.weights'*X < 1
-                    eta = 0.1 / (model.lambda * i);
+                    eta = 0.1 / (model.lambda * iter);
                     model.weights = (1 - eta * model.lambda) * model.weights + eta * X;
                     model.print_weights(model);
                 end
+                
+                % update templates
+                index = find(dres_track_gt.fr == i);
+                for j = 1:numel(index)
+                    ind = index(j);
+                    id = dres_track_gt.id(ind);
+                    x1 = dres_track_gt.x(ind);
+                    y1 = dres_track_gt.y(ind);
+                    x2 = dres_track_gt.x(ind) + dres_track_gt.w(ind);
+                    y2 = dres_track_gt.y(ind) + dres_track_gt.h(ind);
+                    if isempty(model.templates{id}) == 1
+                        model.templates{id} = L1APG_initialize(I, id, x1, y1, x2, y2);
+                    else
+                        model.templates{id} = L1APG_update(I, model.templates{id}, x1, y1, x2, y2);
+                    end
+                end
             else
-                dres_track_gt = tracking_oracle(model, dres_gt, dres_track, dres, dres_image, opt);
                 dres_track = tracking(model, dres_track, dres, dres_image, opt);
+                
+                % update templates
+                index = find(dres_track.fr == i);
+                for j = 1:numel(index)
+                    ind = index(j);
+                    id = dres_track.id(ind);
+                    x1 = dres_track.x(ind);
+                    y1 = dres_track.y(ind);
+                    x2 = dres_track.x(ind) + dres_track.w(ind);
+                    y2 = dres_track.y(ind) + dres_track.h(ind);
+                    if isempty(model.templates{id}) == 1
+                        model.templates{id} = L1APG_initialize(I, id, x1, y1, x2, y2);
+                    else
+                        model.templates{id} = L1APG_update(I, model.templates{id}, x1, y1, x2, y2);
+                    end
+                end
+                
+                dres_track_gt = dres_track;
             end
-        end
+        end   
 
         % show tracking results
         if is_show
@@ -199,7 +243,7 @@ for t = 1:T
         end
 
         if is_show
-            pause(0.2);
+            pause();
         end
         if is_train
             dres_track = dres_track_gt;

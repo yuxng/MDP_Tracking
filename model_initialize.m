@@ -9,14 +9,16 @@ model.f_overlap = 6;
 model.f_distance = 7;
 model.f_ratio = 8;
 model.f_color = 9;
+model.f_recon = 10;
 
-model.fnum = 9;
+model.fnum = 10;
 model.weights = rand(model.fnum, 1);
 model.weights(1) = 0;
 model.weights(2) = 0;
 model.lambda = 0.5;
-
 model.print_weights = @print_weights;
+
+model.templates = cell(10000, 1);
 
 function print_weights(model)
 

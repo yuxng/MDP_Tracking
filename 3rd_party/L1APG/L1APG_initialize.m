@@ -5,7 +5,7 @@ init_pos = [y1, y2, y1; x1 x1 x2];
 sz_T = [24 12];
 
 % parameters setting for tracking
-para.lambda = [0.2,0.001,10]; % lambda 1, lambda 2 for a_T and a_I respectively, lambda 3 for the L2 norm parameter
+para.lambda = [0.2, 0.001, 10]; % lambda 1, lambda 2 for a_T and a_I respectively, lambda 3 for the L2 norm parameter
 % set para.lambda = [a,a,0]; then this the old model
 para.angle_threshold = 40;
 para.Lip	= 8;

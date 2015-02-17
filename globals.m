@@ -25,7 +25,7 @@ opt.det_confident = 50;
 opt.det_normalization = 100;
 
 % parameters in building graph for network flow
-opt.threshold_ratio = 0.7;
+opt.threshold_ratio = 0.5;
 opt.threshold_dis = 50;
 opt.is_display = 1;
 
