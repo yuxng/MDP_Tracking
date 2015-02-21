@@ -37,7 +37,7 @@ end
 
 aff_samples = [aff_samples; model.map_aff];
 n_sample = size(aff_samples,1);
-[Y, Y_inrange] = crop_candidates(im2double(img), aff_samples(:,1:6), sz_T);
+[Y, Y_inrange] = crop_candidates(double(img), aff_samples(:,1:6), sz_T);
 if(sum(Y_inrange == 0) == n_sample)
     fprintf('Target is out of the frame!\n');
 end
@@ -78,5 +78,7 @@ model.Temp = Temp;
 model.Dict = Dict;
 model.Temp1 = Temp1;
 model.map_aff = 0.2*aff_samples(id_max,:) + 0.8*model.map_aff;
+model.aff_samples = ones(para.n_sample,1)*model.map_aff;
+model.occlusionNf = 0;
 
 id_max = index_samples(id_max);

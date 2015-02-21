@@ -2,7 +2,7 @@ function main
 
 opt = globals();
 
-is_train = 1;
+is_train = 0;
 if is_train
     model = model_initialize();
 else
@@ -243,7 +243,7 @@ for t = 1:T
         end
 
         if is_show
-            pause();
+            pause(0.2);
         end
         if is_train
             dres_track = dres_track_gt;

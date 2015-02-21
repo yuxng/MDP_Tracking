@@ -1,7 +1,7 @@
 function track_YOUTUBE
 
 close all;
-seq_name = 'FLUFFYJET_2';
+seq_name = 'FLUFFYJET_6';
 root_path = '/home/yuxiang/Projects/Multiview_Tracking/dataset/YOUTUBE/';
 
 %prepare the file name for each image
@@ -22,12 +22,12 @@ x2 = bbox(3);
 y2 = bbox(4);
 fclose(fid);
 img = imread(s_frames{1});
-model = L1APG_initialize(img, x1, y1, x2, y2);
+model = L1APG_initialize(img, 1, x1, y1, x2, y2);
 
 % main function for tracking
 for t = 2:nframes
     img = imread(s_frames{t});
-    [track_res, model] = L1APG_track_frame(img, model);
+    [track_res, err, model] = L1APG_track_frame(img, model);
     disp(track_res);
     pause;
 end
