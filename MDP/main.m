@@ -2,14 +2,13 @@ function main
 
 opt = globals();
 
-is_train = 0;
+is_train = 1;
 if is_train
     model = model_initialize();
 else
     fprintf('load model\n');
     object = load('model.mat');
     model = object.model;
-    model.templates = cell(10000, 1);
 end
 
 seq_idx = 1;
@@ -138,11 +137,40 @@ for t = 1:T
                 y1 = dres_track.y(j);
                 x2 = dres_track.x(j) + dres_track.w(j);
                 y2 = dres_track.y(j) + dres_track.h(j);
-                model.templates{ID} = L1APG_initialize(I, ID, x1, y1, x2, y2);                
+                model.tlds{ID} = TLD_initialize(I, i, ID, x1, y1, x2, y2);
                 fprintf('target %d enter\n', ID);
             end
             dres_track_gt = dres_track;
         else
+            % apply TLD trackers
+            index = find(dres_track.state == 1);
+            for j = 1:numel(index)
+                id = dres_track.id(index(j));
+                model.tlds{id} = TLD_process(model.tlds{id}, I, i);
+            end
+            
+            % show the TLD tracker results
+            if is_show
+                subplot(2, 2, 3);
+                imshow(I);
+                title('TLD Tracking');
+                hold on;
+                for j = 1:numel(index)
+                    id = dres_track.id(index(j));
+                    ind = i - model.tlds{id}.frame_id + 1;
+                    bb = model.tlds{id}.bb(:,ind);
+                    index_color = min(1 + floor((id-1) * size(cmap,1) / max(dres_track.id)), size(cmap,1));
+                    rectangle('Position', [bb(1) bb(2) bb(3)-bb(1) bb(4)-bb(2)], 'EdgeColor', cmap(index_color,:), 'LineWidth', 2);
+                    text(bb(1), bb(2), sprintf('%d', id), 'BackgroundColor',[.7 .9 .7]);
+                    % show the previous path
+                    ind = find(dres_track.id == id);
+                    centers = [dres_track.x(ind)+dres_track.w(ind)/2 ...
+                        dres_track.y(ind)+dres_track.h(ind)/2];
+                    plot(centers(:,1), centers(:,2), 'LineWidth', 2, 'Color', cmap(index_color,:));
+                end
+                hold off;
+            end
+            
             if is_train
                 % compute the best tracking result using GT
                 [dres_track_gt, features_gt] = tracking_oracle(model, dres_gt, dres_track, dres, dres_image, opt);
@@ -266,5 +294,6 @@ evaluateTracking({seq_name}, opt.results, benchmark_dir);
 
 % save model
 if is_train
+    model.tlds = cell(model.MAX_ID, 1);
     save('model.mat', 'model');
 end

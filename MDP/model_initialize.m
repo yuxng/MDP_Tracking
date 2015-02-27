@@ -1,5 +1,8 @@
 function model = model_initialize()
 
+rand('state', 0);
+randn('state', 0);
+
 model.f_start = 1;
 model.f_end = 2;
 model.f_det = 3;
@@ -18,7 +21,8 @@ model.weights(2) = 0;
 model.lambda = 0.5;
 model.print_weights = @print_weights;
 
-model.templates = cell(10000, 1);
+model.MAX_ID = 10000;
+model.tlds = cell(model.MAX_ID, 1);
 
 function print_weights(model)
 

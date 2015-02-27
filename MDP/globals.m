@@ -31,4 +31,4 @@ opt.is_display = 1;
 
 addpath(genpath('3rd_party/cs2'));
 addpath(fullfile(opt.mot, 'devkit', 'utils'));
-addpath(genpath('3rd_party/L1APG'));
+addpath(genpath('3rd_party/TLD'));
