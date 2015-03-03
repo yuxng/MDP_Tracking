@@ -1,11 +1,13 @@
-function dres_train = generate_training_data()
+function dres_train = generate_training_data(seq_idx, opt)
 
-seq_idx = 1;
-is_show = 1;
+is_show = 0;
 
-opt = globals();
 seq_name = opt.mot2d_train_seqs{seq_idx};
 seq_set = 'train';
+
+% read detections
+filename = fullfile(opt.mot, opt.mot2d, seq_set, seq_name, 'det', 'det.txt');
+dres_det = read_mot2dres(filename);
 
 % read ground truth
 filename = fullfile(opt.mot, opt.mot2d, seq_set, seq_name, 'gt', 'gt.txt');
@@ -21,6 +23,7 @@ for i = 1:numel(ids)
     % check if the target is occluded or not
     num = numel(dres.fr);
     dres.occluded = zeros(num, 1);
+    dres.overlap = zeros(num, 1);
     y = dres.y + dres.h;
     for j = 1:num
         fr = dres.fr(j);
@@ -29,21 +32,30 @@ for i = 1:numel(ids)
         if isempty(find(ov' > opt.overlap_occ & y(j) < y_gt(index), 1)) == 0
             dres.occluded(j) = 1;
         end
+        
+        % overlap with detections
+        index = find(dres_det.fr == fr);
+        overlap = calc_overlap(dres, j, dres_det, index);
+        dres.overlap(j) = max(overlap);
     end
-    dres_train{i} = dres;
+    
+    % start with bounding overlap > 0.5
+    index = find(dres.overlap > 0.5);
+    index_start = index(1);
+    dres_train{i} = sub(dres, index_start:num);
     
     % show gt
-%     if is_show
-%         for j = 1:num
-%             fr = dres.fr(j);
-%             filename = fullfile(opt.mot, opt.mot2d, seq_set, seq_name, 'img1', sprintf('%06d.jpg', fr));
-%             disp(filename);
-%             I = imread(filename);
-%             figure(1);
-%             show_dres(fr, I, 'GT', dres);
-%             pause;
-%         end
-%     end
+     if is_show
+        for j = 1:numel(dres_train{i}.fr)
+            fr = dres_train{i}.fr(j);
+            filename = fullfile(opt.mot, opt.mot2d, seq_set, seq_name, 'img1', sprintf('%06d.jpg', fr));
+            disp(filename);
+            I = imread(filename);
+            figure(1);
+            show_dres(fr, I, 'GT', dres_train{i});
+            pause;
+        end
+    end
 end
 
 % collect false alarms from detections

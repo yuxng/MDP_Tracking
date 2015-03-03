@@ -19,6 +19,7 @@ for i = 1:numel(index)
     y = dres.y(ind);
     w = dres.w(ind);
     h = dres.h(ind);
+    r = dres.r(ind);
     
     if isfield(dres, 'id') && dres.id(ind) > 0
         id = dres.id(ind);
@@ -27,6 +28,7 @@ for i = 1:numel(index)
         c = cmap(index_color,:);
     else
         c = 'g';
+        text(x, y, sprintf('%.2f', r), 'BackgroundColor',[.7 .9 .7]);
     end
     if isfield(dres, 'occluded') && dres.occluded(ind) > 0
         s = '--';

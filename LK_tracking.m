@@ -57,7 +57,11 @@ else
 end
 
 if tracker.flags(ind) == 1
-    fprintf('target %d: medFB %.2f %.2f %.2f %.2f %.2f\n', tracker.target_id, tracker.medFBs);
+    fprintf('target %d: medFB ', tracker.target_id);
+    for i = 1:tracker.num
+        fprintf('%.2f ', tracker.medFBs(i))
+    end
+    fprintf('\n');
 elseif tracker.flags(ind) == 2
     fprintf('target %d: bounding box out of image\n', tracker.target_id);
 elseif tracker.flags(ind) == 3

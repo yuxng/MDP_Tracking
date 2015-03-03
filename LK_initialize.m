@@ -1,17 +1,18 @@
 % initialize the LK tracker
-function tracker = LK_initialize(frame_id, target_id, x1, y1, x2, y2)
+function tracker = LK_initialize(tracker, frame_id, target_id, x1, y1, x2, y2)
 
 % template num
-num = 5;
+num = tracker.num;
 
 % tracker parameters
+tracker.threshold_ratio = 0.5;
+tracker.threshold_dis = 50;
 tracker.target_id = target_id;
-tracker.num = num;
 tracker.rescale_box = [0.6 0.8];
 tracker.bb = zeros(4,1);
 
 % initialize all the templates as the same
-tracker.frame_ids = frame_id * ones(num, 1);
+tracker.frame_ids = frame_id * int32(ones(num, 1));
 tracker.x1 = x1 * ones(num, 1);
 tracker.y1 = y1 * ones(num, 1);
 tracker.x2 = x2 * ones(num, 1);

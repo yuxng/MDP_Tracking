@@ -30,3 +30,10 @@ for i = 1:tracker.num
     tracker.medFBs(i) = medFB;
     tracker.medNCCs(i) = medNCC;
 end
+
+fprintf('LK association, target %d detection %.2f, medFBs ', ...
+    tracker.target_id, dres_det.r);
+for i = 1:tracker.num
+    fprintf('%.2f ', tracker.medFBs(i))
+end
+fprintf('\n');

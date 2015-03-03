@@ -20,7 +20,7 @@ medNCC = median2(xFJ(4,:)); % get median for NCC
 idxF   = xFJ(3,:) <= medFB & xFJ(4,:)>= medNCC; % get indexes of reliable points
 BB2    = bb_predict(BB1,xFI(:,idxF),xFJ(1:2,idxF)); % estimate BB2 using the reliable points only
 
-LK_show(I, J, xFI, BB1, xFJ, BB2);
+% LK_show(I, J, xFI, BB1, xFJ, BB2);
 
 % save selected points (only for display purposes)
 xFJ = xFJ(:, idxF);

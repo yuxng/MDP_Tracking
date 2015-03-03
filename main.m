@@ -60,7 +60,8 @@ for i = 1:seq_num
             y1 = dres_track.y(j);
             x2 = dres_track.x(j) + dres_track.w(j);
             y2 = dres_track.y(j) + dres_track.h(j);
-            trackers{id} = LK_initialize(i, id, x1, y1, x2, y2);
+            trackers{id} = MDP_initialize(size(I,2), size(I,1), dres_det);
+            trackers{id} = LK_initialize(trackers{id}, i, id, x1, y1, x2, y2);
             fprintf('target %d enter\n', id);
         end
     else
@@ -69,9 +70,13 @@ for i = 1:seq_num
         for j = 1:numel(index)
             ind = index(j);
             id = dres_track.id(ind);
-            % trackers{id} = LK_tracking(i, dres_image, dres, trackers{id});
-            dres_det = sub(dres, 1);
-            trackers{id} = LK_associate(i, dres_image, dres_det, trackers{id});
+            
+            for k = 1:num_det
+                dres_one = sub(dres, k);
+                trackers{id} = LK_associate(i, dres_image, dres_one, trackers{id});
+            end
+            
+            trackers{id} = LK_tracking(i, dres_image, dres, trackers{id});
         end
         
         % process tracking results
