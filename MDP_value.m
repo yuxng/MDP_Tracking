@@ -24,6 +24,7 @@ if tracker.state == 1
     % build the dres structure
     tracker.dres = sub(dres_det, index_det);
     tracker.dres.id = tracker.target_id;
+    tracker.dres.state = tracker.state;
 
 % tracked, decide to tracked or occluded
 elseif tracker.state == 2
@@ -40,6 +41,7 @@ elseif tracker.state == 2
     f(3*num+1) = 1;
     % compute qscore
     qscore = dot(tracker.w_tracked, f);
+    fprintf('qscore in tracked %.2f\n', qscore);
     % make a decision
     if qscore > 0
         tracker.state = 2;
@@ -51,12 +53,18 @@ elseif tracker.state == 2
         dres_one.w = tracker.bb(3) - tracker.bb(1);
         dres_one.h = tracker.bb(4) - tracker.bb(2);
         dres_one.r = 1;
+        dres_one.state = 2;
         tracker.dres = concatenate_dres(tracker.dres, dres_one);
         % update LK tracker
         tracker = LK_update(frame_id, tracker);        
     else
         qscore = -1 * qscore;
         tracker.state = 3;
+        dres_one = sub(tracker.dres, numel(tracker.dres.fr));
+        dres_one.fr = frame_id;
+        dres_one.id = tracker.target_id;
+        dres_one.state = 3;
+        tracker.dres = concatenate_dres(tracker.dres, dres_one);        
     end
     tracker.prev_state = 2;
 
@@ -86,7 +94,8 @@ elseif tracker.state == 3
         end
     end
     dres_one = sub(dres_det, index_det(min_index));
-    tracker = LK_associate(frame_id, dres_image, dres_one, tracker);    
+    tracker = LK_associate(frame_id, dres_image, dres_one, tracker);
+    fprintf('qscore in lost %.2f\n', qscore);
     
     % make a decision
     if qscore > 0
@@ -99,12 +108,18 @@ elseif tracker.state == 3
         dres_one.w = tracker.bb(3) - tracker.bb(1);
         dres_one.h = tracker.bb(4) - tracker.bb(2);
         dres_one.r = 1;
+        dres_one.state = 2;
         tracker.dres = concatenate_dres(tracker.dres, dres_one);
         % update LK tracker
         tracker = LK_update(frame_id, tracker);           
     else
         qscore = -1 * qscore;
         tracker.state = 3;
+        dres_one = sub(tracker.dres, numel(tracker.dres.fr));
+        dres_one.fr = frame_id;
+        dres_one.id = tracker.target_id;
+        dres_one.state = 3;
+        tracker.dres = concatenate_dres(tracker.dres, dres_one);          
     end
     tracker.prev_state = 3;
 end

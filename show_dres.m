@@ -1,5 +1,9 @@
 % draw dres structure
-function show_dres(frame_id, I, tit, dres)
+function show_dres(frame_id, I, tit, dres, state)
+
+if nargin < 5
+    state = 1;
+end
 
 cmap = colormap;
 imshow(I);
@@ -7,7 +11,7 @@ title(tit);
 hold on;
 
 if isfield(dres, 'state') == 1
-    index = find(dres.fr == frame_id & dres.state == 1);
+    index = find(dres.fr == frame_id & dres.state == state);
 else
     index = find(dres.fr == frame_id);
 end
