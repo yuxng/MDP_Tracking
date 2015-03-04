@@ -23,6 +23,11 @@ for i = 1:tracker.num
     BB1 = bb_rescale_relative(BB1, tracker.rescale_box);
     [BB2, xFJ, flag, medFB, medNCC] = LK(BB1, I, J);
     BB2 = bb_rescale_relative(BB2, 1./tracker.rescale_box);
+    if isnan(medFB) || isnan(medNCC) || ~bb_isdef(BB2)
+        medFB = inf;
+        medNCC = 0;
+        flag = 3;   % no test for target outside image
+    end
     
     tracker.bbs{i} = BB2;
     tracker.points{i} = xFJ;

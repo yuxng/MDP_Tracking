@@ -32,12 +32,13 @@ elseif tracker.state == 2
     tracker = LK_tracking(frame_id, dres_image, dres_det, tracker);
     % extract features
     f = zeros(tracker.fnum_tracked, 1);
+    w = compute_frame_weights(tracker);
     num = tracker.num;
     frame_ids = tracker.frame_ids;
     [~, index] = sort(frame_ids);
-    f(1:num) = tracker.medFBs(index);
-    f(num+1:2*num) = tracker.medNCCs(index);
-    f(2*num+1:3*num) = tracker.overlaps(index);
+    f(1:num) = w(index) .* exp(-tracker.medFBs(index) / tracker.fb_factor);
+    f(num+1:2*num) = w(index) .* tracker.medNCCs(index);
+    f(2*num+1:3*num) = w(index) .* tracker.overlaps(index);
     f(3*num+1) = 1;
     % compute qscore
     qscore = dot(tracker.w_tracked, f);
@@ -71,6 +72,7 @@ elseif tracker.state == 2
 % occluded, decide to tracked or occluded
 elseif tracker.state == 3
     f = zeros(tracker.fnum_occluded, 1);
+    w = compute_frame_weights(tracker);
     num = tracker.num;
     frame_ids = tracker.frame_ids;
     [~, index] = sort(frame_ids);    
@@ -78,6 +80,7 @@ elseif tracker.state == 3
     % LK association
     min_value = inf;
     min_index = -1;
+    qscore = 0;
     for i = 1:numel(index_det)
         dres_one = sub(dres_det, index_det(i));
         tracker = LK_associate(frame_id, dres_image, dres_one, tracker);
@@ -86,15 +89,17 @@ elseif tracker.state == 3
             min_value = value;
             min_index = i;
             % extract features
-            f(1:num) = tracker.medFBs(index);
-            f(num+1:2*num) = tracker.medNCCs(index);
+            f(1:num) = w(index) .* exp(-tracker.medFBs(index) / tracker.fb_factor);
+            f(num+1:2*num) = w(index) .* tracker.medNCCs(index);
             f(2*num+1) = 1;
             % compute qscore
             qscore = dot(tracker.w_occluded, f);
         end
     end
-    dres_one = sub(dres_det, index_det(min_index));
-    tracker = LK_associate(frame_id, dres_image, dres_one, tracker);
+    if min_index > 0
+        dres_one = sub(dres_det, index_det(min_index));
+        tracker = LK_associate(frame_id, dres_image, dres_one, tracker);
+    end
     fprintf('qscore in lost %.2f\n', qscore);
     
     % make a decision
@@ -122,4 +127,17 @@ elseif tracker.state == 3
         tracker.dres = concatenate_dres(tracker.dres, dres_one);          
     end
     tracker.prev_state = 3;
+end
+
+% compute weights for frame features
+function w = compute_frame_weights(tracker)
+
+num = tracker.num;
+w = zeros(num, 1);
+
+frame_ids = double(tracker.frame_ids);
+fr_max = max(frame_ids);
+
+for i = 1:num
+    w(i) = tracker.frame_weight ^ (fr_max - frame_ids(i));
 end

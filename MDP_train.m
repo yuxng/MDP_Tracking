@@ -26,7 +26,7 @@ I = dres_image.I{1};
 tracker = MDP_initialize(size(I,2), size(I,1), dres_det);
 
 % for each training sequence
-for t = 1:num_train
+for t = 6 * ones(1, 10) %1:num_train
     dres_gt = dres_train{t};
     
     % first frame
@@ -45,7 +45,19 @@ for t = 1:num_train
         % extract detection
         index = find(dres_det.fr == fr);
         dres = sub(dres_det, index);
-        num_det = numel(dres.fr);        
+        num_det = numel(dres.fr);
+        
+        % show results
+        if is_show
+            figure(1);
+            % show ground truth
+            subplot(2, 2, 1);
+            show_dres(fr, dres_image.I{fr}, 'GT', dres_gt);
+
+            % show detections
+            subplot(2, 2, 2);
+            show_dres(fr, dres_image.I{fr}, 'Detections', dres_det);
+        end
         
         if tracker.state == 0
             break;
@@ -82,6 +94,7 @@ for t = 1:num_train
                     reward = -1;
                 end
             end
+            fprintf('reward %.1f\n', reward);
             
             % update weights
             if tracker.state == 0 || fr == seq_num
@@ -89,8 +102,8 @@ for t = 1:num_train
             else
                 index = find(dres_det.fr == fr+1);
                 dres_next = sub(dres_det, index);                
-                [~, qscore_new] = MDP_value(tracker, fr+1, dres_image, dres_next, []);
-                difference = reward + tracker.gamma * qscore_new - qscore;                 
+                [~, qscore_new] = MDP_value(tracker, fr+1, dres_image, dres_next, []);            
+                difference = reward + tracker.gamma * qscore_new - qscore;
             end
             tracker = MDP_update(tracker, difference, f);
             
@@ -122,6 +135,7 @@ for t = 1:num_train
                     reward = -1;
                 end
             end
+            fprintf('reward %.1f\n', reward);
             
             % update weights
             is_end = 0;
@@ -141,17 +155,18 @@ for t = 1:num_train
                         j = j + 1;
                     end
                     if isempty(index_det) == 0
-                        [~, qscore_new] = MDP_value(tracker, fr+j, dres_image, dres_next, index_det);
+                        [~, qscore_new] = MDP_value(tracker, fr+j, dres_image, dres_next, index_det);                   
                         difference = reward + tracker.gamma * qscore_new - qscore;
                     else
                         difference = reward - qscore;
                         is_end = 1;
+                        fprintf('no detection to associate in the future, end target\n');
                     end
                 else
                     index = find(dres_det.fr == fr+1);
                     dres_next = sub(dres_det, index);
                     [~, qscore_new] = MDP_value(tracker, fr+1, dres_image, dres_next, []);
-                    difference = reward + tracker.gamma * qscore_new - qscore;                    
+                    difference = reward + tracker.gamma * qscore_new - qscore;
                 end
             end
             tracker = MDP_update(tracker, difference, f);
@@ -163,10 +178,9 @@ for t = 1:num_train
         elseif tracker.state == 3   
             % find a set of detections for association
             index_det = generate_association_index(tracker, fr, dres);
+            [tracker, qscore, f] = MDP_value(tracker, fr, dres_image, dres, index_det);
+
             if isempty(index_det) == 0
-
-                [tracker, qscore, f] = MDP_value(tracker, fr, dres_image, dres, index_det);
-
                 % check if any detection overlap with gt
                 index = find(dres_gt.fr == fr);
                 if isempty(index) == 1
@@ -197,6 +211,7 @@ for t = 1:num_train
                         reward = -1;
                     end
                 end
+                fprintf('reward %.1f\n', reward);
 
                 % update weights
                 is_end = 0;
@@ -215,17 +230,18 @@ for t = 1:num_train
                         j = j + 1;
                     end
                     if isempty(index_det) == 0
-                        [~, qscore_new] = MDP_value(tracker, fr+j, dres_image, dres_next, index_det);
+                        [~, qscore_new] = MDP_value(tracker, fr+j, dres_image, dres_next, index_det);                 
                         difference = reward + tracker.gamma * qscore_new - qscore;
                     else
                         difference = reward - qscore;
                         is_end = 1;
+                        fprintf('no detection to associate in the future, end target\n');
                     end                    
                 else
                     index = find(dres_det.fr == fr+1);
                     dres_next = sub(dres_det, index);
-                    [~, qscore_new] = MDP_value(tracker, fr+1, dres_image, dres_next, []);
-                    difference = reward + tracker.gamma * qscore_new - qscore;                    
+                    [~, qscore_new] = MDP_value(tracker, fr+1, dres_image, dres_next, []);                   
+                    difference = reward + tracker.gamma * qscore_new - qscore;
                 end
                 tracker = MDP_update(tracker, difference, f);
                 if is_end
@@ -234,16 +250,15 @@ for t = 1:num_train
             end
         end
         
+        % check if target outside image
+        if isempty(find(tracker.flags == 2, 1)) == 0
+            fprintf('target outside image\n');
+            tracker.state = 0;
+        end
+        
         % show results
         if is_show
-            figure(1);
-            % show ground truth
-            subplot(2, 2, 1);
-            show_dres(fr, dres_image.I{fr}, 'GT', dres_gt);
-
-            % show detections
-            subplot(2, 2, 2);
-            show_dres(fr, dres_image.I{fr}, 'Detections', dres_det);        
+            figure(1);     
 
             % show tracking results
             subplot(2, 2, 3);

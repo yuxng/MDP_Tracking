@@ -26,15 +26,21 @@ for i = 1:tracker.num
     BB1 = [tracker.x1(i); tracker.y1(i); tracker.x2(i); tracker.y2(i)];
     BB1 = bb_rescale_relative(BB1, tracker.rescale_box);
     [BB2, xFJ, flag, medFB, medNCC] = LK(BB1, I, J);
-    BB2 = bb_rescale_relative(BB2, 1./tracker.rescale_box);
-    
-    % compute overlap
-    dres.x = BB2(1);
-    dres.y = BB2(2);
-    dres.w = BB2(3) - BB2(1);
-    dres.h = BB2(4) - BB2(2);
-    overlap = calc_overlap(dres, 1, dres_det, 1:num_det);
-    [o, ind] = max(overlap);
+    BB2 = bb_rescale_relative(BB2, 1./tracker.rescale_box);    
+    if isnan(medFB) || isnan(medNCC) || ~bb_isdef(BB2)
+        medFB = inf;
+        medNCC = 0;
+        o = 0;
+        ind = 1;
+    else
+        % compute overlap
+        dres.x = BB2(1);
+        dres.y = BB2(2);
+        dres.w = BB2(3) - BB2(1);
+        dres.h = BB2(4) - BB2(2);
+        overlap = calc_overlap(dres, 1, dres_det, 1:num_det);
+        [o, ind] = max(overlap);
+    end
     
     tracker.bbs{i} = BB2;
     tracker.points{i} = xFJ;
@@ -56,14 +62,35 @@ else
     tracker.bb = tracker.bbs{ind};
 end
 
-if tracker.flags(ind) == 1
-    fprintf('target %d: medFB ', tracker.target_id);
-    for i = 1:tracker.num
-        fprintf('%.2f ', tracker.medFBs(i))
-    end
-    fprintf('\n');
-elseif tracker.flags(ind) == 2
+
+fprintf('\ntarget %d: frame ids ', tracker.target_id);
+for i = 1:tracker.num
+    fprintf('%d ', tracker.frame_ids(i))
+end
+fprintf('\n');    
+fprintf('target %d: medFB ', tracker.target_id);
+for i = 1:tracker.num
+    fprintf('%.2f ', tracker.medFBs(i))
+end
+fprintf('\n');
+fprintf('target %d: medNCC ', tracker.target_id);
+for i = 1:tracker.num
+    fprintf('%.2f ', tracker.medNCCs(i))
+end
+fprintf('\n');
+fprintf('target %d: overlap ', tracker.target_id);
+for i = 1:tracker.num
+    fprintf('%.2f ', tracker.overlaps(i))
+end
+fprintf('\n');    
+fprintf('target %d: flag ', tracker.target_id);
+for i = 1:tracker.num
+    fprintf('%d ', tracker.flags(i))
+end
+fprintf('\n');    
+
+if tracker.flags(ind) == 2
     fprintf('target %d: bounding box out of image\n', tracker.target_id);
 elseif tracker.flags(ind) == 3
-    fprintf('target %d: medFB %.2f, too unstable predictions\n', tracker.target_id, tracker.medFBs(ind));
+    fprintf('target %d: too unstable predictions\n', tracker.target_id);
 end

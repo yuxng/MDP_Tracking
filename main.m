@@ -71,10 +71,10 @@ for i = 1:seq_num
             ind = index(j);
             id = dres_track.id(ind);
             
-            for k = 1:num_det
-                dres_one = sub(dres, k);
-                trackers{id} = LK_associate(i, dres_image, dres_one, trackers{id});
-            end
+%             for k = 1:num_det
+%                 dres_one = sub(dres, k);
+%                 trackers{id} = LK_associate(i, dres_image, dres_one, trackers{id});
+%             end
             
             trackers{id} = LK_tracking(i, dres_image, dres, trackers{id});
         end
