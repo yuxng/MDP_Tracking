@@ -26,5 +26,5 @@ tracker.fnum_tracked = 3 * tracker.num + 1;
 tracker.w_tracked = rand(tracker.fnum_tracked, 1);
 
 % occluded
-tracker.fnum_occluded = 2 * tracker.num + 1;
+tracker.fnum_occluded = 4 * tracker.num + 1;
 tracker.w_occluded = rand(tracker.fnum_occluded, 1);

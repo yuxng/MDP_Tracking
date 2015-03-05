@@ -26,7 +26,7 @@ I = dres_image.I{1};
 tracker = MDP_initialize(size(I,2), size(I,1), dres_det);
 
 % for each training sequence
-for t = 6 * ones(1, 10) %1:num_train
+for t = 7 * ones(1, 10) %1:num_train
     dres_gt = dres_train{t};
     
     % first frame
@@ -75,7 +75,7 @@ for t = 6 * ones(1, 10) %1:num_train
             y1 = dres.y(ind);
             x2 = dres.x(ind) + dres.w(ind);
             y2 = dres.y(ind) + dres.h(ind);    
-            tracker = LK_initialize(tracker, fr, id, x1, y1, x2, y2);            
+            tracker = LK_initialize(tracker, fr, id, x1, y1, x2, y2, dres_image.Igray{fr});
             
             % qscore
             [tracker, qscore, f] = MDP_value(tracker, fr, dres_image, dres, ind);
@@ -181,6 +181,7 @@ for t = 6 * ones(1, 10) %1:num_train
             [tracker, qscore, f] = MDP_value(tracker, fr, dres_image, dres, index_det);
 
             if isempty(index_det) == 0
+                is_end = 0;
                 % check if any detection overlap with gt
                 index = find(dres_gt.fr == fr);
                 if isempty(index) == 1
@@ -199,7 +200,9 @@ for t = 6 * ones(1, 10) %1:num_train
                         if ov > 0.5
                             reward = 1;
                         else
-                            reward = -1;
+                            reward = -10;
+                            is_end = 1;
+                            fprintf('associated to wrong target! Game over\n');
                         end
                     else
                         reward = -1;
@@ -208,13 +211,14 @@ for t = 6 * ones(1, 10) %1:num_train
                     if tracker.state == 3
                         reward = 1;
                     else
-                        reward = -1;
+                        reward = -10;
+                        is_end = 1;
+                        fprintf('associated to wrong target! Game over\n');
                     end
                 end
                 fprintf('reward %.1f\n', reward);
 
                 % update weights
-                is_end = 0;
                 if fr == seq_num
                     difference = reward - qscore;
                 elseif tracker.state == 3

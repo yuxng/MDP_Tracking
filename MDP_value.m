@@ -10,7 +10,7 @@ if tracker.state == 1
     f(3) = dres_det.w(index_det) / tracker.max_width;
     f(4) = dres_det.h(index_det) / tracker.max_height;
     f(5) = dres_det.r(index_det) / tracker.max_score;
-    f(6) = 1;
+    f(6) = -1;
     % compute qscore
     qscore = dot(tracker.w_active, f);
     % make a decision
@@ -39,7 +39,7 @@ elseif tracker.state == 2
     f(1:num) = w(index) .* exp(-tracker.medFBs(index) / tracker.fb_factor);
     f(num+1:2*num) = w(index) .* tracker.medNCCs(index);
     f(2*num+1:3*num) = w(index) .* tracker.overlaps(index);
-    f(3*num+1) = 1;
+    f(3*num+1) = -1;
     % compute qscore
     qscore = dot(tracker.w_tracked, f);
     fprintf('qscore in tracked %.2f\n', qscore);
@@ -57,7 +57,7 @@ elseif tracker.state == 2
         dres_one.state = 2;
         tracker.dres = concatenate_dres(tracker.dres, dres_one);
         % update LK tracker
-        tracker = LK_update(frame_id, tracker);        
+        tracker = LK_update(frame_id, tracker, dres_image.Igray{frame_id});        
     else
         qscore = -1 * qscore;
         tracker.state = 3;
@@ -91,7 +91,9 @@ elseif tracker.state == 3
             % extract features
             f(1:num) = w(index) .* exp(-tracker.medFBs(index) / tracker.fb_factor);
             f(num+1:2*num) = w(index) .* tracker.medNCCs(index);
-            f(2*num+1) = 1;
+            f(2*num+1:3*num) = w(index) .* tracker.nccs(index);
+            f(3*num+1:4*num) = w(index) .* tracker.angles(index);
+            f(4*num+1) = -1;
             % compute qscore
             qscore = dot(tracker.w_occluded, f);
         end
@@ -116,7 +118,7 @@ elseif tracker.state == 3
         dres_one.state = 2;
         tracker.dres = concatenate_dres(tracker.dres, dres_one);
         % update LK tracker
-        tracker = LK_update(frame_id, tracker);           
+        tracker = LK_update(frame_id, tracker, dres_image.Igray{frame_id});           
     else
         qscore = -1 * qscore;
         tracker.state = 3;
