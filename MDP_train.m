@@ -13,17 +13,13 @@ seq_set = 'train';
 dres_image = read_dres_image(opt, seq_set, seq_name, seq_num);
 fprintf('read images done\n');
 
-% read detections
-filename = fullfile(opt.mot, opt.mot2d, seq_set, seq_name, 'det', 'det.txt');
-dres_det = read_mot2dres(filename);
-
 % generate training data
-dres_train = generate_training_data(seq_idx, opt);
+[dres_train, dres_det, labels] = generate_training_data(seq_idx, opt);
 num_train = numel(dres_train);
 
 % intialize tracker
 I = dres_image.I{1};
-tracker = MDP_initialize(size(I,2), size(I,1), dres_det);
+tracker = MDP_initialize(size(I,2), size(I,1), dres_det, labels);
 
 % for each training sequence
 iter = 0;
@@ -76,14 +72,10 @@ for t = 7 * ones(1, 50) %1:num_train
             fprintf('Start: first frame overlap %.2f\n', ov);
 
             % initialize the LK tracker
-            x1 = dres.x(ind);
-            y1 = dres.y(ind);
-            x2 = dres.x(ind) + dres.w(ind);
-            y2 = dres.y(ind) + dres.h(ind);    
-            tracker = LK_initialize(tracker, fr, id, x1, y1, x2, y2, dres_image.Igray{fr});
+            tracker = LK_initialize(tracker, fr, id, dres, ind, dres_image);
             
             % qscore
-            [tracker, qscore, f] = MDP_value(tracker, fr, dres_image, dres, ind);
+            [tracker, ~, f] = MDP_value(tracker, fr, dres_image, dres, ind);
 
             % compute reward
             if id == -1
@@ -92,25 +84,23 @@ for t = 7 * ones(1, 50) %1:num_train
                 else
                     reward = -1;
                 end
+                label = -1;
             else
                 if tracker.state == 2
                     reward = 1;
                 else
                     reward = -1;
                 end
+                label = 1;
             end
             fprintf('reward %.1f\n', reward);
             
             % update weights
-            if tracker.state == 0 || fr == seq_num
-                difference = reward - qscore;
-            else
-                index = find(dres_det.fr == fr+1);
-                dres_next = sub(dres_det, index);                
-                [~, qscore_new] = MDP_value(tracker, fr+1, dres_image, dres_next, []);            
-                difference = reward + tracker.gamma * qscore_new - qscore;
+            if reward == -1
+                tracker.factive(end+1,:) = f;
+                tracker.lactive(end+1) = label;
+                tracker.w_active = svmtrain(tracker.lactive, tracker.factive, '-c 1');
             end
-            tracker = MDP_update(tracker, difference, f);
             
         % tracked    
         elseif tracker.state == 2
@@ -143,30 +133,11 @@ for t = 7 * ones(1, 50) %1:num_train
             fprintf('reward %.1f\n', reward);
             
             % update weights
-            is_end = 0;
             if fr == seq_num
                 difference = reward - qscore;
             else
                 if tracker.state == 3
-                    j = 1;
-                    index_det = [];
-                    while fr+j <= seq_num
-                        index = find(dres_det.fr == fr+j);
-                        dres_next = sub(dres_det, index);
-                        index_det = generate_association_index(tracker, fr+j, dres_next);
-                        if isempty(index_det) == 0
-                            break;
-                        end
-                        j = j + 1;
-                    end
-                    if isempty(index_det) == 0
-                        [~, qscore_new] = MDP_value(tracker, fr+j, dres_image, dres_next, index_det);                   
-                        difference = reward + tracker.gamma * qscore_new - qscore;
-                    else
-                        difference = reward - qscore;
-                        is_end = 1;
-                        fprintf('no detection to associate in the future, end target\n');
-                    end
+                    difference = reward - qscore;
                 else
                     index = find(dres_det.fr == fr+1);
                     dres_next = sub(dres_det, index);
@@ -175,12 +146,9 @@ for t = 7 * ones(1, 50) %1:num_train
                 end
             end
             tracker = MDP_update(tracker, difference, f);
-            if is_end
-                tracker.state = 0;
-            end
             
         % occluded
-        elseif tracker.state == 3   
+        elseif tracker.state == 3
             % find a set of detections for association
             index_det = generate_association_index(tracker, fr, dres);
             [tracker, qscore, f] = MDP_value(tracker, fr, dres_image, dres, index_det);
@@ -208,21 +176,29 @@ for t = 7 * ones(1, 50) %1:num_train
                     if tracker.state == 2
                         % if the association is correct
                         ov = calc_overlap(dres_gt, index, tracker.dres, numel(tracker.dres.fr));
-                        if ov > 0.5
-                            reward = 10;
+                        if ov > 0.4
+                            reward = 1;
                         else
-                            reward = -10;
+                            reward = -1;
+                            label = -1;
                             is_end = 1;
                             fprintf('associated to wrong target! Game over\n');
                         end
                     else
-                        reward = -1;
+                        reward = -1;   % no association
+                        label = 1;
+                        % extract features
+                        [~, ind] = max(overlap);
+                        dres_one = sub(dres, index_det(ind));
+                        f = MDP_feature_occluded(fr, dres_image, dres_one, tracker);                        
+                        fprintf('Missed association!\n');
                     end
                 else
                     if tracker.state == 3
                         reward = 1;
                     else
-                        reward = -10;
+                        reward = -1;
+                        label = -1;
                         is_end = 1;
                         fprintf('associated to wrong target! Game over\n');
                     end
@@ -230,35 +206,13 @@ for t = 7 * ones(1, 50) %1:num_train
                 fprintf('reward %.1f\n', reward);
 
                 % update weights
-                if fr == seq_num
-                    difference = reward - qscore;
-                elseif tracker.state == 3
-                    j = 1;
-                    index_det = [];
-                    while fr+j <= seq_num
-                        index = find(dres_det.fr == fr+j);
-                        dres_next = sub(dres_det, index);
-                        index_det = generate_association_index(tracker, fr+j, dres_next);
-                        if isempty(index_det) == 0
-                            break;
-                        end
-                        j = j + 1;
-                    end
-                    if isempty(index_det) == 0
-                        [~, qscore_new] = MDP_value(tracker, fr+j, dres_image, dres_next, index_det);                 
-                        difference = reward + tracker.gamma * qscore_new - qscore;
-                    else
-                        difference = reward - qscore;
-                        is_end = 1;
-                        fprintf('no detection to associate in the future, end target\n');
-                    end                    
-                else
-                    index = find(dres_det.fr == fr+1);
-                    dres_next = sub(dres_det, index);
-                    [~, qscore_new] = MDP_value(tracker, fr+1, dres_image, dres_next, []);                   
-                    difference = reward + tracker.gamma * qscore_new - qscore;
-                end
-                tracker = MDP_update(tracker, difference, f);
+                if reward == -1
+                    tracker.foccluded(end+1,:) = f;
+                    tracker.loccluded(end+1) = label;
+                    tracker.w_occluded = svmtrain(tracker.loccluded, tracker.foccluded, '-c 1 -b 1 -q');
+                    fprintf('training examples in occluded state %d\n', size(tracker.foccluded,1));
+                end          
+                
                 if is_end
                     tracker.state = 0;
                 end

@@ -1,4 +1,4 @@
-function dres_train = generate_training_data(seq_idx, opt)
+function [dres_train, dres_det, labels] = generate_training_data(seq_idx, opt)
 
 is_show = 0;
 
@@ -45,40 +45,29 @@ for i = 1:numel(ids)
     dres_train{i} = sub(dres, index_start:num);
     
     % show gt
-     if is_show
-        for j = 1:numel(dres_train{i}.fr)
-            fr = dres_train{i}.fr(j);
-            filename = fullfile(opt.mot, opt.mot2d, seq_set, seq_name, 'img1', sprintf('%06d.jpg', fr));
-            disp(filename);
-            I = imread(filename);
-            figure(1);
-            show_dres(fr, I, 'GT', dres_train{i});
-            pause;
-        end
-    end
+%      if is_show
+%         for j = 1:numel(dres_train{i}.fr)
+%             fr = dres_train{i}.fr(j);
+%             filename = fullfile(opt.mot, opt.mot2d, seq_set, seq_name, 'img1', sprintf('%06d.jpg', fr));
+%             disp(filename);
+%             I = imread(filename);
+%             figure(1);
+%             show_dres(fr, I, 'GT', dres_train{i});
+%             pause;
+%         end
+%     end
 end
 
-% collect false alarms from detections
-% read detections
-filename = fullfile(opt.mot, opt.mot2d, seq_set, seq_name, 'det', 'det.txt');
-dres_det = read_mot2dres(filename);
+% collect true positives and false alarms from detections
 num = numel(dres_det.fr);
+labels = zeros(num, 1);
 for i = 1:num
     fr = dres_det.fr(i);
     index = find(dres_gt.fr == fr);
     overlap = calc_overlap(dres_det, i, dres_gt, index);
     if max(overlap) < opt.overlap_neg
-        dres = sub(dres_det, i);
-        
-        dres_train{end+1} = dres;
-
-        if is_show
-            filename = fullfile(opt.mot, opt.mot2d, seq_set, seq_name, 'img1', sprintf('%06d.jpg', fr));
-            disp(filename);
-            I = imread(filename);
-            figure(1);
-            show_dres(fr, I, 'False alarm', dres);
-            pause;
-        end        
-    end
+        labels(i) = -1;
+    else
+        labels(i) = 1;
+    end         
 end

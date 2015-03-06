@@ -24,7 +24,11 @@ for i = 1:tracker.num
     if norm(v) && norm(v_new)
         angle = dot(v, v_new) / (norm(v) * norm(v_new));
     else
-        angle = 1;
+        if norm(v) == 0 && norm(v_new) == 0
+            angle = 1;
+        else
+            angle = 0;
+        end
     end
     
     % resize the image

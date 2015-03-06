@@ -1,14 +1,6 @@
 % update the weights of q function
 function tracker = MDP_update(tracker, difference, f)
 
-if tracker.prev_state == 1
-    tracker.w_active = tracker.w_active + tracker.alpha * difference .* f;
-    tracker.w_active(5) = max(tracker.w_active(5), 0);
-    fnum = tracker.fnum_active;
-    weights = tracker.w_active;
-    type = 'active';
-end
-
 if tracker.prev_state == 2
     tracker.w_tracked = max(tracker.w_tracked + tracker.alpha * difference .* f, 0);
     fnum = tracker.fnum_tracked;

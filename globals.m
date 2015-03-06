@@ -1,5 +1,6 @@
 function opt = globals()
 
+opt.root = pwd;
 opt.mot = '/home/yuxiang/Projects/Multitarget_Tracking/MOTbenchmark';
 opt.mot2d = '2DMOT2015';
 opt.results = 'results';
@@ -15,7 +16,8 @@ opt.mot2d_test_seqs = {'TUD-Crossing', 'PETS09-S2L2', 'ETH-Jelmoli', ...
 opt.mot2d_test_nums = [201, 436, 440, 1194, 219, 450, 500, 625, 209, 1059, 450];
 
 addpath(fullfile(opt.mot, 'devkit', 'utils'));
+addpath([opt.root '/3rd_party/libsvm-3.20/matlab']);
 
 % parameters
-opt.overlap_occ = 0.5;
-opt.overlap_neg = 0.2;
+opt.overlap_occ = 0.3;
+opt.overlap_neg = 0.5;
