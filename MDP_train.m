@@ -26,7 +26,12 @@ I = dres_image.I{1};
 tracker = MDP_initialize(size(I,2), size(I,1), dres_det);
 
 % for each training sequence
-for t = 7 * ones(1, 10) %1:num_train
+iter = 0;
+for t = 7 * ones(1, 50) %1:num_train
+    iter = iter + 1;
+    tracker.alpha = tracker.alpha / iter;
+    tracker.explore = tracker.explore / iter;
+    
     dres_gt = dres_train{t};
     
     % first frame
@@ -51,11 +56,11 @@ for t = 7 * ones(1, 10) %1:num_train
         if is_show
             figure(1);
             % show ground truth
-            subplot(2, 2, 1);
+            subplot(2, 3, 1);
             show_dres(fr, dres_image.I{fr}, 'GT', dres_gt);
 
             % show detections
-            subplot(2, 2, 2);
+            subplot(2, 3, 2);
             show_dres(fr, dres_image.I{fr}, 'Detections', dres_det);
         end
         
@@ -179,6 +184,12 @@ for t = 7 * ones(1, 10) %1:num_train
             % find a set of detections for association
             index_det = generate_association_index(tracker, fr, dres);
             [tracker, qscore, f] = MDP_value(tracker, fr, dres_image, dres, index_det);
+            
+            if is_show
+                figure(1);
+                subplot(2, 3, 3);
+                show_dres(fr, dres_image.I{fr}, 'Potential Associations', sub(dres, index_det));
+            end
 
             if isempty(index_det) == 0
                 is_end = 0;
@@ -198,7 +209,7 @@ for t = 7 * ones(1, 10) %1:num_train
                         % if the association is correct
                         ov = calc_overlap(dres_gt, index, tracker.dres, numel(tracker.dres.fr));
                         if ov > 0.5
-                            reward = 1;
+                            reward = 10;
                         else
                             reward = -10;
                             is_end = 1;
@@ -255,22 +266,30 @@ for t = 7 * ones(1, 10) %1:num_train
         end
         
         % check if target outside image
-        if isempty(find(tracker.flags == 2, 1)) == 0
-            fprintf('target outside image\n');
-            tracker.state = 0;
+        if isempty(find(tracker.flags == 1, 1)) == 1
+            if tracker.dres.x(end) < 0 || tracker.dres.x(end)+tracker.dres.w(end) > dres_image.w(fr)
+                fprintf('target outside image by checking boarders\n');
+                tracker.state = 0;
+            end 
         end
-        
+            
         % show results
+        if iter > 30
+            is_show = 1;
+        end
         if is_show
             figure(1);     
 
             % show tracking results
-            subplot(2, 2, 3);
+            subplot(2, 3, 4);
             show_dres(fr, dres_image.I{fr}, 'Tracking', tracker.dres, 2);
 
             % show lost targets
-            subplot(2, 2, 4);
+            subplot(2, 3, 5);
             show_dres(fr, dres_image.I{fr}, 'Lost', tracker.dres, 3);
+            
+            subplot(2, 3, 6);
+            show_templates(tracker, dres_image);
 
             fprintf('frame %d, state %d\n', fr, tracker.state);
             pause();

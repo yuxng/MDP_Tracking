@@ -32,6 +32,7 @@ for i = 1:tracker.num
         medNCC = 0;
         o = 0;
         ind = 1;
+        angle = 0;
     else
         % compute overlap
         dres.x = BB2(1);
@@ -40,6 +41,17 @@ for i = 1:tracker.num
         dres.h = BB2(4) - BB2(2);
         overlap = calc_overlap(dres, 1, dres_det, 1:num_det);
         [o, ind] = max(overlap);
+        
+        % compute angle
+        centerI = [(BB1(1)+BB1(3))/2 (BB1(2)+BB1(4))/2];
+        centerJ = [(BB2(1)+BB2(3))/2 (BB2(2)+BB2(4))/2];
+        v = compute_velocity(tracker);
+        v_new = [centerJ(1)-centerI(1), centerJ(2)-centerI(2)] / double(frame_id - tracker.frame_ids(i));
+        if norm(v) && norm(v_new)
+            angle = dot(v, v_new) / (norm(v) * norm(v_new));
+        else
+            angle = 1;
+        end        
     end
     
     tracker.bbs{i} = BB2;
@@ -49,6 +61,7 @@ for i = 1:tracker.num
     tracker.medNCCs(i) = medNCC;
     tracker.overlaps(i) = o;
     tracker.indexes(i) = ind;
+    tracker.angles(i) = angle;
 end
 
 % combine tracking and detection results
@@ -87,7 +100,12 @@ fprintf('target %d: flag ', tracker.target_id);
 for i = 1:tracker.num
     fprintf('%d ', tracker.flags(i))
 end
-fprintf('\n');    
+fprintf('\n');
+fprintf('target %d: angle ', tracker.target_id);
+for i = 1:tracker.num
+    fprintf('%.2f ', tracker.angles(i))
+end
+fprintf('\n');
 
 if tracker.flags(ind) == 2
     fprintf('target %d: bounding box out of image\n', tracker.target_id);

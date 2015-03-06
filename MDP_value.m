@@ -39,7 +39,8 @@ elseif tracker.state == 2
     f(1:num) = w(index) .* exp(-tracker.medFBs(index) / tracker.fb_factor);
     f(num+1:2*num) = w(index) .* tracker.medNCCs(index);
     f(2*num+1:3*num) = w(index) .* tracker.overlaps(index);
-    f(3*num+1) = -1;
+    f(3*num+1:4*num) = w(index) .* tracker.angles(index);
+    f(4*num+1) = -1;
     % compute qscore
     qscore = dot(tracker.w_tracked, f);
     fprintf('qscore in tracked %.2f\n', qscore);
@@ -78,29 +79,45 @@ elseif tracker.state == 3
     [~, index] = sort(frame_ids);    
     
     % LK association
-    min_value = inf;
-    min_index = -1;
     qscore = 0;
-    for i = 1:numel(index_det)
-        dres_one = sub(dres_det, index_det(i));
+    if rand(1) < tracker.explore && isempty(index_det) == 0
+        % randomly select one for association
+        fprintf('random association\n');
+        ind = randi(numel(index_det), 1);
+        dres_one = sub(dres_det, index_det(ind));
         tracker = LK_associate(frame_id, dres_image, dres_one, tracker);
-        value = min(tracker.medFBs);
-        if  value < min_value
-            min_value = value;
-            min_index = i;
-            % extract features
-            f(1:num) = w(index) .* exp(-tracker.medFBs(index) / tracker.fb_factor);
-            f(num+1:2*num) = w(index) .* tracker.medNCCs(index);
-            f(2*num+1:3*num) = w(index) .* tracker.nccs(index);
-            f(3*num+1:4*num) = w(index) .* tracker.angles(index);
-            f(4*num+1) = -1;
-            % compute qscore
-            qscore = dot(tracker.w_occluded, f);
+        % extract features
+        f(1:num) = w(index) .* exp(-tracker.medFBs(index) / tracker.fb_factor);
+        f(num+1:2*num) = w(index) .* tracker.medNCCs(index);
+        f(2*num+1:3*num) = w(index) .* tracker.nccs(index);
+        f(3*num+1:4*num) = w(index) .* tracker.angles(index);
+        f(4*num+1) = -1;
+        % compute qscore
+        qscore = dot(tracker.w_occluded, f);
+    else
+        min_value = inf;
+        min_index = -1;    
+        for i = 1:numel(index_det)
+            dres_one = sub(dres_det, index_det(i));
+            tracker = LK_associate(frame_id, dres_image, dres_one, tracker);
+            value = min(tracker.medFBs);
+            if  value < min_value
+                min_value = value;
+                min_index = i;
+                % extract features
+                f(1:num) = w(index) .* exp(-tracker.medFBs(index) / tracker.fb_factor);
+                f(num+1:2*num) = w(index) .* tracker.medNCCs(index);
+                f(2*num+1:3*num) = w(index) .* tracker.nccs(index);
+                f(3*num+1:4*num) = w(index) .* tracker.angles(index);
+                f(4*num+1) = -1;
+                % compute qscore
+                qscore = dot(tracker.w_occluded, f);
+            end
         end
-    end
-    if min_index > 0
-        dres_one = sub(dres_det, index_det(min_index));
-        tracker = LK_associate(frame_id, dres_image, dres_one, tracker);
+        if min_index > 0
+            dres_one = sub(dres_det, index_det(min_index));
+            tracker = LK_associate(frame_id, dres_image, dres_one, tracker);
+        end
     end
     fprintf('qscore in lost %.2f\n', qscore);
     

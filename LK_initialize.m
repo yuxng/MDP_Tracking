@@ -8,7 +8,7 @@ num = tracker.num;
 tracker.threshold_ratio = 0.6;
 tracker.threshold_dis = 150;
 tracker.target_id = target_id;
-tracker.rescale_box = [0.6 0.8];
+tracker.rescale_box = [0.5 0.8];
 tracker.bb = zeros(4,1);
 tracker.patchsize = [24 12];
 
@@ -31,7 +31,7 @@ tracker.patterns = generate_pattern(img, bb, tracker.patchsize);
 % tracker resutls
 tracker.bbs = cell(num, 1);
 tracker.points = cell(num, 1);
-tracker.flags = zeros(num, 1);
+tracker.flags = ones(num, 1);
 tracker.medFBs = zeros(num, 1);
 tracker.medNCCs = zeros(num, 1);
 tracker.overlaps = zeros(num, 1);
