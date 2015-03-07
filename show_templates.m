@@ -29,3 +29,4 @@ for i = 1:num
     end
 end
 imshow(im);
+title('Templates');

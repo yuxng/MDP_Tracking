@@ -23,19 +23,8 @@ if tracker.state == 1
 
 % tracked, decide to tracked or occluded
 elseif tracker.state == 2
-    % LK tracking
-    tracker = LK_tracking(frame_id, dres_image, dres_det, tracker);
-    % extract features
-    f = zeros(tracker.fnum_tracked, 1);
-    w = compute_frame_weights(tracker);
-    num = tracker.num;
-    frame_ids = tracker.frame_ids;
-    [~, index] = sort(frame_ids);
-    f(1:num) = w(index) .* exp(-tracker.medFBs(index) / tracker.fb_factor);
-    f(num+1:2*num) = w(index) .* tracker.medNCCs(index);
-    f(2*num+1:3*num) = w(index) .* tracker.overlaps(index);
-    f(3*num+1:4*num) = w(index) .* tracker.angles(index);
-    f(4*num+1) = -1;
+    % extract features with LK tracking
+    [tracker, f] = MDP_feature_tracked(frame_id, dres_image, dres_det, tracker);
     % compute qscore
     qscore = dot(tracker.w_tracked, f);
     fprintf('qscore in tracked %.2f\n', qscore);
@@ -53,7 +42,7 @@ elseif tracker.state == 2
         dres_one.state = 2;
         tracker.dres = concatenate_dres(tracker.dres, dres_one);
         % update LK tracker
-        tracker = LK_update(frame_id, tracker, dres_image.Igray{frame_id});        
+        tracker = LK_update(frame_id, tracker, dres_image.Igray{frame_id});
     else
         qscore = -1 * qscore;
         tracker.state = 3;
@@ -72,6 +61,7 @@ elseif tracker.state == 3
         label = -1;
         f = [];
     else
+        % extract features with LK association
         dres = sub(dres_det, index_det);
         features = MDP_feature_occluded(frame_id, dres_image, dres, tracker);
         m = size(features, 1);

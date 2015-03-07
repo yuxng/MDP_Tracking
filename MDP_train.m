@@ -23,7 +23,7 @@ tracker = MDP_initialize(size(I,2), size(I,1), dres_det, labels);
 
 % for each training sequence
 iter = 0;
-for t = 7 * ones(1, 50) %1:num_train
+for t = 9 * ones(1, 50) %1:num_train
     iter = iter + 1;
     tracker.alpha = tracker.alpha / iter;
     tracker.explore = tracker.explore / iter;
@@ -247,6 +247,9 @@ for t = 7 * ones(1, 50) %1:num_train
 
             fprintf('frame %d, state %d\n', fr, tracker.state);
             pause();
+            
+            % filename = sprintf('results/%s_%06d.png', seq_name, fr);
+            % hgexport(h, filename, hgexport('factorystyle'), 'Format', 'png');
         end
         
         fr = fr + 1;
