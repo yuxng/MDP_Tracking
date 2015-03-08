@@ -23,7 +23,7 @@ tracker = MDP_initialize(size(I,2), size(I,1), dres_det, labels);
 
 % for each training sequence
 iter = 0;
-for t = 9 * ones(1, 50) %1:num_train
+for t = 7 * ones(1, 50) %1:num_train
     iter = iter + 1;
     tracker.alpha = tracker.alpha / iter;
     tracker.explore = tracker.explore / iter;
