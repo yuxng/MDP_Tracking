@@ -11,7 +11,7 @@ num = tracker.num;
 
 % tracker parameters
 tracker.threshold_ratio = 0.6;
-tracker.threshold_dis = 150;
+tracker.threshold_dis = 200;
 tracker.target_id = target_id;
 tracker.rescale_box = [0.5 0.8];
 tracker.bb = zeros(4,1);

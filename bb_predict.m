@@ -16,7 +16,7 @@
 % along with TLD.  If not, see <http://www.gnu.org/licenses/>.
 
 
-function [BB1 shift] = bb_predict(BB0,pt0,pt1)
+function [BB1, shift] = bb_predict(BB0,pt0,pt1)
 
 of  = pt1 - pt0;
 dx  = median(of(1,:));

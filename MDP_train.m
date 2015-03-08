@@ -186,6 +186,7 @@ for t = 7 * ones(1, 50) %1:num_train
                         end
                     else
                         reward = -1;   % no association
+                        reward = 1;
                         label = 1;
                         % extract features
                         [~, ind] = max(overlap);
