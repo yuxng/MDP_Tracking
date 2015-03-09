@@ -11,8 +11,9 @@ for i = 1:m
     [~, index] = min(tracker.medFBs);
     f(1) = exp(-tracker.medFBs(index) / tracker.fb_factor);
     f(2) = tracker.medNCCs(index);
-    f(3) = tracker.nccs(index);
-    f(4) = tracker.angles(index);
-    f(5) = 1;
+    f(3) = tracker.overlaps(index);
+    f(4) = tracker.nccs(index);
+    f(5) = tracker.angles(index);
+    f(6) = 1;
     feature(i,:) = f;
 end

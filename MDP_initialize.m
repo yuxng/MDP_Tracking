@@ -25,9 +25,9 @@ tracker.w_active = svmtrain(tracker.lactive, tracker.factive, '-c 1');
 
 % tracked
 tracker.num = 10;
-tracker.fnum_tracked = 4 + 1;
+tracker.fnum_tracked = 5 + 1;
 tracker.w_tracked = rand(tracker.fnum_tracked, 1);
 
 % occluded
-tracker.fnum_occluded = 4 + 1;
+tracker.fnum_occluded = 5 + 1;
 tracker.w_occluded = [];

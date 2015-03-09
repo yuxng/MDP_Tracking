@@ -25,8 +25,13 @@ for i = 1:tracker.num
     I = dres_image.Igray{tracker.frame_ids(i)};
     BB1 = [tracker.x1(i); tracker.y1(i); tracker.x2(i); tracker.y2(i)];
     BB1 = bb_rescale_relative(BB1, tracker.rescale_box);
-    [BB2, xFJ, flag, medFB, medNCC] = LK(BB1, I, J);
-    BB2 = bb_rescale_relative(BB2, 1./tracker.rescale_box);    
+    
+    % initialization from the current target location
+    dres_one = sub(tracker.dres, numel(tracker.dres.fr));
+    BB3 = [dres_one.x; dres_one.y; dres_one.x+dres_one.w; dres_one.y+dres_one.h];
+    
+    [BB2, xFJ, flag, medFB, medNCC] = LK(I, J, BB1, BB3, 5);
+    BB2 = bb_rescale_relative(BB2, 1./tracker.rescale_box);
     if isnan(medFB) || isnan(medNCC) || ~bb_isdef(BB2)
         medFB = inf;
         medNCC = 0;
@@ -75,6 +80,10 @@ else
     tracker.bb = tracker.bbs{ind};
 end
 
+% compute pattern similarity
+pattern = generate_pattern(dres_image.Igray{frame_id}, tracker.bb, tracker.patchsize);
+nccs = distance(pattern, tracker.patterns, 1); % measure NCC to positive examples
+tracker.nccs = nccs';
 
 fprintf('\ntarget %d: frame ids ', tracker.target_id);
 for i = 1:tracker.num
@@ -106,50 +115,14 @@ for i = 1:tracker.num
     fprintf('%.2f ', tracker.angles(i))
 end
 fprintf('\n');
+fprintf('target %d: ncc ', tracker.target_id);
+for i = 1:tracker.num
+    fprintf('%.2f ', tracker.nccs(i))
+end
+fprintf('\n\n');
 
 if tracker.flags(ind) == 2
     fprintf('target %d: bounding box out of image\n', tracker.target_id);
 elseif tracker.flags(ind) == 3
     fprintf('target %d: too unstable predictions\n', tracker.target_id);
-end
-
-
-% Estimates motion of bounding box BB1 from frame I to frame J
-function [BB2, xFJ, flag, medFB, medNCC] = LK(BB1, I, J)
-
-% initialize output variables
-BB2 = []; % estimated bounding
-
-% exit function if BB1 is not defined
-if isempty(BB1) || ~bb_isdef(BB1)
-    return;
-end 
-
-% estimate BB2
-xFI    = bb_points(BB1,10,10,5); % generate 10x10 grid of points within BB1 with margin 5 px
-% track all points by Lucas-Kanade tracker from frame I to frame J, 
-% estimate Forward-Backward error, and NCC for each point
-xFJ    = lk(2, I, J, xFI, xFI);
-
-medFB  = median2(xFJ(3,:)); % get median of Forward-Backward error
-medNCC = median2(xFJ(4,:)); % get median for NCC
-idxF   = xFJ(3,:) <= medFB & xFJ(4,:)>= medNCC; % get indexes of reliable points
-BB2    = bb_predict(BB1,xFI(:,idxF),xFJ(1:2,idxF)); % estimate BB2 using the reliable points only
-
-% LK_show(I, J, xFI, BB1, xFJ, BB2);
-
-% save selected points (only for display purposes)
-xFJ = xFJ(:, idxF);
-
-flag = 1;
-% detect failures
-% bounding box out of image
-if ~bb_isdef(BB2) || bb_isout(BB2, size(J))
-    flag = 2;
-    return;
-end
-% too unstable predictions
-if medFB > 10
-    flag = 3;
-    return;
 end
