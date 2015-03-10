@@ -44,7 +44,6 @@ elseif tracker.state == 2
         % update LK tracker
         tracker = LK_update(frame_id, tracker, dres_image.Igray{frame_id});
     else
-        qscore = -1 * qscore;
         tracker.state = 3;
         dres_one = sub(tracker.dres, numel(tracker.dres.fr));
         dres_one.fr = frame_id;

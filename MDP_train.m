@@ -1,7 +1,7 @@
 % training MDP
 function MDP_train
 
-is_show = 1;
+is_show = 0;
 
 opt = globals();
 seq_idx = 1;
@@ -25,8 +25,6 @@ tracker = MDP_initialize(size(I,2), size(I,1), dres_det, labels);
 iter = 0;
 for t = 7 * ones(1, 50) %1:num_train
     iter = iter + 1;
-    tracker.alpha = tracker.alpha / iter;
-    tracker.explore = tracker.explore / iter;
     
     dres_gt = dres_train{t};
     
@@ -107,11 +105,12 @@ for t = 7 * ones(1, 50) %1:num_train
             [tracker, qscore, f] = MDP_value(tracker, fr, dres_image, dres, []);
             
             % check if tracking result overlaps with gt
+            is_end = 0;
             index = find(dres_gt.fr == fr);
             if isempty(index) == 1
                 overlap = 0;
             else
-                if dres_gt.occluded(index) == 1
+                if dres_gt.covered(index) > opt.overlap_occ
                     overlap = 0;
                 else
                     overlap = calc_overlap(dres_gt, index, tracker.dres, numel(tracker.dres.fr));
@@ -128,6 +127,11 @@ for t = 7 * ones(1, 50) %1:num_train
                     reward = 1;
                 else
                     reward = -1;
+                    % possible drift
+                    if dres_gt.covered(index) > 0.9
+                        is_end = 1;
+                        fprintf('target drift! Game over\n');
+                    end
                 end
             end
             fprintf('reward %.1f\n', reward);
@@ -146,6 +150,10 @@ for t = 7 * ones(1, 50) %1:num_train
                 end
             end
             tracker = MDP_update(tracker, difference, f);
+            
+            if is_end
+                tracker.state = 0;
+            end
             
         % occluded
         elseif tracker.state == 3
@@ -166,7 +174,7 @@ for t = 7 * ones(1, 50) %1:num_train
                 if isempty(index) == 1
                     overlap = 0;
                 else
-                    if dres_gt.occluded(index) == 1
+                    if dres_gt.covered(index) > opt.overlap_occ
                         overlap = 0;
                     else
                         overlap = calc_overlap(dres_gt, index, dres, index_det);
@@ -176,7 +184,7 @@ for t = 7 * ones(1, 50) %1:num_train
                     if tracker.state == 2
                         % if the association is correct
                         ov = calc_overlap(dres_gt, index, tracker.dres, numel(tracker.dres.fr));
-                        if ov > 0.4
+                        if ov > 0.5
                             reward = 1;
                         else
                             reward = -1;
@@ -185,14 +193,17 @@ for t = 7 * ones(1, 50) %1:num_train
                             fprintf('associated to wrong target! Game over\n');
                         end
                     else
-                        reward = -1;   % no association
-                        reward = 1;
-                        label = 1;
-                        % extract features
-                        [~, ind] = max(overlap);
-                        dres_one = sub(dres, index_det(ind));
-                        f = MDP_feature_occluded(fr, dres_image, dres_one, tracker);                        
-                        fprintf('Missed association!\n');
+                        if dres_gt.covered(index) == 0
+                            reward = -1;   % no association
+                            label = 1;
+                            % extract features
+                            [~, ind] = max(overlap);
+                            dres_one = sub(dres, index_det(ind));
+                            f = MDP_feature_occluded(fr, dres_image, dres_one, tracker);                        
+                            fprintf('Missed association!\n');
+                        else
+                            reward = 1;
+                        end
                     end
                 else
                     if tracker.state == 3
