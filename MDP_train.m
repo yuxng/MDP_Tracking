@@ -240,11 +240,11 @@ for t = 7 * ones(1, 50) %1:num_train
         end
             
         % show results
-        if iter > 30
+        if iter > 20
             is_show = 1;
         end
         if is_show
-            figure(1);     
+            h = figure(1);     
 
             % show tracking results
             subplot(2, 3, 4);
@@ -260,8 +260,8 @@ for t = 7 * ones(1, 50) %1:num_train
             fprintf('frame %d, state %d\n', fr, tracker.state);
             pause();
             
-            % filename = sprintf('results/%s_%06d.png', seq_name, fr);
-            % hgexport(h, filename, hgexport('factorystyle'), 'Format', 'png');
+            filename = sprintf('results/%s_%06d.png', seq_name, fr);
+            hgexport(h, filename, hgexport('factorystyle'), 'Format', 'png');
         end
         
         fr = fr + 1;
