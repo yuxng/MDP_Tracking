@@ -32,3 +32,4 @@ tracker.w_tracked(end) = 0;
 % occluded
 tracker.fnum_occluded = 5 + 1;
 tracker.w_occluded = [];
+tracker.streak_occluded = 0;

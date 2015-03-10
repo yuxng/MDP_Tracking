@@ -21,3 +21,4 @@ addpath([opt.root '/3rd_party/libsvm-3.20/matlab']);
 % parameters
 opt.overlap_occ = 0.5;
 opt.overlap_neg = 0.5;
+opt.max_occlusion = 20;

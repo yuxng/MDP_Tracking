@@ -68,6 +68,7 @@ end
 % collect true positives and false alarms from detections
 num = numel(dres_det.fr);
 labels = zeros(num, 1);
+overlaps = zeros(num, 1);
 for i = 1:num
     fr = dres_det.fr(i);
     index = find(dres_gt.fr == fr);
@@ -76,5 +77,17 @@ for i = 1:num
         labels(i) = -1;
     else
         labels(i) = 1;
-    end         
+    end
+    overlaps(i) = max(overlap);
+end
+
+% extract false alarms and append to training sequences
+index = find(overlaps < 0.2);
+dres = sub(dres_det, index);
+num = numel(dres.fr);
+dres.occluded = zeros(num, 1);
+dres.covered = zeros(num, 1);
+dres.overlap = ones(num, 1);
+for i = 1:num
+    dres_train{end+1} = sub(dres, i);
 end

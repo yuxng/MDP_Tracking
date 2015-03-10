@@ -1,7 +1,7 @@
 % training MDP
 function MDP_train
 
-is_show = 0;
+is_show = 1;
 
 opt = globals();
 seq_idx = 1;
@@ -23,7 +23,7 @@ tracker = MDP_initialize(size(I,2), size(I,1), dres_det, labels);
 
 % for each training sequence
 iter = 0;
-for t = 7 * ones(1, 50) %1:num_train
+for t = 11:num_train
     iter = iter + 1;
     
     dres_gt = dres_train{t};
@@ -102,6 +102,7 @@ for t = 7 * ones(1, 50) %1:num_train
             
         % tracked    
         elseif tracker.state == 2
+            tracker.streak_occluded = 0;
             [tracker, qscore, f] = MDP_value(tracker, fr, dres_image, dres, []);
             
             % check if tracking result overlaps with gt
@@ -128,7 +129,7 @@ for t = 7 * ones(1, 50) %1:num_train
                 else
                     reward = -1;
                     % possible drift
-                    if dres_gt.covered(index) > 0.9
+                    if isempty(index) == 0 && dres_gt.covered(index) > 0.9
                         is_end = 1;
                         fprintf('target drift! Game over\n');
                     end
@@ -157,6 +158,7 @@ for t = 7 * ones(1, 50) %1:num_train
             
         % occluded
         elseif tracker.state == 3
+            tracker.streak_occluded = tracker.streak_occluded + 1;
             % find a set of detections for association
             index_det = generate_association_index(tracker, fr, dres);
             [tracker, qscore, f] = MDP_value(tracker, fr, dres_image, dres, index_det);
@@ -223,7 +225,12 @@ for t = 7 * ones(1, 50) %1:num_train
                     tracker.loccluded(end+1) = label;
                     tracker.w_occluded = svmtrain(tracker.loccluded, tracker.foccluded, '-c 1 -b 1 -q');
                     fprintf('training examples in occluded state %d\n', size(tracker.foccluded,1));
-                end          
+                end
+                
+                if tracker.streak_occluded > opt.max_occlusion
+                    is_end = 1;
+                    fprintf('target exits due to long time occlusion\n');
+                end
                 
                 if is_end
                     tracker.state = 0;
@@ -260,8 +267,8 @@ for t = 7 * ones(1, 50) %1:num_train
             fprintf('frame %d, state %d\n', fr, tracker.state);
             pause();
             
-            filename = sprintf('results/%s_%06d.png', seq_name, fr);
-            hgexport(h, filename, hgexport('factorystyle'), 'Format', 'png');
+%             filename = sprintf('results/%s_%06d.png', seq_name, fr);
+%             hgexport(h, filename, hgexport('factorystyle'), 'Format', 'png');
         end
         
         fr = fr + 1;
