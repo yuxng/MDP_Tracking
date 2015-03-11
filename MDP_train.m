@@ -23,7 +23,8 @@ tracker = MDP_initialize(size(I,2), size(I,1), dres_det, labels);
 
 % for each training sequence
 iter = 0;
-for t = 11:num_train
+iterations = repmat(1:num_train, 1, 5);
+for t = iterations
     iter = iter + 1;
     
     dres_gt = dres_train{t};
@@ -227,15 +228,16 @@ for t = 11:num_train
                     fprintf('training examples in occluded state %d\n', size(tracker.foccluded,1));
                 end
                 
-                if tracker.streak_occluded > opt.max_occlusion
-                    is_end = 1;
-                    fprintf('target exits due to long time occlusion\n');
-                end
-                
                 if is_end
                     tracker.state = 0;
                 end
             end
+            
+            if tracker.streak_occluded > opt.max_occlusion
+                tracker.state = 0;
+                fprintf('target exits due to long time occlusion\n');
+            end            
+            
         end
         
         % check if target outside image
@@ -247,9 +249,6 @@ for t = 11:num_train
         end
             
         % show results
-        if iter > 20
-            is_show = 1;
-        end
         if is_show
             h = figure(1);     
 
@@ -265,7 +264,7 @@ for t = 11:num_train
             show_templates(tracker, dres_image);
 
             fprintf('frame %d, state %d\n', fr, tracker.state);
-            pause();
+            pause(0.2);
             
 %             filename = sprintf('results/%s_%06d.png', seq_name, fr);
 %             hgexport(h, filename, hgexport('factorystyle'), 'Format', 'png');
@@ -274,3 +273,6 @@ for t = 11:num_train
         fr = fr + 1;
     end
 end
+
+% save model
+save('tracker.mat', 'tracker');
