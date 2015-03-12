@@ -26,10 +26,11 @@ elseif tracker.state == 2
     % extract features with LK tracking
     [tracker, f] = MDP_feature_tracked(frame_id, dres_image, dres_det, tracker);
     % compute qscore
-    qscore = dot(tracker.w_tracked, f);
+    [label, ~, prob] = svmpredict(1, f, tracker.w_tracked, '-b 1');
+    qscore = prob(1);
     fprintf('qscore in tracked %.2f\n', qscore);
     % make a decision
-    if qscore > 0
+    if label > 0
         tracker.state = 2;
         % build the dres structure
         dres_one.fr = frame_id;

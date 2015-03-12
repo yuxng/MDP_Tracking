@@ -26,7 +26,7 @@ tracker = MDP_initialize(size(I,2), size(I,1), dres_det, labels);
 t = 0;
 iter = 0;
 max_iter = 1000;
-flag = 0;
+count = 0;
 while 1
     iter = iter + 1;
     fprintf('iter %d\n', iter);
@@ -35,10 +35,10 @@ while 1
     end
     if isempty(find(is_good == 0, 1)) == 1
         % two pass training
-        if flag == 1
+        if count == 5
             break;
         else
-            flag = 1;
+            count = count + 1;
             is_good = zeros(num_train, 1);
             t = 0;
         end
@@ -137,7 +137,7 @@ while 1
         % tracked    
         elseif tracker.state == 2
             tracker.streak_occluded = 0;
-            [tracker, qscore, f] = MDP_value(tracker, fr, dres_image, dres, []);
+            [tracker, ~, f] = MDP_value(tracker, fr, dres_image, dres, []);
             
             % check if tracking result overlaps with gt
             is_end = 0;
@@ -156,12 +156,14 @@ while 1
                     reward = 1;
                 else
                     reward = -1;
+                    label = 1;
                 end
             else
                 if tracker.state == 3
                     reward = 1;
                 else
                     reward = -1;
+                    label = -1;
                     % possible drift
                     if isempty(index) == 0 && dres_gt.covered(index) > 0.9
                         is_end = 1;
@@ -172,19 +174,12 @@ while 1
             fprintf('reward %.1f\n', reward);
             
             % update weights
-            if fr == seq_num
-                difference = reward - qscore;
-            else
-                if tracker.state == 3
-                    difference = reward - qscore;
-                else
-                    index = find(dres_det.fr == fr+1);
-                    dres_next = sub(dres_det, index);
-                    [~, qscore_new] = MDP_value(tracker, fr+1, dres_image, dres_next, []);
-                    difference = reward + tracker.gamma * qscore_new - qscore;
-                end
+            if reward == -1
+                tracker.ftracked(end+1,:) = f;
+                tracker.ltracked(end+1) = label;
+                tracker.w_tracked = svmtrain(tracker.ltracked, tracker.ftracked, '-c 1 -b 1 -q');
+                fprintf('training examples in tracked state %d\n', size(tracker.ftracked,1));
             end
-            tracker = MDP_update(tracker, difference, f);
             
             if is_end
                 tracker.state = 0;
@@ -195,7 +190,7 @@ while 1
             tracker.streak_occluded = tracker.streak_occluded + 1;
             % find a set of detections for association
             index_det = generate_association_index(tracker, fr, dres);
-            [tracker, qscore, f] = MDP_value(tracker, fr, dres_image, dres, index_det);
+            [tracker, ~, f] = MDP_value(tracker, fr, dres_image, dres, index_det);
             
             if is_show
                 figure(1);
@@ -216,17 +211,17 @@ while 1
                         overlap = calc_overlap(dres_gt, index, dres, index_det);
                     end
                 end
-                if max(overlap) > 0.5
+                if max(overlap) > 0.4
                     if tracker.state == 2
                         % if the association is correct
                         ov = calc_overlap(dres_gt, index, tracker.dres, numel(tracker.dres.fr));
-                        if ov > 0.5
+                        if ov > 0.4
                             reward = 1;
                         else
                             reward = -1;
                             label = -1;
                             is_end = 1;
-                            fprintf('associated to wrong target! Game over\n');
+                            fprintf('associated to wrong target (%.2f, %.2f)! Game over\n', max(overlap), ov);
                         end
                     else
                         if dres_gt.covered(index) == 0
@@ -268,22 +263,25 @@ while 1
             
             if tracker.streak_occluded > opt.max_occlusion
                 tracker.state = 0;
+                if isempty(find(dres_gt.fr == fr, 1)) == 1
+                    reward = 1;
+                end
                 fprintf('target exits due to long time occlusion\n');
             end            
             
         end
         
-        % check if target outside image
-        if isempty(find(tracker.flags == 1, 1)) == 1
-            if tracker.dres.x(end) < 0 || tracker.dres.x(end)+tracker.dres.w(end) > dres_image.w(fr)
-                fprintf('target outside image by checking boarders\n');
-                tracker.state = 0;
-            end 
-        end
+        % check if outside image
+        [~, ov] = calc_overlap(tracker.dres, numel(tracker.dres.fr), dres_image, fr);
+        if ov < 0.8
+            fprintf('target outside image by checking boarders\n');
+            tracker.state = 0;
+            reward = 1;
+        end        
             
         % show results
         if is_show
-            h = figure(1);     
+            figure(1);     
 
             % show tracking results
             subplot(2, 3, 4);

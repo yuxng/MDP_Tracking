@@ -56,7 +56,7 @@ if tracker.overlaps(ind) > 0.7
     index = tracker.indexes(ind);
     bb_det = [dres_det.x(index); dres_det.y(index); ...
         dres_det.x(index)+dres_det.w(index); dres_det.y(index)+dres_det.h(index)];
-    tracker.bb = mean([repmat(tracker.bbs{ind},1,10) bb_det], 2);
+    tracker.bb = mean([repmat(tracker.bbs{ind},1,3) bb_det], 2);
 else
     tracker.bb = tracker.bbs{ind};
 end

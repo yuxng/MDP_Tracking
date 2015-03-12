@@ -33,17 +33,20 @@ tracker = MDP_initialize_test(tracker, size(I,2), size(I,1), dres_det);
 trackers = [];
 id = 0;
 for fr = 1:seq_num
+    fprintf('frame %d\n', fr);
     % extract detection
     index = find(dres_det.fr == fr);
     dres = sub(dres_det, index);
     
     % apply existing trackers
+    [dres, index] = generate_initial_index(trackers, dres);
+    dres_associate = sub(dres, index);
     for i = 1:numel(trackers)
-        trackers{i} = process(fr, dres_image, dres, trackers{i}, opt);
+        trackers{i} = process(fr, dres_image, dres, dres_associate, trackers{i}, opt);
     end
     
     % find detections for initialization
-    index = generate_initial_index(trackers, dres);
+    [dres, index] = generate_initial_index(trackers, dres);
     for i = 1:numel(index)
         % reset tracker
         tracker.prev_state = 1;
@@ -73,7 +76,7 @@ for fr = 1:seq_num
         subplot(2, 2, 4);
         show_dres(fr, dres_image.I{fr}, 'Lost', dres_track, 3);
 
-        pause();
+        pause(0.01);
     end
 end
 
@@ -108,7 +111,7 @@ end
 
 % apply a single tracker
 % dres: detections
-function tracker = process(fr, dres_image, dres, tracker, opt)
+function tracker = process(fr, dres_image, dres, dres_associate, tracker, opt)
 
 if tracker.state == 0
     return;
@@ -122,8 +125,8 @@ elseif tracker.state == 2
 elseif tracker.state == 3
     tracker.streak_occluded = tracker.streak_occluded + 1;
     % find a set of detections for association
-    index_det = generate_association_index(tracker, fr, dres);
-    tracker = MDP_value(tracker, fr, dres_image, dres, index_det);
+    index_det = generate_association_index(tracker, fr, dres_associate);
+    tracker = MDP_value(tracker, fr, dres_image, dres_associate, index_det);
 
     if tracker.streak_occluded > opt.max_occlusion
         tracker.state = 0;

@@ -58,5 +58,10 @@ if isempty(tracker.w_occluded) == 1
     labels(index,:) = [];
     tracker.foccluded = features;
     tracker.loccluded = labels;
-    tracker.w_occluded = svmtrain(tracker.loccluded, tracker.foccluded, '-c 1 -b 1'); 
+    tracker.w_occluded = svmtrain(tracker.loccluded, tracker.foccluded, '-c 1 -b 1');
+    
+    % initialize tracked svm in the same way
+    tracker.ftracked = features;
+    tracker.ltracked = labels;
+    tracker.w_tracked = svmtrain(tracker.ltracked, tracker.ftracked, '-c 1 -b 1');     
 end

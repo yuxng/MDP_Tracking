@@ -1,5 +1,5 @@
 % find detections for initialization
-function index_det = generate_initial_index(trackers, dres_det)
+function [dres_det, index_det] = generate_initial_index(trackers, dres_det)
 
 if isempty(dres_det) == 1
     index_det = [];
@@ -12,7 +12,7 @@ for i = 1:numel(trackers)
     tracker = trackers{i};
     dres = sub(tracker.dres, numel(tracker.dres.fr));
     
-    if tracker.state == 2    
+    if tracker.state == 2 || tracker.prev_state == 2 
         if isempty(dres_track)
             dres_track = dres;
         else
