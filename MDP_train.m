@@ -16,16 +16,45 @@ fprintf('read images done\n');
 % generate training data
 [dres_train, dres_det, labels] = generate_training_data(seq_idx, opt);
 num_train = numel(dres_train);
+is_good = zeros(num_train, 1);
 
 % intialize tracker
 I = dres_image.I{1};
 tracker = MDP_initialize(size(I,2), size(I,1), dres_det, labels);
 
 % for each training sequence
+t = 0;
 iter = 0;
-iterations = repmat(1:num_train, 1, 5);
-for t = iterations
+max_iter = 1000;
+flag = 0;
+while 1
     iter = iter + 1;
+    fprintf('iter %d\n', iter);
+    if iter > max_iter
+        break;
+    end
+    if isempty(find(is_good == 0, 1)) == 1
+        % two pass training
+        if flag == 1
+            break;
+        else
+            flag = 1;
+            is_good = zeros(num_train, 1);
+            t = 0;
+        end
+    end
+    
+    % find a sequence to train
+    while 1
+        t = t + 1;
+        if t > num_train
+            t = 1;
+        end
+        if is_good(t) == 0
+            break;
+        end
+    end
+    fprintf('tracking sequence %d\n', t);
     
     dres_gt = dres_train{t};
     
@@ -60,6 +89,10 @@ for t = iterations
         end
         
         if tracker.state == 0
+            if reward == 1
+                is_good(t) = 1;
+                fprintf('sequence %d is good\n', t);
+            end
             break;
 
         % active
@@ -264,7 +297,7 @@ for t = iterations
             show_templates(tracker, dres_image);
 
             fprintf('frame %d, state %d\n', fr, tracker.state);
-            pause(0.2);
+            pause(0.01);
             
 %             filename = sprintf('results/%s_%06d.png', seq_name, fr);
 %             hgexport(h, filename, hgexport('factorystyle'), 'Format', 'png');
@@ -272,6 +305,11 @@ for t = iterations
         
         fr = fr + 1;
     end
+    
+    if fr > seq_num
+        is_good(t) = 1;
+        fprintf('sequence %d is good\n', t);
+    end    
 end
 
 % save model

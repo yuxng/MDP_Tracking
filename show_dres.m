@@ -10,10 +10,14 @@ imshow(I);
 title(tit);
 hold on;
 
-if isfield(dres, 'state') == 1
-    index = find(dres.fr == frame_id & dres.state == state);
+if isempty(dres) == 1
+    index = [];
 else
-    index = find(dres.fr == frame_id);
+    if isfield(dres, 'state') == 1
+        index = find(dres.fr == frame_id & dres.state == state);
+    else
+        index = find(dres.fr == frame_id);
+    end
 end
 
 for i = 1:numel(index)

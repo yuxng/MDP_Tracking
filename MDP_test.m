@@ -39,16 +39,21 @@ for fr = 1:seq_num
     
     % apply existing trackers
     for i = 1:numel(trackers)
-        trackers{i} = process(fr, dres_image, dres, trackers{i});
+        trackers{i} = process(fr, dres_image, dres, trackers{i}, opt);
     end
     
     % find detections for initialization
-    [index, dres_track] = generate_initial_index(trackers, dres);
+    index = generate_initial_index(trackers, dres);
     for i = 1:numel(index)
+        % reset tracker
+        tracker.prev_state = 1;
+        tracker.state = 1;            
         id = id + 1;
+        
         trackers{end+1} = initialize(fr, dres_image, id, dres, index(i), tracker);
     end
     
+    dres_track = generate_results(trackers);
     if is_show
         figure(1);
         
@@ -96,14 +101,14 @@ else  % active
 
     % initialize the LK tracker
     tracker = LK_initialize(tracker, fr, id, dres, ind, dres_image);
-
+    
     tracker = MDP_value(tracker, fr, dres_image, dres, ind);
 end
 
 
 % apply a single tracker
 % dres: detections
-function tracker = process(fr, dres_image, dres, tracker)
+function tracker = process(fr, dres_image, dres, tracker, opt)
 
 if tracker.state == 0
     return;
