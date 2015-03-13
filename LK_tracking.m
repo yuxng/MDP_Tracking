@@ -41,6 +41,7 @@ for i = 1:tracker.num
         medFB = inf;
         medNCC = 0;
         o = 0;
+        score = 0;
         ind = 1;
         angle = 0;
     else
@@ -51,13 +52,14 @@ for i = 1:tracker.num
         dres.h = BB2(4) - BB2(2);
         overlap = calc_overlap(dres, 1, dres_det, 1:num_det);
         [o, ind] = max(overlap);
+        score = dres_det.r(ind);
         
         % compute angle
         centerI = [(BB1(1)+BB1(3))/2 (BB1(2)+BB1(4))/2];
         centerJ = [(BB2(1)+BB2(3))/2 (BB2(2)+BB2(4))/2];
         v = compute_velocity(tracker);
         v_new = [centerJ(1)-centerI(1), centerJ(2)-centerI(2)] / double(frame_id - tracker.frame_ids(i));
-        if norm(v) && norm(v_new)
+        if norm(v) > 0.2 && norm(v_new) > 0.2
             angle = dot(v, v_new) / (norm(v) * norm(v_new));
         else
             angle = 1;
@@ -70,6 +72,7 @@ for i = 1:tracker.num
     tracker.medFBs(i) = medFB;
     tracker.medNCCs(i) = medNCC;
     tracker.overlaps(i) = o;
+    tracker.scores(i) = score;
     tracker.indexes(i) = ind;
     tracker.angles(i) = angle;
 end
@@ -109,7 +112,12 @@ fprintf('target %d: overlap ', tracker.target_id);
 for i = 1:tracker.num
     fprintf('%.2f ', tracker.overlaps(i))
 end
-fprintf('\n');    
+fprintf('\n');
+fprintf('target %d: detection score ', tracker.target_id);
+for i = 1:tracker.num
+    fprintf('%.2f ', tracker.scores(i))
+end
+fprintf('\n');
 fprintf('target %d: flag ', tracker.target_id);
 for i = 1:tracker.num
     fprintf('%d ', tracker.flags(i))
@@ -123,6 +131,11 @@ fprintf('\n');
 fprintf('target %d: ncc ', tracker.target_id);
 for i = 1:tracker.num
     fprintf('%.2f ', tracker.nccs(i))
+end
+fprintf('\n\n');
+fprintf('target %d: bb overlaps ', tracker.target_id);
+for i = 1:tracker.num
+    fprintf('%.2f ', tracker.bb_overlaps(i))
 end
 fprintf('\n\n');
 

@@ -43,7 +43,7 @@ elseif tracker.state == 2
         dres_one.state = 2;
         tracker.dres = concatenate_dres(tracker.dres, dres_one);
         % update LK tracker
-        tracker = LK_update(frame_id, tracker, dres_image.Igray{frame_id});
+        tracker = LK_update(frame_id, tracker, dres_image.Igray{frame_id}, dres_det);
     else
         tracker.state = 3;
         dres_one = sub(tracker.dres, numel(tracker.dres.fr));
@@ -73,6 +73,7 @@ elseif tracker.state == 3
         
         dres_one = sub(dres_det, index_det(ind));
         tracker = LK_associate(frame_id, dres_image, dres_one, tracker);
+        dres = dres_one;
     end
     
     % make a decision
@@ -89,7 +90,7 @@ elseif tracker.state == 3
         dres_one.state = 2;
         tracker.dres = concatenate_dres(tracker.dres, dres_one);
         % update LK tracker
-        tracker = LK_update(frame_id, tracker, dres_image.Igray{frame_id});           
+        tracker = LK_update(frame_id, tracker, dres_image.Igray{frame_id}, dres);           
     else
         tracker.state = 3;
         dres_one = sub(tracker.dres, numel(tracker.dres.fr));

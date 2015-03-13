@@ -14,6 +14,5 @@ for i = 1:m
     f(3) = tracker.overlaps(index);
     f(4) = tracker.nccs(index);
     f(5) = tracker.angles(index);
-    f(6) = 1;
     feature(i,:) = f;
 end

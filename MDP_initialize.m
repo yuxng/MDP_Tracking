@@ -11,7 +11,7 @@ tracker.image_height = image_height;
 tracker.max_width = max(dres_det.w);
 tracker.max_height = max(dres_det.h);
 tracker.max_score = max(dres_det.r);
-tracker.fb_factor = 10;
+tracker.fb_factor = 30;
 
 % active
 tracker.prev_state = 1;
@@ -23,10 +23,10 @@ tracker.w_active = svmtrain(tracker.lactive, tracker.factive, '-c 1');
 
 % tracked
 tracker.num = 10;
-tracker.fnum_tracked = 5 + 1;
+tracker.fnum_tracked = 5;
 tracker.w_tracked = [];
 
 % occluded
-tracker.fnum_occluded = 5 + 1;
+tracker.fnum_occluded = 5;
 tracker.w_occluded = [];
 tracker.streak_occluded = 0;

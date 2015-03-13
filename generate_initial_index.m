@@ -12,7 +12,7 @@ for i = 1:numel(trackers)
     tracker = trackers{i};
     dres = sub(tracker.dres, numel(tracker.dres.fr));
     
-    if tracker.state == 2 || tracker.prev_state == 2 
+    if tracker.state == 2
         if isempty(dres_track)
             dres_track = dres;
         else

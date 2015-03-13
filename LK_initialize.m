@@ -34,6 +34,9 @@ tracker.y2 = bb(4,:)';
 img = dres_image.Igray{frame_id};
 tracker.patterns = generate_pattern(img, bb, tracker.patchsize);
 
+% box overlap history
+tracker.bb_overlaps = ones(num, 1);
+
 % tracker resutls
 tracker.bbs = cell(num, 1);
 tracker.points = cell(num, 1);
@@ -41,9 +44,18 @@ tracker.flags = ones(num, 1);
 tracker.medFBs = zeros(num, 1);
 tracker.medNCCs = zeros(num, 1);
 tracker.overlaps = zeros(num, 1);
+tracker.scores = zeros(num, 1);
 tracker.indexes = zeros(num, 1);
 tracker.nccs = zeros(num, 1);
 tracker.angles = zeros(num, 1);
+
+if isempty(tracker.w_tracked) == 1
+    features = [ones(1, tracker.fnum_tracked); zeros(1, tracker.fnum_tracked)];
+    labels = [+1; -1];
+    tracker.ftracked = features;
+    tracker.ltracked = labels;
+    tracker.w_tracked = svmtrain(tracker.ltracked, tracker.ftracked, '-c 1 -b 1'); 
+end
 
 % compute features for occluded state
 if isempty(tracker.w_occluded) == 1
@@ -58,10 +70,5 @@ if isempty(tracker.w_occluded) == 1
     labels(index,:) = [];
     tracker.foccluded = features;
     tracker.loccluded = labels;
-    tracker.w_occluded = svmtrain(tracker.loccluded, tracker.foccluded, '-c 1 -b 1');
-    
-    % initialize tracked svm in the same way
-    tracker.ftracked = features;
-    tracker.ltracked = labels;
-    tracker.w_tracked = svmtrain(tracker.ltracked, tracker.ftracked, '-c 1 -b 1');     
+    tracker.w_occluded = svmtrain(tracker.loccluded, tracker.foccluded, '-c 1 -b 1');    
 end

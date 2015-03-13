@@ -35,7 +35,7 @@ while 1
     end
     if isempty(find(is_good == 0, 1)) == 1
         % two pass training
-        if count == 5
+        if count == 2
             break;
         else
             count = count + 1;
@@ -157,6 +157,10 @@ while 1
                 else
                     reward = -1;
                     label = 1;
+                    if isempty(find(dres_gt.occluded == 1, 1)) == 1
+                        is_end = 1;
+                        fprintf('target not tracked! Game over\n');
+                    end
                 end
             else
                 if tracker.state == 3
@@ -189,7 +193,7 @@ while 1
         elseif tracker.state == 3
             tracker.streak_occluded = tracker.streak_occluded + 1;
             % find a set of detections for association
-            index_det = generate_association_index(tracker, fr, dres);
+            index_det = generate_association_index(tracker, fr, dres_image.w(fr), dres_image.h(fr), dres, 0);
             [tracker, ~, f] = MDP_value(tracker, fr, dres_image, dres, index_det);
             
             if is_show
@@ -230,7 +234,8 @@ while 1
                             % extract features
                             [~, ind] = max(overlap);
                             dres_one = sub(dres, index_det(ind));
-                            f = MDP_feature_occluded(fr, dres_image, dres_one, tracker);                        
+                            f = MDP_feature_occluded(fr, dres_image, dres_one, tracker);
+                            is_end = 1;
                             fprintf('Missed association!\n');
                         else
                             reward = 1;
@@ -273,7 +278,7 @@ while 1
         
         % check if outside image
         [~, ov] = calc_overlap(tracker.dres, numel(tracker.dres.fr), dres_image, fr);
-        if ov < 0.8
+        if ov < opt.exit_threshold
             fprintf('target outside image by checking boarders\n');
             tracker.state = 0;
             reward = 1;
