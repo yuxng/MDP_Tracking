@@ -35,10 +35,12 @@ for i = 1:tracker.num
         BB3 = BB1;
     end
     
-    [BB2, xFJ, flag, medFB, medNCC] = LK(I, J, BB1, BB3, 5);
+    [BB2, xFJ, flag, medFB, medNCC, medFB_left, medFB_right] = LK(I, J, BB1, BB3, 5);
     BB2 = bb_rescale_relative(BB2, 1./tracker.rescale_box);
-    if isnan(medFB) || isnan(medNCC) || ~bb_isdef(BB2)
+    if isnan(medFB) || isnan(medFB_left) || isnan(medFB_right) || isnan(medNCC) || ~bb_isdef(BB2)
         medFB = inf;
+        medFB_left = inf;
+        medFB_right = inf;
         medNCC = 0;
         o = 0;
         score = 0;
@@ -70,6 +72,8 @@ for i = 1:tracker.num
     tracker.points{i} = xFJ;
     tracker.flags(i) = flag;
     tracker.medFBs(i) = medFB;
+    tracker.medFBs_left(i) = medFB_left;
+    tracker.medFBs_right(i) = medFB_right;
     tracker.medNCCs(i) = medNCC;
     tracker.overlaps(i) = o;
     tracker.scores(i) = score;

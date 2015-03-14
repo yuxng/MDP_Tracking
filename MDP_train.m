@@ -1,7 +1,7 @@
 % training MDP
 function MDP_train
 
-is_show = 1;
+is_show = 0;
 
 opt = globals();
 seq_idx = 1;
@@ -35,7 +35,7 @@ while 1
     end
     if isempty(find(is_good == 0, 1)) == 1
         % two pass training
-        if count == 2
+        if count == 5
             break;
         else
             count = count + 1;
@@ -272,17 +272,19 @@ while 1
                     reward = 1;
                 end
                 fprintf('target exits due to long time occlusion\n');
-            end            
+            end
             
         end
         
         % check if outside image
-        [~, ov] = calc_overlap(tracker.dres, numel(tracker.dres.fr), dres_image, fr);
-        if ov < opt.exit_threshold
-            fprintf('target outside image by checking boarders\n');
-            tracker.state = 0;
-            reward = 1;
-        end        
+        if tracker.state == 2
+            [~, ov] = calc_overlap(tracker.dres, numel(tracker.dres.fr), dres_image, fr);
+            if ov < opt.exit_threshold
+                fprintf('target outside image by checking boarders\n');
+                tracker.state = 0;
+                reward = 1;
+            end
+        end
             
         % show results
         if is_show

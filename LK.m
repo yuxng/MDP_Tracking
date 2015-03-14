@@ -1,5 +1,5 @@
 % Estimates motion from bounding box BB1 in frame I to bounding box BB2 in frame J
-function [BB3, xFJ, flag, medFB, medNCC] = LK(I, J, BB1, BB2, level)
+function [BB3, xFJ, flag, medFB, medNCC, medFB_left, medFB_right] = LK(I, J, BB1, BB2, level)
 
 % initialize output variables
 BB3 = []; % estimated bounding
@@ -25,8 +25,11 @@ medNCC = median2(xFJ(4,:)); % get median for NCC
 idxF   = xFJ(3,:) <= medFB & xFJ(4,:)>= medNCC; % get indexes of reliable points
 BB3    = bb_predict(BB1, xFI(:,idxF), xFJ(1:2,idxF)); % estimate BB2 using the reliable points only
 
+medFB_left = median2(xFJ(3,1:50));
+medFB_right = median2(xFJ(3,51:100));
+% fprintf('medFB left %.2f, medFB right %.2f\n', medFB_left, medFB_right);
 % LK_show(I, J, xFI, BB1, xFJ, BB3);
-% pause(0.5);
+% pause();
 
 % save selected points (only for display purposes)
 xFJ = xFJ(:, idxF);
