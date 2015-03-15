@@ -1,17 +1,25 @@
 % use LK trackers for association
 function tracker = LK_associate(frame_id, dres_image, dres_det, tracker)
 
+rescale = 1;
+
 % current frame
 J = dres_image.Igray{frame_id};
-BB2 = [dres_det.x; dres_det.y; dres_det.x + dres_det.w; dres_det.y + dres_det.h];
+% J = imresize(J, rescale);
+
+BB2 = [dres_det.x; dres_det.y; dres_det.x + dres_det.w; dres_det.y + dres_det.h] * rescale;
 BB2 = bb_rescale_relative(BB2, tracker.rescale_box);
 
 for i = 1:tracker.num
     I = dres_image.Igray{tracker.frame_ids(i)};
-    BB1 = [tracker.x1(i); tracker.y1(i); tracker.x2(i); tracker.y2(i)];    
+%     I = imresize(I, rescale);
+    
+    BB1 = [tracker.x1(i); tracker.y1(i); tracker.x2(i); tracker.y2(i)] * rescale;    
     BB1 = bb_rescale_relative(BB1, tracker.rescale_box);
+    
     [BB3, xFJ, flag, medFB, medNCC, medFB_left, medFB_right] = LK(I, J, BB1, BB2, 1);
-    BB3 = bb_rescale_relative(BB3, 1./tracker.rescale_box);
+    BB3 = bb_rescale_relative(BB3, 1./tracker.rescale_box) / rescale;
+    BB1 = bb_rescale_relative(BB1, 1./tracker.rescale_box) / rescale;
     
     if isnan(medFB) || isnan(medFB_left) || isnan(medFB_right) || isnan(medNCC) || ~bb_isdef(BB3)
         medFB = inf;
@@ -73,51 +81,51 @@ pattern = generate_pattern(dres_image.Igray{frame_id}, tracker.bb, tracker.patch
 nccs = distance(pattern, tracker.patterns, 1); % measure NCC to positive examples
 tracker.nccs = nccs';
 
-fprintf('LK association, target %d detection %.2f, medFBs ', ...
-    tracker.target_id, dres_det.r);
-for i = 1:tracker.num
-    fprintf('%.2f ', tracker.medFBs(i));
-end
-fprintf('\n');
-
-fprintf('LK association, target %d detection %.2f, medFBs left ', ...
-    tracker.target_id, dres_det.r);
-for i = 1:tracker.num
-    fprintf('%.2f ', tracker.medFBs_left(i));
-end
-fprintf('\n');
-
-fprintf('LK association, target %d detection %.2f, medFBs right ', ...
-    tracker.target_id, dres_det.r);
-for i = 1:tracker.num
-    fprintf('%.2f ', tracker.medFBs_right(i));
-end
-fprintf('\n');
-
-fprintf('LK association, target %d detection %.2f, nccs ', ...
-    tracker.target_id, dres_det.r);
-for i = 1:tracker.num
-    fprintf('%.2f ', tracker.nccs(i));
-end
-fprintf('\n');
-
-fprintf('LK association, target %d detection %.2f, overlaps ', ...
-    tracker.target_id, dres_det.r);
-for i = 1:tracker.num
-    fprintf('%.2f ', tracker.overlaps(i));
-end
-fprintf('\n');
-
-fprintf('LK association, target %d detection %.2f, scores ', ...
-    tracker.target_id, dres_det.r);
-for i = 1:tracker.num
-    fprintf('%.2f ', tracker.scores(i));
-end
-fprintf('\n');
-
-fprintf('LK association, target %d detection %.2f, angles ', ...
-    tracker.target_id, dres_det.r);
-for i = 1:tracker.num
-    fprintf('%.2f ', tracker.angles(i));
-end
-fprintf('\n');
+% fprintf('LK association, target %d detection %.2f, medFBs ', ...
+%     tracker.target_id, dres_det.r);
+% for i = 1:tracker.num
+%     fprintf('%.2f ', tracker.medFBs(i));
+% end
+% fprintf('\n');
+% 
+% fprintf('LK association, target %d detection %.2f, medFBs left ', ...
+%     tracker.target_id, dres_det.r);
+% for i = 1:tracker.num
+%     fprintf('%.2f ', tracker.medFBs_left(i));
+% end
+% fprintf('\n');
+% 
+% fprintf('LK association, target %d detection %.2f, medFBs right ', ...
+%     tracker.target_id, dres_det.r);
+% for i = 1:tracker.num
+%     fprintf('%.2f ', tracker.medFBs_right(i));
+% end
+% fprintf('\n');
+% 
+% fprintf('LK association, target %d detection %.2f, nccs ', ...
+%     tracker.target_id, dres_det.r);
+% for i = 1:tracker.num
+%     fprintf('%.2f ', tracker.nccs(i));
+% end
+% fprintf('\n');
+% 
+% fprintf('LK association, target %d detection %.2f, overlaps ', ...
+%     tracker.target_id, dres_det.r);
+% for i = 1:tracker.num
+%     fprintf('%.2f ', tracker.overlaps(i));
+% end
+% fprintf('\n');
+% 
+% fprintf('LK association, target %d detection %.2f, scores ', ...
+%     tracker.target_id, dres_det.r);
+% for i = 1:tracker.num
+%     fprintf('%.2f ', tracker.scores(i));
+% end
+% fprintf('\n');
+% 
+% fprintf('LK association, target %d detection %.2f, angles ', ...
+%     tracker.target_id, dres_det.r);
+% for i = 1:tracker.num
+%     fprintf('%.2f ', tracker.angles(i));
+% end
+% fprintf('\n');

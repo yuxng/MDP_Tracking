@@ -4,14 +4,22 @@ function MDP_test
 is_show = 1;
 
 opt = globals();
-seq_idx = 2;
+seq_idx = 3;
 seq_name = opt.mot2d_train_seqs{seq_idx};
 seq_num = opt.mot2d_train_nums(seq_idx);
 seq_set = 'train';
 
 % build the dres structure for images
-dres_image = read_dres_image(opt, seq_set, seq_name, seq_num);
-fprintf('read images done\n');
+filename = sprintf('results/%s_dres_image.mat', seq_name);
+if exist(filename, 'file') ~= 0
+    object = load(filename);
+    dres_image = object.dres_image;
+    fprintf('load images from file %s done\n', filename);
+else
+    dres_image = read_dres_image(opt, seq_set, seq_name, seq_num);
+    fprintf('read images done\n');
+    save(filename, 'dres_image');
+end
 
 % read detections
 filename = fullfile(opt.mot, opt.mot2d, seq_set, seq_name, 'det', 'det.txt');
@@ -90,7 +98,7 @@ for fr = 1:seq_num
         subplot(2, 2, 4);
         show_dres(fr, dres_image.I{fr}, 'Lost', dres_track, 3);
 
-        pause();
+        pause(0.01);
     end
 end
 
@@ -211,16 +219,16 @@ for i = 1:num_track
     [~, o] = calc_overlap(dres_track, i, dres_track, 1:num_track);
     o(i) = 0;
     [mo, ind] = max(o);
-    if mo > 0.9
+    if mo > 0.95
         o1 = calc_overlap(dres_track, i, dres_det, 1:num_det);
         o2 = calc_overlap(dres_track, ind, dres_det, 1:num_det);
         if max(o1) > max(o2)
-            trackers{dres_track.id(ind)}.state = 0;
-            trackers{dres_track.id(ind)}.dres.state(end) = 0;
+            trackers{dres_track.id(ind)}.state = 3;
+            trackers{dres_track.id(ind)}.dres.state(end) = 3;
             fprintf('target %d suppressed\n', dres_track.id(ind));
         else
-            trackers{dres_track.id(i)}.state = 0;
-            trackers{dres_track.id(i)}.dres.state(end) = 0;
+            trackers{dres_track.id(i)}.state = 3;
+            trackers{dres_track.id(i)}.dres.state(end) = 3;
             fprintf('target %d suppressed\n', dres_track.id(i));
         end
     end

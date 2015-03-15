@@ -26,8 +26,13 @@ elseif tracker.state == 2
     % extract features with LK tracking
     [tracker, f] = MDP_feature_tracked(frame_id, dres_image, dres_det, tracker);
     % compute qscore
-    [label, ~, prob] = svmpredict(1, f, tracker.w_tracked, '-b 1');
-    qscore = prob(1);
+    if isempty(find(tracker.flags ~= 2, 1)) == 1
+        label = -1;
+        qscore = 0;
+    else
+        [label, ~, prob] = svmpredict(1, f, tracker.w_tracked, '-b 1');
+        qscore = prob(1);
+    end
     fprintf('qscore in tracked %.2f\n', qscore);
     % make a decision
     if label > 0

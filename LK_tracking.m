@@ -17,27 +17,37 @@
 
 function tracker = LK_tracking(frame_id, dres_image, dres_det, tracker)
 
+rescale = 1;
+
 % current frame
 J = dres_image.Igray{frame_id};
+% J = imresize(J, rescale);
 
 num_det = numel(dres_det.x);
 for i = 1:tracker.num
     I = dres_image.Igray{tracker.frame_ids(i)};
-    BB1 = [tracker.x1(i); tracker.y1(i); tracker.x2(i); tracker.y2(i)];
+%     I = imresize(I, rescale);
+    
+    BB1 = [tracker.x1(i); tracker.y1(i); tracker.x2(i); tracker.y2(i)] * rescale;
     BB1 = bb_rescale_relative(BB1, tracker.rescale_box);
     
     % initialization from the current target location
     if isfield(tracker, 'dres')
         dres_one = sub(tracker.dres, numel(tracker.dres.fr));
-        BB3 = [dres_one.x; dres_one.y; dres_one.x+dres_one.w; dres_one.y+dres_one.h];
+        BB3 = [dres_one.x; dres_one.y; dres_one.x+dres_one.w; dres_one.y+dres_one.h] * rescale;
         BB3 = bb_rescale_relative(BB3, tracker.rescale_box);
     else
         BB3 = BB1;
     end
     
     [BB2, xFJ, flag, medFB, medNCC, medFB_left, medFB_right] = LK(I, J, BB1, BB3, 5);
-    BB2 = bb_rescale_relative(BB2, 1./tracker.rescale_box);
-    if isnan(medFB) || isnan(medFB_left) || isnan(medFB_right) || isnan(medNCC) || ~bb_isdef(BB2)
+    BB2 = bb_rescale_relative(BB2, 1./tracker.rescale_box) / rescale;
+    
+    BB1 = bb_rescale_relative(BB1, 1./tracker.rescale_box) / rescale;
+    ratio = (BB2(4)-BB2(2)) / (BB1(4)-BB1(2));
+    ratio = min(ratio, 1/ratio);
+    
+    if isnan(medFB) || isnan(medFB_left) || isnan(medFB_right) || isnan(medNCC) || ~bb_isdef(BB2) || ratio < 0.5
         medFB = inf;
         medFB_left = inf;
         medFB_right = inf;
@@ -45,7 +55,8 @@ for i = 1:tracker.num
         o = 0;
         score = 0;
         ind = 1;
-        angle = 0;
+        angle = -1;
+        flag = 2;
     else
         % compute overlap
         dres.x = BB2(1);
@@ -87,7 +98,7 @@ if tracker.overlaps(ind) > 0.7
     index = tracker.indexes(ind);
     bb_det = [dres_det.x(index); dres_det.y(index); ...
         dres_det.x(index)+dres_det.w(index); dres_det.y(index)+dres_det.h(index)];
-    tracker.bb = mean([repmat(tracker.bbs{ind},1,5) bb_det], 2);
+    tracker.bb = mean([repmat(tracker.bbs{ind},1,10) bb_det], 2);
 else
     tracker.bb = tracker.bbs{ind};
 end

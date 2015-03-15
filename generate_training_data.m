@@ -1,4 +1,4 @@
-function [dres_train, dres_det, labels] = generate_training_data(seq_idx, opt)
+function [dres_train, dres_det, labels] = generate_training_data(seq_idx, width, height, opt)
 
 is_show = 0;
 
@@ -89,5 +89,9 @@ dres.occluded = zeros(num, 1);
 dres.covered = zeros(num, 1);
 dres.overlap = ones(num, 1);
 for i = 1:num
-    dres_train{end+1} = sub(dres, i);
+    dres_one = sub(dres, i);
+    if dres_one.x > width*0.05 && dres_one.x+dres_one.w < width*0.95 && ...
+            dres_one.y > height*0.05 && dres_one.y+dres_one.h < height*0.95
+        dres_train{end+1} = dres_one;
+    end
 end

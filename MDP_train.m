@@ -4,29 +4,39 @@ function MDP_train
 is_show = 0;
 
 opt = globals();
-seq_idx = 1;
+seq_idx = 3;
 seq_name = opt.mot2d_train_seqs{seq_idx};
 seq_num = opt.mot2d_train_nums(seq_idx);
 seq_set = 'train';
 
 % build the dres structure for images
-dres_image = read_dres_image(opt, seq_set, seq_name, seq_num);
-fprintf('read images done\n');
+filename = sprintf('results/%s_dres_image.mat', seq_name);
+if exist(filename, 'file') ~= 0
+    object = load(filename);
+    dres_image = object.dres_image;
+    fprintf('load images from file %s done\n', filename);
+else
+    dres_image = read_dres_image(opt, seq_set, seq_name, seq_num);
+    fprintf('read images done\n');
+    save(filename, 'dres_image');
+end
 
 % generate training data
-[dres_train, dres_det, labels] = generate_training_data(seq_idx, opt);
+I = dres_image.I{1};
+[dres_train, dres_det, labels] = generate_training_data(seq_idx, size(I,2), size(I,1), opt);
 num_train = numel(dres_train);
 is_good = zeros(num_train, 1);
 
 % intialize tracker
-I = dres_image.I{1};
 tracker = MDP_initialize(size(I,2), size(I,1), dres_det, labels);
 
 % for each training sequence
 t = 0;
 iter = 0;
-max_iter = 1000;
+max_iter = 10000;
+max_count = 10;
 count = 0;
+counter = zeros(num_train, 1);
 while 1
     iter = iter + 1;
     fprintf('iter %d\n', iter);
@@ -35,7 +45,7 @@ while 1
     end
     if isempty(find(is_good == 0, 1)) == 1
         % two pass training
-        if count == 5
+        if count == 2
             break;
         else
             count = count + 1;
@@ -157,16 +167,24 @@ while 1
                 else
                     reward = -1;
                     label = 1;
-                    if isempty(find(dres_gt.occluded == 1, 1)) == 1
-                        is_end = 1;
-                        fprintf('target not tracked! Game over\n');
+                    if isempty(find(tracker.flags ~= 2, 1)) == 1
+                        reward = 0;  % no update
+                    else
+                        if isempty(find(dres_gt.occluded == 1, 1)) == 1
+                            is_end = 1;
+                            fprintf('target not tracked! Game over\n');
+                        end
                     end
                 end
             else
                 if tracker.state == 3
                     reward = 1;
                 else
-                    reward = -1;
+                    if overlap < 0.2
+                        reward = -1;
+                    else
+                        reward = 0;  % no update
+                    end
                     label = -1;
                     % possible drift
                     if isempty(index) == 0 && dres_gt.covered(index) > 0.9
@@ -302,7 +320,7 @@ while 1
             show_templates(tracker, dres_image);
 
             fprintf('frame %d, state %d\n', fr, tracker.state);
-            pause(0.01);
+            pause(0.001);
             
 %             filename = sprintf('results/%s_%06d.png', seq_name, fr);
 %             hgexport(h, filename, hgexport('factorystyle'), 'Format', 'png');
@@ -314,7 +332,12 @@ while 1
     if fr > seq_num
         is_good(t) = 1;
         fprintf('sequence %d is good\n', t);
-    end    
+    end
+    counter(t) = counter(t) + 1;
+    if counter(t) > max_count
+        is_good(t) = 1;
+        fprintf('sequence %d max iteration\n', t);
+    end
 end
 
 % save model
