@@ -24,7 +24,7 @@ for i = 1:tracker.num
     ratio = (BB3(4)-BB3(2)) / (BB1(4)-BB1(2));
     ratio = min(ratio, 1/ratio);    
     
-    if isnan(medFB) || isnan(medFB_left) || isnan(medFB_right) || isnan(medNCC) || ~bb_isdef(BB3) || ratio < 0.75
+    if isnan(medFB) || isnan(medFB_left) || isnan(medFB_right) || isnan(medNCC) || ~bb_isdef(BB3) || ratio < 0.8
         medFB = inf;
         medFB_left = inf;
         medFB_right = inf;

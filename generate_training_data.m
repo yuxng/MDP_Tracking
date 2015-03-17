@@ -15,7 +15,8 @@ dres_gt = read_mot2dres(filename);
 y_gt = dres_gt.y + dres_gt.h;
 
 ids = unique(dres_gt.id);
-dres_train = cell(numel(ids), 1);
+dres_train = [];
+count = 0;
 for i = 1:numel(ids)
     index = find(dres_gt.id == ids(i));
     dres = sub(dres_gt, index);
@@ -48,8 +49,11 @@ for i = 1:numel(ids)
     
     % start with bounding overlap > 0.5
     index = find(dres.overlap > 0.5);
-    index_start = index(1);
-    dres_train{i} = sub(dres, index_start:num);
+    if isempty(index) == 0
+        index_start = index(1);
+        count = count + 1;
+        dres_train{count} = sub(dres, index_start:num);
+    end
     
     % show gt
 %      if is_show

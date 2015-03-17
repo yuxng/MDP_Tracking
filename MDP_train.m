@@ -1,11 +1,11 @@
 % training MDP
 function MDP_train
 
-is_show = 0;
+is_show = 1;
 
 opt = globals();
 opt.is_show = is_show;
-seq_idx = 3;
+seq_idx = 4;
 seq_name = opt.mot2d_train_seqs{seq_idx};
 seq_num = opt.mot2d_train_nums(seq_idx);
 seq_set = 'train';
@@ -27,7 +27,7 @@ I = dres_image.I{1};
 [dres_train, dres_det, labels] = generate_training_data(seq_idx, size(I,2), size(I,1), opt);
 
 % for debugging
-% dres_train = {dres_train{11}};
+dres_train = {dres_train{4}};
 
 num_train = numel(dres_train);
 is_good = zeros(num_train, 1);
@@ -331,7 +331,7 @@ while 1
             show_templates(tracker, dres_image);
 
             fprintf('frame %d, state %d\n', fr, tracker.state);
-            pause(0.001);
+            pause();
             
 %             filename = sprintf('results/%s_%06d.png', seq_name, fr);
 %             hgexport(h, filename, hgexport('factorystyle'), 'Format', 'png');

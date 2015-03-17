@@ -5,7 +5,7 @@ is_show = 1;
 
 opt = globals();
 opt.is_show = is_show;
-seq_idx = 3;
+seq_idx = 4;
 seq_name = opt.mot2d_train_seqs{seq_idx};
 seq_num = opt.mot2d_train_nums(seq_idx);
 seq_set = 'train';
@@ -59,18 +59,23 @@ for fr = 1:seq_num
         show_dres(fr, dres_image.I{fr}, 'Detections', dres_det);
     end
     
-    % apply existing trackers
-    [dres_tmp, index] = generate_initial_index(trackers, dres);
-    dres_associate = sub(dres_tmp, index);
+    % track targets
     for i = 1:numel(trackers)
-        trackers{i} = process(fr, dres_image, dres, dres_associate, trackers{i}, opt);    
+        trackers{i} = track(fr, dres_image, dres, trackers{i}, opt);    
     end
     
-    % connect
+    % connect targets
     [dres_tmp, index] = generate_initial_index(trackers, dres);
     dres_associate = sub(dres_tmp, index);
     for i = 1:numel(trackers)
         trackers{i} = connect(fr, dres_image, dres_associate, trackers{i}, opt);
+    end    
+    
+    % associate targets
+    [dres_tmp, index] = generate_initial_index(trackers, dres);
+    dres_associate = sub(dres_tmp, index);
+    for i = 1:numel(trackers)
+        trackers{i} = associate(fr, dres_image, dres_associate, trackers{i}, opt);    
     end
     
     % find detections for initialization
@@ -134,18 +139,27 @@ end
 
 % apply a single tracker
 % dres: detections
-function tracker = process(fr, dres_image, dres, dres_associate, tracker, opt)
-
-if tracker.state == 0
-    return;
+function tracker = track(fr, dres_image, dres, tracker, opt)
 
 % tracked    
-elseif tracker.state == 2
+if tracker.state == 2
     tracker.streak_occluded = 0;
     tracker = MDP_value(tracker, fr, dres_image, dres, [], opt);
 
+    % check if target outside image
+    [~, ov] = calc_overlap(tracker.dres, numel(tracker.dres.fr), dres_image, fr);
+    if ov < opt.exit_threshold
+        fprintf('target outside image by checking boarders\n');
+        tracker.state = 0;
+    end    
+end
+
+
+% associate a lost target
+function tracker = associate(fr, dres_image, dres_associate, tracker, opt)
+
 % occluded
-elseif tracker.state == 3
+if tracker.state == 3 && double(max(tracker.dres.fr)) ~= fr
     tracker.streak_occluded = tracker.streak_occluded + 1;
     % find a set of detections for association
     index_det = generate_association_index(tracker, fr, dres_image.w(fr), dres_image.h(fr), dres_associate, 1);
@@ -158,13 +172,13 @@ elseif tracker.state == 3
         tracker.state = 0;
         fprintf('target %d exits due to long time occlusion\n', tracker.target_id);
     end
-end
-
-% check if target outside image
-[~, ov] = calc_overlap(tracker.dres, numel(tracker.dres.fr), dres_image, fr);
-if ov < opt.exit_threshold
-    fprintf('target outside image by checking boarders\n');
-    tracker.state = 0;
+    
+    % check if target outside image
+    [~, ov] = calc_overlap(tracker.dres, numel(tracker.dres.fr), dres_image, fr);
+    if ov < opt.exit_threshold
+        fprintf('target outside image by checking boarders\n');
+        tracker.state = 0;
+    end    
 end
 
 

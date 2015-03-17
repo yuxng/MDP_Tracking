@@ -13,7 +13,7 @@ num = tracker.num;
 tracker.threshold_ratio = 0.6;
 tracker.threshold_dis = 200;
 tracker.target_id = target_id;
-tracker.rescale_box = [1 1];
+tracker.rescale_box = [0.6 1];  % [width height]
 tracker.bb = zeros(4,1);
 tracker.patchsize = [24 12];
 
