@@ -28,8 +28,10 @@ BB3    = bb_predict(BB1, xFI(:,idxF), xFJ(1:2,idxF)); % estimate BB2 using the r
 medFB_left = median2(xFJ(3,1:50));
 medFB_right = median2(xFJ(3,51:100));
 % fprintf('medFB left %.2f, medFB right %.2f\n', medFB_left, medFB_right);
-% LK_show(I, J, xFI, BB1, xFJ, BB3);
-% pause();
+% if bb_isdef(BB3)
+%     LK_show(I, J, xFI, BB1, xFJ, BB3);
+%     pause();
+% end
 
 % save selected points (only for display purposes)
 xFJ = xFJ(:, idxF);

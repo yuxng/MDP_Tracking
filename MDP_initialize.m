@@ -22,7 +22,8 @@ tracker.lactive = labels;
 tracker.w_active = svmtrain(tracker.lactive, tracker.factive, '-c 1');
 
 % tracked
-tracker.num = 10;
+num = 10;
+tracker.num = num;
 tracker.fnum_tracked = 5;
 tracker.w_tracked = [];
 

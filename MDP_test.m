@@ -4,6 +4,7 @@ function MDP_test
 is_show = 1;
 
 opt = globals();
+opt.is_show = is_show;
 seq_idx = 3;
 seq_name = opt.mot2d_train_seqs{seq_idx};
 seq_num = opt.mot2d_train_nums(seq_idx);
@@ -80,7 +81,7 @@ for fr = 1:seq_num
         tracker.state = 1;            
         id = id + 1;
         
-        trackers{end+1} = initialize(fr, dres_image, id, dres, index(i), tracker);
+        trackers{end+1} = initialize(fr, dres_image, id, dres, index(i), tracker, opt);
     end
     
     % resolve tracker conflict
@@ -98,7 +99,7 @@ for fr = 1:seq_num
         subplot(2, 2, 4);
         show_dres(fr, dres_image.I{fr}, 'Lost', dres_track, 3);
 
-        pause(0.01);
+        pause();
     end
 end
 
@@ -118,7 +119,7 @@ evaluateTracking({seq_name}, opt.results, benchmark_dir);
 
 % initialize a tracker
 % dres: detections
-function tracker = initialize(fr, dres_image, id, dres, ind, tracker)
+function tracker = initialize(fr, dres_image, id, dres, ind, tracker, opt)
 
 if tracker.state ~= 1
     return;
@@ -127,7 +128,7 @@ else  % active
     % initialize the LK tracker
     tracker = LK_initialize(tracker, fr, id, dres, ind, dres_image);
     
-    tracker = MDP_value(tracker, fr, dres_image, dres, ind);
+    tracker = MDP_value(tracker, fr, dres_image, dres, ind, opt);
 end
 
 
@@ -141,14 +142,14 @@ if tracker.state == 0
 % tracked    
 elseif tracker.state == 2
     tracker.streak_occluded = 0;
-    tracker = MDP_value(tracker, fr, dres_image, dres, []);
+    tracker = MDP_value(tracker, fr, dres_image, dres, [], opt);
 
 % occluded
 elseif tracker.state == 3
     tracker.streak_occluded = tracker.streak_occluded + 1;
     % find a set of detections for association
     index_det = generate_association_index(tracker, fr, dres_image.w(fr), dres_image.h(fr), dres_associate, 1);
-    tracker = MDP_value(tracker, fr, dres_image, dres_associate, index_det);
+    tracker = MDP_value(tracker, fr, dres_image, dres_associate, index_det, opt);
     if tracker.state == 2
         tracker.streak_occluded = 0;
     end
@@ -173,7 +174,7 @@ function tracker = connect(fr, dres_image, dres_associate, tracker, opt)
 if tracker.state == 3 && tracker.prev_state == 2
     % find a set of detections for association
     index_det = generate_association_index(tracker, fr, dres_image.w(fr), dres_image.h(fr), dres_associate, 1);
-    tracker = MDP_value(tracker, fr, dres_image, dres_associate, index_det);
+    tracker = MDP_value(tracker, fr, dres_image, dres_associate, index_det, opt);
     
     % erase last second
     dres = tracker.dres;

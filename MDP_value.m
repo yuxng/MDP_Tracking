@@ -1,5 +1,5 @@
 % MDP value function
-function [tracker, qscore, f] = MDP_value(tracker, frame_id, dres_image, dres_det, index_det)
+function [tracker, qscore, f] = MDP_value(tracker, frame_id, dres_image, dres_det, index_det, opt)
 
 % active, decide to tracked or inactive
 if tracker.state == 1    
@@ -24,7 +24,7 @@ if tracker.state == 1
 % tracked, decide to tracked or occluded
 elseif tracker.state == 2
     % extract features with LK tracking
-    [tracker, f] = MDP_feature_tracked(frame_id, dres_image, dres_det, tracker);
+    [tracker, f] = MDP_feature_tracked(frame_id, dres_image, dres_det, tracker, opt);
     % compute qscore
     if isempty(find(tracker.flags ~= 2, 1)) == 1
         label = -1;
@@ -68,19 +68,26 @@ elseif tracker.state == 3
     else
         % extract features with LK association
         dres = sub(dres_det, index_det);
-        features = MDP_feature_occluded(frame_id, dres_image, dres, tracker);
+        [features, flag] = MDP_feature_occluded(frame_id, dres_image, dres, tracker, opt);
+        
         m = size(features, 1);
         labels = -1 * ones(m, 1);
         [labels, ~, probs] = svmpredict(labels, features, tracker.w_occluded, '-b 1');
+        
+        probs(flag == 0, 1) = 0;
+        probs(flag == 0, 2) = 1;
+        labels(flag == 0) = -1;
+        
         [qscore, ind] = max(probs(:,1));
         label = labels(ind);
         f = features(ind,:);
         
         dres_one = sub(dres_det, index_det(ind));
-        tracker = LK_associate(frame_id, dres_image, dres_one, tracker);
+        tracker = LK_associate(frame_id, dres_image, dres_one, tracker, opt);
         dres = dres_one;
     end
     
+    fprintf('qscore in lost %.2f\n', qscore);
     % make a decision
     if label > 0
         tracker.state = 2;

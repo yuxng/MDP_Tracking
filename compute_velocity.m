@@ -4,6 +4,12 @@ function v = compute_velocity(tracker)
 fr = double(unique(tracker.frame_ids));
 num = numel(fr);
 
+% only use the past 3 frames
+if num > 3
+    fr = fr(num-2:num);
+    num = 3;
+end
+
 % compute centers
 centers = zeros(num, 2);
 for i = 1:num

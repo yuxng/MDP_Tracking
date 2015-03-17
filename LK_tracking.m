@@ -15,18 +15,18 @@
 % You should have received a copy of the GNU General Public License
 % along with TLD.  If not, see <http://www.gnu.org/licenses/>.
 
-function tracker = LK_tracking(frame_id, dres_image, dres_det, tracker)
+function tracker = LK_tracking(frame_id, dres_image, dres_det, tracker, opt)
 
-rescale = 1;
+rescale = 0.5;
 
 % current frame
 J = dres_image.Igray{frame_id};
-% J = imresize(J, rescale);
+J = imresize(J, rescale);
 
 num_det = numel(dres_det.x);
 for i = 1:tracker.num
     I = dres_image.Igray{tracker.frame_ids(i)};
-%     I = imresize(I, rescale);
+    I = imresize(I, rescale);
     
     BB1 = [tracker.x1(i); tracker.y1(i); tracker.x2(i); tracker.y2(i)] * rescale;
     BB1 = bb_rescale_relative(BB1, tracker.rescale_box);
@@ -40,14 +40,14 @@ for i = 1:tracker.num
         BB3 = BB1;
     end
     
-    [BB2, xFJ, flag, medFB, medNCC, medFB_left, medFB_right] = LK(I, J, BB1, BB3, 5);
+    [BB2, xFJ, flag, medFB, medNCC, medFB_left, medFB_right] = LK(I, J, BB1, BB3, 3);
     BB2 = bb_rescale_relative(BB2, 1./tracker.rescale_box) / rescale;
     
     BB1 = bb_rescale_relative(BB1, 1./tracker.rescale_box) / rescale;
     ratio = (BB2(4)-BB2(2)) / (BB1(4)-BB1(2));
     ratio = min(ratio, 1/ratio);
     
-    if isnan(medFB) || isnan(medFB_left) || isnan(medFB_right) || isnan(medNCC) || ~bb_isdef(BB2) || ratio < 0.5
+    if isnan(medFB) || isnan(medFB_left) || isnan(medFB_right) || isnan(medNCC) || ~bb_isdef(BB2) || ratio < 0.75
         medFB = inf;
         medFB_left = inf;
         medFB_right = inf;
@@ -98,64 +98,70 @@ if tracker.overlaps(ind) > 0.7
     index = tracker.indexes(ind);
     bb_det = [dres_det.x(index); dres_det.y(index); ...
         dres_det.x(index)+dres_det.w(index); dres_det.y(index)+dres_det.h(index)];
-    tracker.bb = mean([repmat(tracker.bbs{ind},1,10) bb_det], 2);
+    tracker.bb = mean([repmat(tracker.bbs{ind},1,opt.weight_tracking) bb_det], 2);
 else
     tracker.bb = tracker.bbs{ind};
 end
 
 % compute pattern similarity
-pattern = generate_pattern(dres_image.Igray{frame_id}, tracker.bb, tracker.patchsize);
-nccs = distance(pattern, tracker.patterns, 1); % measure NCC to positive examples
-tracker.nccs = nccs';
+if bb_isdef(tracker.bb)
+    pattern = generate_pattern(dres_image.Igray{frame_id}, tracker.bb, tracker.patchsize);
+    nccs = distance(pattern, tracker.patterns, 1); % measure NCC to positive examples
+    tracker.nccs = nccs';
+else
+    tracker.nccs = zeros(tracker.num, 1);
+end    
 
-fprintf('\ntarget %d: frame ids ', tracker.target_id);
-for i = 1:tracker.num
-    fprintf('%d ', tracker.frame_ids(i))
-end
-fprintf('\n');    
-fprintf('target %d: medFB ', tracker.target_id);
-for i = 1:tracker.num
-    fprintf('%.2f ', tracker.medFBs(i))
-end
-fprintf('\n');
-fprintf('target %d: medNCC ', tracker.target_id);
-for i = 1:tracker.num
-    fprintf('%.2f ', tracker.medNCCs(i))
-end
-fprintf('\n');
-fprintf('target %d: overlap ', tracker.target_id);
-for i = 1:tracker.num
-    fprintf('%.2f ', tracker.overlaps(i))
-end
-fprintf('\n');
-fprintf('target %d: detection score ', tracker.target_id);
-for i = 1:tracker.num
-    fprintf('%.2f ', tracker.scores(i))
-end
-fprintf('\n');
-fprintf('target %d: flag ', tracker.target_id);
-for i = 1:tracker.num
-    fprintf('%d ', tracker.flags(i))
-end
-fprintf('\n');
-fprintf('target %d: angle ', tracker.target_id);
-for i = 1:tracker.num
-    fprintf('%.2f ', tracker.angles(i))
-end
-fprintf('\n');
-fprintf('target %d: ncc ', tracker.target_id);
-for i = 1:tracker.num
-    fprintf('%.2f ', tracker.nccs(i))
-end
-fprintf('\n\n');
-fprintf('target %d: bb overlaps ', tracker.target_id);
-for i = 1:tracker.num
-    fprintf('%.2f ', tracker.bb_overlaps(i))
-end
-fprintf('\n\n');
+if opt.is_show
+    fprintf('\ntarget %d: frame ids ', tracker.target_id);
+    for i = 1:tracker.num
+        fprintf('%d ', tracker.frame_ids(i))
+    end
+    fprintf('\n');    
+    fprintf('target %d: medFB ', tracker.target_id);
+    for i = 1:tracker.num
+        fprintf('%.2f ', tracker.medFBs(i))
+    end
+    fprintf('\n');
+    fprintf('target %d: medNCC ', tracker.target_id);
+    for i = 1:tracker.num
+        fprintf('%.2f ', tracker.medNCCs(i))
+    end
+    fprintf('\n');
+    fprintf('target %d: overlap ', tracker.target_id);
+    for i = 1:tracker.num
+        fprintf('%.2f ', tracker.overlaps(i))
+    end
+    fprintf('\n');
+    fprintf('target %d: detection score ', tracker.target_id);
+    for i = 1:tracker.num
+        fprintf('%.2f ', tracker.scores(i))
+    end
+    fprintf('\n');
+    fprintf('target %d: flag ', tracker.target_id);
+    for i = 1:tracker.num
+        fprintf('%d ', tracker.flags(i))
+    end
+    fprintf('\n');
+    fprintf('target %d: angle ', tracker.target_id);
+    for i = 1:tracker.num
+        fprintf('%.2f ', tracker.angles(i))
+    end
+    fprintf('\n');
+    fprintf('target %d: ncc ', tracker.target_id);
+    for i = 1:tracker.num
+        fprintf('%.2f ', tracker.nccs(i))
+    end
+    fprintf('\n\n');
+    fprintf('target %d: bb overlaps ', tracker.target_id);
+    for i = 1:tracker.num
+        fprintf('%.2f ', tracker.bb_overlaps(i))
+    end
+    fprintf('\n\n');
 
-if tracker.flags(ind) == 2
-    fprintf('target %d: bounding box out of image\n', tracker.target_id);
-elseif tracker.flags(ind) == 3
-    fprintf('target %d: too unstable predictions\n', tracker.target_id);
+    if tracker.flags(ind) == 2
+        fprintf('target %d: bounding box out of image\n', tracker.target_id);
+    elseif tracker.flags(ind) == 3
+        fprintf('target %d: too unstable predictions\n', tracker.target_id);
+    end
 end

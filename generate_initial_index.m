@@ -23,7 +23,7 @@ end
 
 % nms
 bbox = [dres_det.x dres_det.y dres_det.x+dres_det.w dres_det.y+dres_det.h dres_det.r];
-index_nms = nms_new(bbox, 0.6);
+index_nms = nms(bbox, 0.5);
 dres_det = sub(dres_det, index_nms);    
 
 % compute overlaps

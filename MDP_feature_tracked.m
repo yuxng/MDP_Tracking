@@ -1,8 +1,8 @@
 % extract features for tracked state
-function [tracker, f] = MDP_feature_tracked(frame_id, dres_image, dres_det, tracker)
+function [tracker, f] = MDP_feature_tracked(frame_id, dres_image, dres_det, tracker, opt)
 
 % LK tracking
-tracker = LK_tracking(frame_id, dres_image, dres_det, tracker);
+tracker = LK_tracking(frame_id, dres_image, dres_det, tracker, opt);
 % extract features
 f = zeros(1, tracker.fnum_tracked);
 % extract minimal FB error
