@@ -64,9 +64,15 @@ for i = 1:tracker.num
         dres.y = BB2(2);
         dres.w = BB2(3) - BB2(1);
         dres.h = BB2(4) - BB2(2);
-        overlap = calc_overlap(dres, 1, dres_det, 1:num_det);
-        [o, ind] = max(overlap);
-        score = dres_det.r(ind);
+        if isempty(dres_det.fr) == 0
+            overlap = calc_overlap(dres, 1, dres_det, 1:num_det);
+            [o, ind] = max(overlap);
+            score = dres_det.r(ind);
+        else
+            o = 0;
+            score = -1;
+            ind = 0;
+        end
         
         % compute angle
         centerI = [(BB1(1)+BB1(3))/2 (BB1(2)+BB1(4))/2];

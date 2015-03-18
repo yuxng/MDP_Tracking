@@ -18,5 +18,9 @@ dres.y = tracker.bb(2);
 dres.w = tracker.bb(3) - tracker.bb(1);
 dres.h = tracker.bb(4) - tracker.bb(2);
 num_det = numel(dres_det.fr);
-o = calc_overlap(dres, 1, dres_det, 1:num_det);
-tracker.bb_overlaps(index) = max(o);
+if isempty(dres_det.fr) == 0
+    o = calc_overlap(dres, 1, dres_det, 1:num_det);
+    tracker.bb_overlaps(index) = max(o);
+else
+    tracker.bb_overlaps(index) = 0;
+end

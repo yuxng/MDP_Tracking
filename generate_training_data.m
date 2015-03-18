@@ -46,10 +46,12 @@ for i = 1:numel(ids)
         
         % overlap with detections
         index = find(dres_det.fr == fr);
-        overlap = calc_overlap(dres, j, dres_det, index);
-        [o, ind] = max(overlap);
-        dres.overlap(j) = o;
-        dres.r(j) = dres_det.r(index(ind));
+        if isempty(index) == 0
+            overlap = calc_overlap(dres, j, dres_det, index);
+            [o, ind] = max(overlap);
+            dres.overlap(j) = o;
+            dres.r(j) = dres_det.r(index(ind));
+        end
     end
     
     % start with bounding overlap > 0.5

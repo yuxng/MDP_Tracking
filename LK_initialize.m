@@ -70,6 +70,11 @@ if isempty(tracker.w_occluded) == 1
     index = find(ov > 0.5);
     features(index,:) = [];
     labels(index,:) = [];
+    
+    % add default negative example
+    features = [features; zeros(1, tracker.fnum_occluded)];
+    labels = [labels; -1];
+    
     tracker.foccluded = features;
     tracker.loccluded = labels;
     tracker.w_occluded = svmtrain(tracker.loccluded, tracker.foccluded, '-c 1 -b 1');    

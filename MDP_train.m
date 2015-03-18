@@ -5,7 +5,7 @@ is_show = 1;
 
 opt = globals();
 opt.is_show = is_show;
-seq_idx = 4;
+seq_idx = 5;
 seq_name = opt.mot2d_train_seqs{seq_idx};
 seq_num = opt.mot2d_train_nums(seq_idx);
 seq_set = 'train';
@@ -27,7 +27,7 @@ I = dres_image.I{1};
 [dres_train, dres_det, labels] = generate_training_data(seq_idx, size(I,2), size(I,1), opt);
 
 % for debugging
-% dres_train = {dres_train{5}};
+% dres_train = {dres_train{6}};
 
 num_train = numel(dres_train);
 is_good = zeros(num_train, 1);
