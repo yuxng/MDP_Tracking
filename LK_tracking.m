@@ -57,6 +57,7 @@ for i = 1:tracker.num
         ind = 1;
         angle = -1;
         flag = 2;
+        BB2 = [NaN; NaN; NaN; NaN];
     else
         % compute overlap
         dres.x = BB2(1);
