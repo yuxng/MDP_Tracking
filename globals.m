@@ -27,3 +27,4 @@ opt.tracked = 4;
 opt.exit_threshold = 0.2;
 opt.weight_tracking = 5;
 opt.weight_association = 1;
+opt.start_conf = 10;

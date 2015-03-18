@@ -19,7 +19,7 @@ if exist(filename, 'file') ~= 0
 else
     dres_image = read_dres_image(opt, seq_set, seq_name, seq_num);
     fprintf('read images done\n');
-    save(filename, 'dres_image');
+    save(filename, 'dres_image', '-v7.3');
 end
 
 % generate training data
@@ -27,7 +27,7 @@ I = dres_image.I{1};
 [dres_train, dres_det, labels] = generate_training_data(seq_idx, size(I,2), size(I,1), opt);
 
 % for debugging
-dres_train = {dres_train{4}};
+% dres_train = {dres_train{5}};
 
 num_train = numel(dres_train);
 is_good = zeros(num_train, 1);
@@ -331,7 +331,7 @@ while 1
             show_templates(tracker, dres_image);
 
             fprintf('frame %d, state %d\n', fr, tracker.state);
-            pause();
+            pause(0.001);
             
 %             filename = sprintf('results/%s_%06d.png', seq_name, fr);
 %             hgexport(h, filename, hgexport('factorystyle'), 'Format', 'png');

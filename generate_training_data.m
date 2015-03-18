@@ -12,7 +12,9 @@ dres_det = read_mot2dres(filename);
 % read ground truth
 filename = fullfile(opt.mot, opt.mot2d, seq_set, seq_name, 'gt', 'gt.txt');
 dres_gt = read_mot2dres(filename);
+dres_gt = fix_groundtruth(seq_name, dres_gt);
 y_gt = dres_gt.y + dres_gt.h;
+
 
 ids = unique(dres_gt.id);
 dres_train = [];
@@ -26,6 +28,7 @@ for i = 1:numel(ids)
     dres.occluded = zeros(num, 1);
     dres.covered = zeros(num, 1);
     dres.overlap = zeros(num, 1);
+    dres.r = zeros(num, 1);
     y = dres.y + dres.h;
     for j = 1:num
         fr = dres.fr(j);
@@ -44,11 +47,13 @@ for i = 1:numel(ids)
         % overlap with detections
         index = find(dres_det.fr == fr);
         overlap = calc_overlap(dres, j, dres_det, index);
-        dres.overlap(j) = max(overlap);
+        [o, ind] = max(overlap);
+        dres.overlap(j) = o;
+        dres.r(j) = dres_det.r(index(ind));
     end
     
     % start with bounding overlap > 0.5
-    index = find(dres.overlap > 0.5);
+    index = find(dres.overlap > 0.5 & dres.r > opt.start_conf);
     if isempty(index) == 0
         index_start = index(1);
         count = count + 1;
@@ -68,6 +73,7 @@ for i = 1:numel(ids)
 %         end
 %     end
 end
+fprintf('%s: %d positive sequences\n', seq_name, numel(dres_train));
 
 % collect true positives and false alarms from detections
 num = numel(dres_det.fr);
@@ -99,3 +105,4 @@ for i = 1:num
         dres_train{end+1} = dres_one;
     end
 end
+fprintf('%s: %d negative sequences\n', seq_name, numel(dres_train) - count);

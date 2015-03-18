@@ -19,7 +19,7 @@ if exist(filename, 'file') ~= 0
 else
     dres_image = read_dres_image(opt, seq_set, seq_name, seq_num);
     fprintf('read images done\n');
-    save(filename, 'dres_image');
+    save(filename, 'dres_image', '-v7.3');
 end
 
 % read detections
@@ -29,6 +29,7 @@ dres_det = read_mot2dres(filename);
 % read ground truth
 filename = fullfile(opt.mot, opt.mot2d, seq_set, seq_name, 'gt', 'gt.txt');
 dres_gt = read_mot2dres(filename);
+dres_gt = fix_groundtruth(seq_name, dres_gt);
 
 % load the trained model
 object = load('tracker.mat');
