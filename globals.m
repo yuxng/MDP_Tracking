@@ -18,6 +18,10 @@ opt.mot2d_test_nums = [201, 436, 440, 1194, 219, 450, 500, 625, 209, 1059, 450];
 addpath(fullfile(opt.mot, 'devkit', 'utils'));
 addpath([opt.root '/3rd_party/libsvm-3.20/matlab']);
 
+if exist(opt.results, 'dir') == 0
+    mkdir(opt.results);
+end
+
 % tracking parameters
 opt.num = 10;                 % number of templates in tracker
 opt.fb_factor = 30;           % normalization factor for forward-backward error in optical flow
