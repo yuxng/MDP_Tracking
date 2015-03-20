@@ -24,8 +24,10 @@ opt.num = 10;               % number of templates in tracker
 opt.fb_factor = 30;         % normalization factor for forward-backward error in optical flow
 opt.threshold_ratio = 0.6;  % aspect ratio threshold in target association
 opt.threshold_dis = 200;    % distance threshold in target association
+
 opt.rescale_box = [0.6 1];  % [width height], rescale the bounding box before computing flow
 opt.rescale_img = 0.5;      % rescale the image before computing flow
+
 opt.enlarge_box = 5;        % enlarge the box before computing flow
 opt.level_track = 5;        % LK level in tracking
 opt.level_lost =  1;        % LK level in association

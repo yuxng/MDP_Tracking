@@ -86,11 +86,11 @@ for fr = 1:seq_num
         tracker.state = 1;            
         id = id + 1;
         
-        trackers{end+1} = initialize(fr, dres_image, id, dres, index(i), tracker, opt);
+        trackers{end+1} = initialize(fr, dres_image, id, dres, index(i), tracker);
     end
     
     % resolve tracker conflict
-    trackers = resolve(trackers, dres);    
+    trackers = resolve(trackers, dres, opt);    
     
     dres_track = generate_results(trackers);
     if is_show
@@ -205,7 +205,7 @@ end
 
 
 % resolve conflict between trackers
-function trackers = resolve(trackers, dres_det)
+function trackers = resolve(trackers, dres_det, opt)
 
 % collect dres from trackers
 dres_track = [];
