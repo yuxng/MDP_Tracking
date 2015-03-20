@@ -1,7 +1,17 @@
 function opt = globals()
 
 opt.root = pwd;
-opt.mot = '/home/yuxiang/Projects/Multitarget_Tracking/MOTbenchmark';
+
+% path for MOT benchmark
+mot_paths = {'/home/yuxiang/Projects/Multitarget_Tracking/MOTbenchmark', ...
+    '/scail/scratch/u/yuxiang/MOTbenchmark'};
+for i = 1:numel(mot_paths)
+    if exist(mot_paths{i}, 'dir')
+        opt.mot = mot_paths{i};
+        break;
+    end
+end
+
 opt.mot2d = '2DMOT2015';
 opt.results = 'results';
 

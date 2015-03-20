@@ -15,7 +15,7 @@ seq_num = opt.mot2d_train_nums(seq_idx);
 seq_set = 'train';
 
 % build the dres structure for images
-filename = sprintf('results/%s_dres_image.mat', seq_name);
+filename = sprintf('%s/%s_dres_image.mat', opt.results, seq_name);
 if exist(filename, 'file') ~= 0
     object = load(filename);
     dres_image = object.dres_image;
