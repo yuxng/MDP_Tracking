@@ -20,17 +20,11 @@ function tracker = LK_tracking(frame_id, dres_image, dres_det, tracker)
 rescale = tracker.rescale_img;
 
 % current frame
-J = dres_image.Igray{frame_id};
-if rescale ~= 1
-    J = imresize(J, rescale);
-end
+J = dres_image.Igray_rescale{frame_id};
 
 num_det = numel(dres_det.x);
 for i = 1:tracker.num
-    I = dres_image.Igray{tracker.frame_ids(i)};
-    if rescale ~= 1
-        I = imresize(I, rescale);
-    end
+    I = dres_image.Igray_rescale{tracker.frame_ids(i)};
     
     BB1 = [tracker.x1(i); tracker.y1(i); tracker.x2(i); tracker.y2(i)] * rescale;
     BB1 = bb_rescale_relative(BB1, tracker.rescale_box);

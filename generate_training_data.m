@@ -1,6 +1,6 @@
 function [dres_train, dres_det, labels] = generate_training_data(seq_idx, width, height, opt)
 
-is_show = 0;
+% is_show = 0;
 
 seq_name = opt.mot2d_train_seqs{seq_idx};
 seq_set = 'train';
@@ -14,6 +14,34 @@ filename = fullfile(opt.mot, opt.mot2d, seq_set, seq_name, 'gt', 'gt.txt');
 dres_gt = read_mot2dres(filename);
 dres_gt = fix_groundtruth(seq_name, dres_gt);
 y_gt = dres_gt.y + dres_gt.h;
+
+% collect true positives and false alarms from detections
+num = numel(dres_det.fr);
+labels = zeros(num, 1);
+overlaps = zeros(num, 1);
+for i = 1:num
+    fr = dres_det.fr(i);
+    index = find(dres_gt.fr == fr);
+    if isempty(index) == 0
+        overlap = calc_overlap(dres_det, i, dres_gt, index);
+        o = max(overlap);
+        if o < opt.overlap_neg
+            labels(i) = -1;
+        elseif o > opt.overlap_pos
+            labels(i) = 1;
+        else
+            labels(i) = 0;
+        end
+        overlaps(i) = o;
+    else
+        overlaps(i) = 0;
+        labels(i) = -1;
+    end
+end
+
+% compute start conf
+scores = sort(dres_det.r(labels == 1));
+start_conf = scores(round(0.05*num));
 
 
 ids = unique(dres_gt.id);
@@ -55,7 +83,7 @@ for i = 1:numel(ids)
     end
     
     % start with bounding overlap > opt.overlap_pos
-    index = find(dres.overlap > opt.overlap_pos & dres.r > opt.start_conf);
+    index = find(dres.overlap > opt.overlap_pos & dres.r > start_conf);
     if isempty(index) == 0
         index_start = index(1);
         count = count + 1;
@@ -77,29 +105,6 @@ for i = 1:numel(ids)
 end
 fprintf('%s: %d positive sequences\n', seq_name, numel(dres_train));
 
-% collect true positives and false alarms from detections
-num = numel(dres_det.fr);
-labels = zeros(num, 1);
-overlaps = zeros(num, 1);
-for i = 1:num
-    fr = dres_det.fr(i);
-    index = find(dres_gt.fr == fr);
-    if isempty(index) == 0
-        overlap = calc_overlap(dres_det, i, dres_gt, index);
-        o = max(overlap);
-        if o < opt.overlap_neg
-            labels(i) = -1;
-        elseif o > opt.overlap_pos
-            labels(i) = 1;
-        else
-            labels(i) = 0;
-        end
-        overlaps(i) = o;
-    else
-        overlaps(i) = 0;
-        labels(i) = -1;
-    end
-end
 
 % extract false alarms and append to training sequences
 index = find(overlaps < opt.overlap_neg);

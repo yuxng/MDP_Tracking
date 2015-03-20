@@ -4,19 +4,13 @@ function tracker = LK_associate(frame_id, dres_image, dres_det, tracker)
 rescale = tracker.rescale_img;
 
 % current frame
-J = dres_image.Igray{frame_id};
-if rescale ~= 1
-    J = imresize(J, rescale);
-end
+J = dres_image.Igray_rescale{frame_id};
 
 BB2 = [dres_det.x; dres_det.y; dres_det.x + dres_det.w; dres_det.y + dres_det.h] * rescale;
 BB2 = bb_rescale_relative(BB2, tracker.rescale_box);
 
 for i = 1:tracker.num
-    I = dres_image.Igray{tracker.frame_ids(i)};
-    if rescale ~= 1
-        I = imresize(I, rescale);
-    end
+    I = dres_image.Igray_rescale{tracker.frame_ids(i)};
     
     BB1 = [tracker.x1(i); tracker.y1(i); tracker.x2(i); tracker.y2(i)] * rescale;    
     BB1 = bb_rescale_relative(BB1, tracker.rescale_box);

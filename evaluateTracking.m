@@ -1,4 +1,4 @@
-function allMets = evaluateTracking(allSeq, resDir, dataDir)
+function allMets=evaluateTracking(allSeq,resDir,dataDir)
 %% evaluate CLEAR MOT and other metrics
 % concatenate ALL sequences and evaluate as one!
 %
@@ -14,9 +14,10 @@ function allMets = evaluateTracking(allSeq, resDir, dataDir)
 fprintf('Sequences: \n');
 disp(allSeq')
 
+
 % concat gtInfo
 gtInfo=[];
-gtInfo.Xi=[];
+gtInfo.X=[];
 allFgt=zeros(1,length(allSeq));
 
 % Find out the length of each sequence
@@ -33,7 +34,7 @@ for s=allSeq
     gtFile = fullfile(dataDir,seqName,'gt','gt.txt');
     gtI = convertTXTToStruct(gtFile,seqFolder);
     
-    [Fgt,Ngt] = size(gtInfo.Xi);
+    [Fgt,Ngt] = size(gtInfo.X);
     [FgtI,NgtI] = size(gtI.Xi);
     newFgt = Fgt+1:Fgt+FgtI;
     newNgt = Ngt+1:Ngt+NgtI;
@@ -51,7 +52,17 @@ for s=allSeq
         gtInfo.Ygp(newFgt,newNgt) = gtI.Ygp;
         gtInfoSingle(seqCnt).wc=1;
     end
-        
+    
+    % check if bounding boxes available in solution
+    imCoord=1;
+    if all(gtI.Xi(find(gtI.Xi(:)))==-1)
+        imCoord=0;
+    end
+    
+    gtInfo.X=gtInfo.Xi;gtInfo.Y=gtInfo.Yi;
+    if ~imCoord 
+        gtInfo.X=gtInfo.Xgp;gtInfo.Y=gtInfo.Ygp; 
+    end
     
     allFgt(seqCnt) = FgtI;
     
@@ -122,6 +133,8 @@ for s=allSeq
         stI.Yi(missingFrames,:)=0;
         stI.W(missingFrames,:)=0;
         stI.H(missingFrames,:)=0;
+        stI.X(missingFrames,:)=0;
+        stI.Y(missingFrames,:)=0;
         if worldCoordST
             stI.Xgp(missingFrames,:)=0; stI.Ygp(missingFrames,:)=0;
         end
@@ -130,7 +143,6 @@ for s=allSeq
     end
     
     % get result for one sequence only
-    
     [mets, mInf]=CLEAR_MOT_HUN(gtInfoSingle(seqCnt).gtInfo,stI);
     
     allMets(mcnt).mets2d(seqCnt).name=seqName;
@@ -151,6 +163,7 @@ for s=allSeq
         evopt.eval3d=1;evopt.td=1;
         [mets, mInf]=CLEAR_MOT_HUN(gtInfoSingle(seqCnt).gtInfo,stI,evopt);
             allMets(mcnt).mets3d(seqCnt).m=mets;
+                
         fprintf('*** 3D (in world coordinates) ***\n'); printMetrics(mets); fprintf('\n');            
     else
         eval3D=0;
@@ -167,7 +180,11 @@ for s=allSeq
     stInfo.W(newF,newN) = stI.W;
     stInfo.H(newF,newN) = stI.H;
     if isfield(stI,'Xgp') && isfield(stI,'Ygp')
-        stInfo.Xgp(newF,newN) = stI.Xgp;stInfo.Ygp(newF,newN) = stI.Ygp;        
+        stInfo.Xgp(newF,newN) = stI.Xgp;stInfo.Ygp(newF,newN) = stI.Ygp;
+    end
+    stInfo.X=stInfo.Xi;stInfo.Y=stInfo.Yi;
+    if ~imCoord 
+        stInfo.X=stInfo.Xgp;stInfo.Y=stInfo.Ygp; 
     end
     
 end
@@ -191,7 +208,7 @@ if eval3D
     fprintf(' ********************* Your Benchmark Results (3D) ***********************\n');
 
     evopt.eval3d=1;evopt.td=1;
-    
+       
     [m3d, mInf]=CLEAR_MOT_HUN(gtInfo,stInfo,evopt);
     allMets.bmark3d=m3d;
     

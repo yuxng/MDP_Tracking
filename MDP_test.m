@@ -1,10 +1,12 @@
 % testing MDP
-function MDP_test
+function metrics = MDP_test(seq_idx, tracker)
 
-is_show = 1;
+is_show = 0;
+is_save = 0;
+is_text = 0;
 
 opt = globals();
-seq_idx = 1;
+opt.is_text = is_text;
 seq_name = opt.mot2d_train_seqs{seq_idx};
 seq_num = opt.mot2d_train_nums(seq_idx);
 seq_set = 'train';
@@ -31,18 +33,38 @@ dres_gt = read_mot2dres(filename);
 dres_gt = fix_groundtruth(seq_name, dres_gt);
 
 % load the trained model
-object = load('tracker.mat');
-tracker = object.tracker;
+if nargin < 2
+    object = load('tracker.mat');
+    tracker = object.tracker;
+end
 
 % intialize tracker
 I = dres_image.I{1};
 tracker = MDP_initialize_test(tracker, size(I,2), size(I,1), dres_det, is_show);
 
+% rescale gray images
+dres_image.Igray_rescale = cell(size(dres_image.Igray));
+for i = 1:numel(dres_image.Igray)
+    if tracker.rescale_img ~= 1
+        dres_image.Igray_rescale{i} = imresize(dres_image.Igray{i}, tracker.rescale_img);
+    else
+        dres_image.Igray_rescale{i} = dres_image.Igray{i};
+    end
+end
+fprintf('rescale images done\n');
+
 % for each frame
 trackers = [];
 id = 0;
 for fr = 1:seq_num
-    fprintf('frame %d\n', fr);
+    if is_text
+        fprintf('frame %d\n', fr);
+    else
+        fprintf('.');
+        if mod(fr, 100) == 0
+            fprintf('\n');
+        end        
+    end
     % extract detection
     index = find(dres_det.fr == fr);
     dres = sub(dres_det, index);
@@ -104,13 +126,9 @@ for fr = 1:seq_num
         subplot(2, 2, 4);
         show_dres(fr, dres_image.I{fr}, 'Lost', dres_track, 3);
 
-        pause(0.01);
+        pause();
     end
 end
-
-% save results
-filename = sprintf('%s/%s.mat', opt.results, seq_name);
-save(filename, 'dres_track');
 
 % write tracking results
 filename = sprintf('%s/%s.txt', opt.results, seq_name);
@@ -119,8 +137,13 @@ write_tracking_results(filename, dres_track, opt.tracked);
 
 % evaluation
 benchmark_dir = fullfile(opt.mot, opt.mot2d, seq_set, filesep);
-evaluateTracking({seq_name}, opt.results, benchmark_dir);
+metrics = evaluateTracking({seq_name}, opt.results, benchmark_dir);
 
+% save results
+if is_save
+    filename = sprintf('%s/%s.mat', opt.results, seq_name);
+    save(filename, 'dres_track', 'metrics');
+end
 
 % initialize a tracker
 % dres: detections
@@ -149,7 +172,9 @@ if tracker.state == 2
     % check if target outside image
     [~, ov] = calc_overlap(tracker.dres, numel(tracker.dres.fr), dres_image, fr);
     if ov < opt.exit_threshold
-        fprintf('target outside image by checking boarders\n');
+        if opt.is_text
+            fprintf('target outside image by checking boarders\n');
+        end
         tracker.state = 0;
     end    
 end
@@ -170,13 +195,17 @@ if tracker.state == 3 && double(max(tracker.dres.fr)) ~= fr
 
     if tracker.streak_occluded > opt.max_occlusion
         tracker.state = 0;
-        fprintf('target %d exits due to long time occlusion\n', tracker.target_id);
+        if opt.is_text
+            fprintf('target %d exits due to long time occlusion\n', tracker.target_id);
+        end
     end
     
     % check if target outside image
     [~, ov] = calc_overlap(tracker.dres, numel(tracker.dres.fr), dres_image, fr);
     if ov < opt.exit_threshold
-        fprintf('target outside image by checking boarders\n');
+        if opt.is_text
+            fprintf('target outside image by checking boarders\n');
+        end
         tracker.state = 0;
     end    
 end
@@ -198,7 +227,9 @@ if tracker.state == 3 && tracker.prev_state == 2
     % check if target outside image
     [~, ov] = calc_overlap(tracker.dres, numel(tracker.dres.fr), dres_image, fr);
     if ov < opt.exit_threshold
-        fprintf('target outside image by checking boarders\n');
+        if opt.is_text
+            fprintf('target outside image by checking boarders\n');
+        end
         tracker.state = 0;
     end       
 end
@@ -240,11 +271,15 @@ for i = 1:num_track
         if max(o1) > max(o2)
             trackers{dres_track.id(ind)}.state = 3;
             trackers{dres_track.id(ind)}.dres.state(end) = 3;
-            fprintf('target %d suppressed\n', dres_track.id(ind));
+            if opt.is_text
+                fprintf('target %d suppressed\n', dres_track.id(ind));
+            end
         else
             trackers{dres_track.id(i)}.state = 3;
             trackers{dres_track.id(i)}.dres.state(end) = 3;
-            fprintf('target %d suppressed\n', dres_track.id(i));
+            if opt.is_text
+                fprintf('target %d suppressed\n', dres_track.id(i));
+            end
         end
     end
 end

@@ -50,7 +50,7 @@ if isempty(tracker.w_tracked) == 1
     labels = [+1; -1];
     tracker.ftracked = features;
     tracker.ltracked = labels;
-    tracker.w_tracked = svmtrain(tracker.ltracked, tracker.ftracked, '-c 1 -b 1'); 
+    tracker.w_tracked = svmtrain(tracker.ltracked, tracker.ftracked, '-c 1 -b 1 -q'); 
 end
 
 % compute features for occluded state
@@ -71,5 +71,5 @@ if isempty(tracker.w_occluded) == 1
     
     tracker.foccluded = features;
     tracker.loccluded = labels;
-    tracker.w_occluded = svmtrain(tracker.loccluded, tracker.foccluded, '-c 1 -b 1');    
+    tracker.w_occluded = svmtrain(tracker.loccluded, tracker.foccluded, '-c 1 -b 1 -q');    
 end

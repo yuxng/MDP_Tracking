@@ -10,7 +10,7 @@ cdets = [dres_det.x + dres_det.w/2, dres_det.y + dres_det.h/2];
 distances = zeros(num_det, 1);
 ratios = zeros(num_det, 1);
 for i = 1:num_det
-    distances(i) = norm(cdets(i,:) - ctrack);
+    distances(i) = norm(cdets(i,:) - ctrack) / dres_det.w(i);
 
     ratio = tracker.dres.h(end) / dres_det.h(i);
     ratios(i) = min(ratio, 1/ratio);

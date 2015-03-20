@@ -8,7 +8,7 @@ if tracker.state == 1
     f = MDP_feature_active(tracker, dres_one);
     qscore = 1;
     % prediction
-    label = svmpredict(1, f, tracker.w_active);
+    label = svmpredict(1, f, tracker.w_active, '-q');
     % make a decision
     if label > 0
         tracker.state = 2;
@@ -46,10 +46,12 @@ elseif tracker.state == 2
         label = -1;
         qscore = 0;
     else
-        [label, ~, prob] = svmpredict(1, f, tracker.w_tracked, '-b 1');
+        [label, ~, prob] = svmpredict(1, f, tracker.w_tracked, '-b 1 -q');
         qscore = prob(1);
     end
-    fprintf('qscore in tracked %.2f\n', qscore);
+    if tracker.is_show
+        fprintf('qscore in tracked %.2f\n', qscore);
+    end
     % make a decision
     if label > 0
         tracker.state = 2;
@@ -77,7 +79,7 @@ elseif tracker.state == 3
         
         m = size(features, 1);
         labels = -1 * ones(m, 1);
-        [labels, ~, probs] = svmpredict(labels, features, tracker.w_occluded, '-b 1');
+        [labels, ~, probs] = svmpredict(labels, features, tracker.w_occluded, '-b 1 -q');
         
         probs(flag == 0, 1) = 0;
         probs(flag == 0, 2) = 1;
@@ -92,7 +94,9 @@ elseif tracker.state == 3
         dres = dres_one;
     end
     
-    fprintf('qscore in lost %.2f\n', qscore);
+    if tracker.is_show
+        fprintf('qscore in lost %.2f\n', qscore);
+    end
     % make a decision
     if label > 0
         tracker.state = 2;
