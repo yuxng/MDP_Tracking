@@ -1,5 +1,5 @@
 % MDP value function
-function [tracker, qscore, f] = MDP_value(tracker, frame_id, dres_image, dres_det, index_det, opt)
+function [tracker, qscore, f] = MDP_value(tracker, frame_id, dres_image, dres_det, index_det)
 
 % active, decide to tracked or inactive
 if tracker.state == 1    
@@ -24,7 +24,23 @@ if tracker.state == 1
 % tracked, decide to tracked or occluded
 elseif tracker.state == 2
     % extract features with LK tracking
-    [tracker, f] = MDP_feature_tracked(frame_id, dres_image, dres_det, tracker, opt);
+    [tracker, f] = MDP_feature_tracked(frame_id, dres_image, dres_det, tracker);
+    
+    % build the dres structure
+    if bb_isdef(tracker.bb)
+        dres_one.fr = frame_id;
+        dres_one.id = tracker.target_id;
+        dres_one.x = tracker.bb(1);
+        dres_one.y = tracker.bb(2);
+        dres_one.w = tracker.bb(3) - tracker.bb(1);
+        dres_one.h = tracker.bb(4) - tracker.bb(2);
+        dres_one.r = 1;
+    else
+        dres_one = sub(tracker.dres, numel(tracker.dres.fr));
+        dres_one.fr = frame_id;
+        dres_one.id = tracker.target_id;
+    end
+    
     % compute qscore
     if isempty(find(tracker.flags ~= 2, 1)) == 1
         label = -1;
@@ -37,23 +53,12 @@ elseif tracker.state == 2
     % make a decision
     if label > 0
         tracker.state = 2;
-        % build the dres structure
-        dres_one.fr = frame_id;
-        dres_one.id = tracker.target_id;
-        dres_one.x = tracker.bb(1);
-        dres_one.y = tracker.bb(2);
-        dres_one.w = tracker.bb(3) - tracker.bb(1);
-        dres_one.h = tracker.bb(4) - tracker.bb(2);
-        dres_one.r = 1;
         dres_one.state = 2;
         tracker.dres = concatenate_dres(tracker.dres, dres_one);
         % update LK tracker
         tracker = LK_update(frame_id, tracker, dres_image.Igray{frame_id}, dres_det);
     else
         tracker.state = 3;
-        dres_one = sub(tracker.dres, numel(tracker.dres.fr));
-        dres_one.fr = frame_id;
-        dres_one.id = tracker.target_id;
         dres_one.state = 3;
         tracker.dres = concatenate_dres(tracker.dres, dres_one);        
     end
@@ -68,7 +73,7 @@ elseif tracker.state == 3
     else
         % extract features with LK association
         dres = sub(dres_det, index_det);
-        [features, flag] = MDP_feature_occluded(frame_id, dres_image, dres, tracker, opt);
+        [features, flag] = MDP_feature_occluded(frame_id, dres_image, dres, tracker);
         
         m = size(features, 1);
         labels = -1 * ones(m, 1);
@@ -83,7 +88,7 @@ elseif tracker.state == 3
         f = features(ind,:);
         
         dres_one = sub(dres_det, index_det(ind));
-        tracker = LK_associate(frame_id, dres_image, dres_one, tracker, opt);
+        tracker = LK_associate(frame_id, dres_image, dres_one, tracker);
         dres = dres_one;
     end
     

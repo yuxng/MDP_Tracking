@@ -1,30 +1,51 @@
 % use LK trackers for association
-function tracker = LK_associate(frame_id, dres_image, dres_det, tracker, opt)
+function tracker = LK_associate(frame_id, dres_image, dres_det, tracker)
 
-rescale = 0.5;
+rescale = tracker.rescale_img;
 
 % current frame
 J = dres_image.Igray{frame_id};
-J = imresize(J, rescale);
+if rescale ~= 1
+    J = imresize(J, rescale);
+end
 
 BB2 = [dres_det.x; dres_det.y; dres_det.x + dres_det.w; dres_det.y + dres_det.h] * rescale;
 BB2 = bb_rescale_relative(BB2, tracker.rescale_box);
 
 for i = 1:tracker.num
     I = dres_image.Igray{tracker.frame_ids(i)};
-    I = imresize(I, rescale);
+    if rescale ~= 1
+        I = imresize(I, rescale);
+    end
     
     BB1 = [tracker.x1(i); tracker.y1(i); tracker.x2(i); tracker.y2(i)] * rescale;    
     BB1 = bb_rescale_relative(BB1, tracker.rescale_box);
     
-    [BB3, xFJ, flag, medFB, medNCC, medFB_left, medFB_right] = LK(I, J, BB1, BB2, 1);
+    % crop images and boxes
+    BB_crop = bb_union(BB1, BB2);
+    BB_crop = bb_rescale_relative(BB_crop, tracker.enlarge_box);
+    BB_crop(1) = max(1, BB_crop(1));
+    BB_crop(2) = max(1, BB_crop(2));
+    BB_crop(3) = min(size(I,2), BB_crop(3));
+    BB_crop(4) = min(size(I,1), BB_crop(4));
+    rect = [BB_crop(1), BB_crop(2), BB_crop(3)-BB_crop(1)+1, BB_crop(4)-BB_crop(2)+1];
+    I_crop = imcrop(I, rect);
+    J_crop = imcrop(J, rect);
+    BB1_crop = bb_shift_absolute(BB1, [-rect(1) -rect(2)]);
+    BB2_crop = bb_shift_absolute(BB2, [-rect(1) -rect(2)]);    
+    
+    [BB3, xFJ, flag, medFB, medNCC, medFB_left, medFB_right] = LK(I_crop, ...
+        J_crop, BB1_crop, BB2_crop, tracker.level_lost);
+    
+    BB3 = bb_shift_absolute(BB3, [rect(1) rect(2)]);
     BB3 = bb_rescale_relative(BB3, 1./tracker.rescale_box) / rescale;
     BB1 = bb_rescale_relative(BB1, 1./tracker.rescale_box) / rescale;
     
     ratio = (BB3(4)-BB3(2)) / (BB1(4)-BB1(2));
     ratio = min(ratio, 1/ratio);    
     
-    if isnan(medFB) || isnan(medFB_left) || isnan(medFB_right) || isnan(medNCC) || ~bb_isdef(BB3) || ratio < 0.8
+    if isnan(medFB) || isnan(medFB_left) || isnan(medFB_right) || isnan(medNCC) ...
+            || ~bb_isdef(BB3) || ratio < tracker.max_ratio
         medFB = inf;
         medFB_left = inf;
         medFB_right = inf;
@@ -50,7 +71,7 @@ for i = 1:tracker.num
         centerJ = [(BB3(1)+BB3(3))/2 (BB3(2)+BB3(4))/2];
         v = compute_velocity(tracker);
         v_new = [centerJ(1)-centerI(1), centerJ(2)-centerI(2)] / double(frame_id - tracker.frame_ids(i));
-        if norm(v) > 0.2 && norm(v_new) > 0.2
+        if norm(v) > tracker.min_vnorm && norm(v_new) > tracker.min_vnorm
             angle = dot(v, v_new) / (norm(v) * norm(v_new));
         else
             angle = 1;
@@ -72,11 +93,11 @@ end
 
 % combine tracking and detection results
 [~, ind] = min(tracker.medFBs);
-if tracker.overlaps(ind) > 0.7
+if tracker.overlaps(ind) > tracker.overlap_box
     index = tracker.indexes(ind);
     bb_det = [dres_det.x(index); dres_det.y(index); ...
         dres_det.x(index)+dres_det.w(index); dres_det.y(index)+dres_det.h(index)];
-    tracker.bb = mean([repmat(tracker.bbs{ind},1,opt.weight_association) bb_det], 2);
+    tracker.bb = mean([repmat(tracker.bbs{ind}, 1, tracker.weight_association) bb_det], 2);
 else
     tracker.bb = tracker.bbs{ind};
 end
@@ -90,7 +111,7 @@ else
     tracker.nccs = zeros(tracker.num, 1);
 end
 
-if opt.is_show
+if tracker.is_show
     fprintf('LK association, target %d detection %.2f, medFBs ', ...
         tracker.target_id, dres_det.r);
     for i = 1:tracker.num

@@ -1,5 +1,5 @@
 % initialize the LK tracker
-function tracker = LK_initialize(tracker, frame_id, target_id, dres, ind, dres_image, opt)
+function tracker = LK_initialize(tracker, frame_id, target_id, dres, ind, dres_image)
 
 x1 = dres.x(ind);
 y1 = dres.y(ind);
@@ -8,14 +8,8 @@ y2 = dres.y(ind) + dres.h(ind);
 
 % template num
 num = tracker.num;
-
-% tracker parameters
-tracker.threshold_ratio = 0.6;
-tracker.threshold_dis = 200;
 tracker.target_id = target_id;
-tracker.rescale_box = [0.6 1];  % [width height]
 tracker.bb = zeros(4,1);
-tracker.patchsize = [24 12];
 
 % initialize all the templates
 bb = repmat([x1; y1; x2; y2], [1 num]);
@@ -61,7 +55,7 @@ end
 
 % compute features for occluded state
 if isempty(tracker.w_occluded) == 1
-    features = MDP_feature_occluded(frame_id, dres_image, dres, tracker, opt);
+    features = MDP_feature_occluded(frame_id, dres_image, dres, tracker);
     m = size(features, 1);
     labels = -1 * ones(m, 1);
     labels(ind) = 1;

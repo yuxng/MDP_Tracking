@@ -4,8 +4,7 @@ function MDP_test
 is_show = 1;
 
 opt = globals();
-opt.is_show = is_show;
-seq_idx = 4;
+seq_idx = 1;
 seq_name = opt.mot2d_train_seqs{seq_idx};
 seq_num = opt.mot2d_train_nums(seq_idx);
 seq_set = 'train';
@@ -37,7 +36,7 @@ tracker = object.tracker;
 
 % intialize tracker
 I = dres_image.I{1};
-tracker = MDP_initialize_test(tracker, size(I,2), size(I,1), dres_det);
+tracker = MDP_initialize_test(tracker, size(I,2), size(I,1), dres_det, is_show);
 
 % for each frame
 trackers = [];
@@ -125,7 +124,7 @@ evaluateTracking({seq_name}, opt.results, benchmark_dir);
 
 % initialize a tracker
 % dres: detections
-function tracker = initialize(fr, dres_image, id, dres, ind, tracker, opt)
+function tracker = initialize(fr, dres_image, id, dres, ind, tracker)
 
 if tracker.state ~= 1
     return;
@@ -134,7 +133,7 @@ else  % active
     % initialize the LK tracker
     tracker = LK_initialize(tracker, fr, id, dres, ind, dres_image);
     
-    tracker = MDP_value(tracker, fr, dres_image, dres, ind, opt);
+    tracker = MDP_value(tracker, fr, dres_image, dres, ind);
 end
 
 
@@ -145,7 +144,7 @@ function tracker = track(fr, dres_image, dres, tracker, opt)
 % tracked    
 if tracker.state == 2
     tracker.streak_occluded = 0;
-    tracker = MDP_value(tracker, fr, dres_image, dres, [], opt);
+    tracker = MDP_value(tracker, fr, dres_image, dres, []);
 
     % check if target outside image
     [~, ov] = calc_overlap(tracker.dres, numel(tracker.dres.fr), dres_image, fr);
@@ -164,7 +163,7 @@ if tracker.state == 3 && double(max(tracker.dres.fr)) ~= fr
     tracker.streak_occluded = tracker.streak_occluded + 1;
     % find a set of detections for association
     index_det = generate_association_index(tracker, fr, dres_image.w(fr), dres_image.h(fr), dres_associate, 1);
-    tracker = MDP_value(tracker, fr, dres_image, dres_associate, index_det, opt);
+    tracker = MDP_value(tracker, fr, dres_image, dres_associate, index_det);
     if tracker.state == 2
         tracker.streak_occluded = 0;
     end
@@ -189,7 +188,7 @@ function tracker = connect(fr, dres_image, dres_associate, tracker, opt)
 if tracker.state == 3 && tracker.prev_state == 2
     % find a set of detections for association
     index_det = generate_association_index(tracker, fr, dres_image.w(fr), dres_image.h(fr), dres_associate, 1);
-    tracker = MDP_value(tracker, fr, dres_image, dres_associate, index_det, opt);
+    tracker = MDP_value(tracker, fr, dres_image, dres_associate, index_det);
     
     % erase last second
     dres = tracker.dres;
@@ -235,7 +234,7 @@ for i = 1:num_track
     [~, o] = calc_overlap(dres_track, i, dres_track, 1:num_track);
     o(i) = 0;
     [mo, ind] = max(o);
-    if mo > 0.95
+    if mo > opt.overlap_sup
         o1 = calc_overlap(dres_track, i, dres_det, 1:num_det);
         o2 = calc_overlap(dres_track, ind, dres_det, 1:num_det);
         if max(o1) > max(o2)

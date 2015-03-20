@@ -5,7 +5,7 @@ is_show = 1;
 
 opt = globals();
 opt.is_show = is_show;
-seq_idx = 5;
+seq_idx = 1;
 seq_name = opt.mot2d_train_seqs{seq_idx};
 seq_num = opt.mot2d_train_nums(seq_idx);
 seq_set = 'train';
@@ -27,19 +27,19 @@ I = dres_image.I{1};
 [dres_train, dres_det, labels] = generate_training_data(seq_idx, size(I,2), size(I,1), opt);
 
 % for debugging
-% dres_train = {dres_train{6}};
+% dres_train = {dres_train{1}};
 
 num_train = numel(dres_train);
 is_good = zeros(num_train, 1);
 
 % intialize tracker
-tracker = MDP_initialize(size(I,2), size(I,1), dres_det, labels);
+tracker = MDP_initialize(size(I,2), size(I,1), dres_det, labels, opt);
 
 % for each training sequence
 t = 0;
 iter = 0;
-max_iter = 10000;
-max_count = 20;
+max_iter = opt.max_iter;
+max_count = opt.max_count;
 count = 0;
 counter = zeros(num_train, 1);
 while 1
@@ -119,10 +119,10 @@ while 1
             fprintf('Start: first frame overlap %.2f\n', ov);
 
             % initialize the LK tracker
-            tracker = LK_initialize(tracker, fr, id, dres, ind, dres_image, opt);
+            tracker = LK_initialize(tracker, fr, id, dres, ind, dres_image);
             
             % qscore
-            [tracker, ~, f] = MDP_value(tracker, fr, dres_image, dres, ind, opt);
+            [tracker, ~, f] = MDP_value(tracker, fr, dres_image, dres, ind);
 
             % compute reward
             if id == -1
@@ -152,7 +152,7 @@ while 1
         % tracked    
         elseif tracker.state == 2
             tracker.streak_occluded = 0;
-            [tracker, ~, f] = MDP_value(tracker, fr, dres_image, dres, [], opt);
+            [tracker, ~, f] = MDP_value(tracker, fr, dres_image, dres, []);
             
             % check if tracking result overlaps with gt
             is_end = 0;
@@ -167,7 +167,7 @@ while 1
                 end
             end
             fprintf('overlap in tracked %.2f\n', overlap);
-            if overlap > 0.5
+            if overlap > opt.overlap_pos
                 if tracker.state == 2
                     reward = 1;
                 else
@@ -186,7 +186,7 @@ while 1
                 if tracker.state == 3
                     reward = 1;
                 else
-                    if overlap < 0.2
+                    if overlap < opt.overlap_neg
                         reward = -1;                       
                     else
                         reward = 0;  % no update
@@ -218,7 +218,7 @@ while 1
             tracker.streak_occluded = tracker.streak_occluded + 1;
             % find a set of detections for association
             index_det = generate_association_index(tracker, fr, dres_image.w(fr), dres_image.h(fr), dres, 0);
-            [tracker, ~, f] = MDP_value(tracker, fr, dres_image, dres, index_det, opt);
+            [tracker, ~, f] = MDP_value(tracker, fr, dres_image, dres, index_det);
             
             if is_show
                 figure(1);
@@ -240,11 +240,11 @@ while 1
                     end
                 end
                 fprintf('max overlap in association %.2f\n', max(overlap));
-                if max(overlap) > 0.4
+                if max(overlap) > opt.overlap_pos
                     if tracker.state == 2
                         % if the association is correct
                         ov = calc_overlap(dres_gt, index, tracker.dres, numel(tracker.dres.fr));
-                        if ov > 0.4
+                        if ov > opt.overlap_pos
                             reward = 1;
                         else
                             reward = -1;
@@ -253,7 +253,7 @@ while 1
                             fprintf('associated to wrong target (%.2f, %.2f)! Game over\n', max(overlap), ov);
                         end
                     else  % target not associated
-                        if dres_gt.covered(index) < 0.2
+                        if dres_gt.covered(index) < opt.overlap_neg
                             if isempty(find(tracker.flags ~= 2, 1)) == 1
                                 reward = 0;  % no update
                             else
@@ -262,7 +262,7 @@ while 1
                                 % extract features
                                 [~, ind] = max(overlap);
                                 dres_one = sub(dres, index_det(ind));
-                                f = MDP_feature_occluded(fr, dres_image, dres_one, tracker, opt);
+                                f = MDP_feature_occluded(fr, dres_image, dres_one, tracker);
                                 is_end = 1;
                                 fprintf('Missed association!\n');
                             end
@@ -331,7 +331,7 @@ while 1
             show_templates(tracker, dres_image);
 
             fprintf('frame %d, state %d\n', fr, tracker.state);
-            pause(0.001);
+            pause();
             
 %             filename = sprintf('results/%s_%06d.png', seq_name, fr);
 %             hgexport(h, filename, hgexport('factorystyle'), 'Format', 'png');

@@ -1,5 +1,5 @@
 % extract features for occluded state
-function [feature, flag] = MDP_feature_occluded(frame_id, dres_image, dres, tracker, opt)
+function [feature, flag] = MDP_feature_occluded(frame_id, dres_image, dres, tracker)
 
 f = zeros(1, tracker.fnum_occluded);
 m = numel(dres.fr);
@@ -7,7 +7,7 @@ feature = zeros(m, tracker.fnum_occluded);
 flag = zeros(m, 1);
 for i = 1:m
     dres_one = sub(dres, i);
-    tracker = LK_associate(frame_id, dres_image, dres_one, tracker, opt);
+    tracker = LK_associate(frame_id, dres_image, dres_one, tracker);
     
     % extract minimal left or right FB error
     [ml, indl] = min(tracker.medFBs_left);

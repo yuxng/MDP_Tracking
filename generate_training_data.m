@@ -54,8 +54,8 @@ for i = 1:numel(ids)
         end
     end
     
-    % start with bounding overlap > 0.5
-    index = find(dres.overlap > 0.5 & dres.r > opt.start_conf);
+    % start with bounding overlap > opt.overlap_pos
+    index = find(dres.overlap > opt.overlap_pos & dres.r > opt.start_conf);
     if isempty(index) == 0
         index_start = index(1);
         count = count + 1;
@@ -84,17 +84,25 @@ overlaps = zeros(num, 1);
 for i = 1:num
     fr = dres_det.fr(i);
     index = find(dres_gt.fr == fr);
-    overlap = calc_overlap(dres_det, i, dres_gt, index);
-    if max(overlap) < opt.overlap_neg
-        labels(i) = -1;
+    if isempty(index) == 0
+        overlap = calc_overlap(dres_det, i, dres_gt, index);
+        o = max(overlap);
+        if o < opt.overlap_neg
+            labels(i) = -1;
+        elseif o > opt.overlap_pos
+            labels(i) = 1;
+        else
+            labels(i) = 0;
+        end
+        overlaps(i) = o;
     else
-        labels(i) = 1;
+        overlaps(i) = 0;
+        labels(i) = -1;
     end
-    overlaps(i) = max(overlap);
 end
 
 % extract false alarms and append to training sequences
-index = find(overlaps < 0.2);
+index = find(overlaps < opt.overlap_neg);
 dres = sub(dres_det, index);
 num = numel(dres.fr);
 dres.occluded = zeros(num, 1);
@@ -102,6 +110,7 @@ dres.covered = zeros(num, 1);
 dres.overlap = ones(num, 1);
 for i = 1:num
     dres_one = sub(dres, i);
+    % ignore detections near the borders
     if dres_one.x > width*0.05 && dres_one.x+dres_one.w < width*0.95 && ...
             dres_one.y > height*0.05 && dres_one.y+dres_one.h < height*0.95
         dres_train{end+1} = dres_one;
