@@ -56,7 +56,7 @@ if nargin == 4 && randomize > 0
 else
     
     % All coordinates are integers
-    if sum(round(bb)-bb)==0
+    if isempty(find((round(bb)-bb) ~= 0, 1)) == 1
         L = max([1 bb(1)]);
         T = max([1 bb(2)]);
         R = min([size(img,2) bb(3)]);
@@ -89,5 +89,3 @@ else
 
     end
 end
-
-
