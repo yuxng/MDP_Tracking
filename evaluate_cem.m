@@ -2,7 +2,7 @@ function evaluate_cem
 
 opt = globals();
 seq_set = 'train';
-seq_name = 'KITTI-17';
+seq_name = 'KITTI-13';
 results = '/home/yuxiang/Projects/Multitarget_Tracking/MOTbenchmark/devkit/res/data';
 
 

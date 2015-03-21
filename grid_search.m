@@ -9,42 +9,37 @@ fname = 'rescale_box';
 values = {[1, 1], [0.8, 1], [0.6, 1], [0.6, 0.8]};
 opt = search_parameter(seq_idx, opt, fname, values);
 
-% 2. search for level track (very important for optical flow tracking)
-fname = 'level_track';
-values = {1, 2, 3};
-opt = search_parameter(seq_idx, opt, fname, values);
-
-% 3. search for rescale image
+% 2. search for rescale image
 fname = 'rescale_img';
 values = {0.25, 0.5, 0.75, 1};
 opt = search_parameter(seq_idx, opt, fname, values);
 
-% 4. search for enlarge box
+% 3. search for enlarge box
 fname = 'enlarge_box';
 values = {2, 3, 5};
 opt = search_parameter(seq_idx, opt, fname, values);
 
-% 5. search for max ratio changed allowed in LK
+% 4. search for max ratio changed allowed in LK
 fname = 'max_ratio';
 values = {0.6, 0.7, 0.8};
 opt = search_parameter(seq_idx, opt, fname, values);
 
-% 6. search for weight tracking
+% 5. search for weight tracking
 fname = 'weight_tracking';
 values = {1, 3, 5, 7};
 opt = search_parameter(seq_idx, opt, fname, values);
 
-% 7. search for fb factor
+% 6. search for fb factor
 fname = 'fb_factor';
 values = {10, 20, 30, 40};
 opt = search_parameter(seq_idx, opt, fname, values);
 
-% 8. search for threshold ratio
+% 7. search for threshold ratio
 fname = 'threshold_ratio';
 values = {0.6, 0.7, 0.8};
 opt = search_parameter(seq_idx, opt, fname, values);
 
-% 9. search for threshold dis
+% 8. search for threshold dis
 fname = 'threshold_dis';
 values = {1, 3, 5, 7};
 opt = search_parameter(seq_idx, opt, fname, values);
