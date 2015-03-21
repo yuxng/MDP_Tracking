@@ -197,7 +197,8 @@ if eval2D
     [m2d, mInf]=CLEAR_MOT_HUN(gtInfo,stInfo);
     allMets.bmark2d=m2d;
     
-    evalFile = fullfile(resDir, 'eval2D.txt');
+    filename = sprintf('eval2D_%s.txt', strjoin(allSeq));
+    evalFile = fullfile(resDir, filename);
     
     printMetrics(m2d);
     dlmwrite(evalFile,m2d);

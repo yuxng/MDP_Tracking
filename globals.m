@@ -54,6 +54,7 @@ opt.overlap_occ = 0.7;
 opt.overlap_pos = 0.5;
 opt.overlap_neg = 0.2;
 opt.overlap_sup = 0.95;  % suppress target used in testing only
+opt.max_neg = 100;
 
 % training parameters
 opt.max_iter = 100000;    % max iterations in total

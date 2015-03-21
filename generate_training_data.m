@@ -108,6 +108,10 @@ fprintf('%s: %d positive sequences\n', seq_name, numel(dres_train));
 
 % extract false alarms and append to training sequences
 index = find(overlaps < opt.overlap_neg);
+if numel(index) > opt.max_neg
+    ind = randi(numel(index), [1, opt.max_neg]);
+    index = sort(index(ind));
+end
 dres = sub(dres_det, index);
 num = numel(dres.fr);
 dres.occluded = zeros(num, 1);

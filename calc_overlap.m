@@ -30,8 +30,10 @@ inds  = find((w > 0) .* (h > 0));  %% real overlap
 ov    = zeros(1, n);
 ov_n1 = zeros(1, n);
 ov_n2 = zeros(1, n);
-inter = w(inds).*h(inds);         %% area of overlap
-u     = ca + ga(inds) - w(inds).*h(inds);     %% area of union
-ov(inds)    = inter ./ u;                       %% intersection / union
-ov_n1(inds) = inter / ca;                       %% intersection / area in dres1
-ov_n2(inds) = inter ./ ga(inds);                  %% intersection / area in dres2
+if isempty(inds) == 0
+    inter = w(inds).*h(inds);         %% area of overlap
+    u     = ca + ga(inds) - w(inds).*h(inds);     %% area of union
+    ov(inds)    = inter ./ u;                       %% intersection / union
+    ov_n1(inds) = inter / ca;                       %% intersection / area in dres0
+    ov_n2(inds) = inter ./ ga(inds);                  %% intersection / area in dres2
+end
