@@ -2,7 +2,7 @@ function evaluate_cem
 
 opt = globals();
 seq_set = 'train';
-seq_name = 'KITTI-13';
+seq_name = 'ETH-Sunnyday';
 results = '/home/yuxiang/Projects/Multitarget_Tracking/MOTbenchmark/devkit/res/data';
 
 

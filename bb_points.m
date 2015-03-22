@@ -45,3 +45,9 @@ stepW = (bb(3)-bb(1)) / (numN - 1);
 stepH = (bb(4)-bb(2)) / (numM - 1);
 
 pt = ntuples(bb(1):stepW:bb(3),(bb(2):stepH:bb(4)));
+
+if size(pt,2) < numM*numN
+    count = numM * numN - size(pt, 2);
+    app = repmat(pt(:,end), 1, count);
+    pt = [pt, app];
+end
