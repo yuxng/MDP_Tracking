@@ -1,7 +1,7 @@
 % testing MDP
 function metrics = MDP_test(seq_idx, tracker)
 
-is_show = 1;
+is_show = 0;
 is_save = 0;
 is_text = 0;
 
