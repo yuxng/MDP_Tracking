@@ -1,7 +1,7 @@
 % testing MDP
 function metrics = MDP_test(seq_idx, tracker)
 
-is_show = 0;
+is_show = 1;
 is_save = 0;
 is_text = 0;
 
@@ -277,6 +277,56 @@ for i = 1:num_track
         else
             trackers{dres_track.id(i)}.state = 3;
             trackers{dres_track.id(i)}.dres.state(end) = 3;
+            if opt.is_text
+                fprintf('target %d suppressed\n', dres_track.id(i));
+            end
+        end
+    end
+end
+
+
+% collect dres from trackers
+dres_track = [];
+for i = 1:numel(trackers)
+    tracker = trackers{i};
+    dres = sub(tracker.dres, numel(tracker.dres.fr));
+    
+    if tracker.state == 3
+        if isempty(dres_track)
+            dres_track = dres;
+        else
+            dres_track = concatenate_dres(dres_track, dres);
+        end
+    end
+end   
+
+% compute overlaps
+if isempty(dres_track)
+    num_track = 0;
+else
+    num_track = numel(dres_track.fr);
+end
+
+flag = zeros(num_track, 1);
+for i = 1:num_track
+    [~, o] = calc_overlap(dres_track, i, dres_track, 1:num_track);
+    o(i) = 0;
+    o(flag == 1) = 0;
+    [mo, ind] = max(o);
+    if mo > opt.overlap_sup_lost
+        f1 = dres_track.fr(i);
+        f2 = dres_track.fr(ind);
+        if f1 > f2
+            trackers{dres_track.id(ind)}.state = 0;
+            trackers{dres_track.id(ind)}.dres.state(end) = 0;
+            flag(ind) = 1;
+            if opt.is_text
+                fprintf('target %d suppressed\n', dres_track.id(ind));
+            end
+        else
+            trackers{dres_track.id(i)}.state = 0;
+            trackers{dres_track.id(i)}.dres.state(end) = 0;
+            flag(i) = 1;
             if opt.is_text
                 fprintf('target %d suppressed\n', dres_track.id(i));
             end

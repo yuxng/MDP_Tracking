@@ -38,7 +38,7 @@ opt.fb_factor = 30;           % normalization factor for forward-backward error 
 opt.threshold_ratio = 0.6;    % aspect ratio threshold in target association
 opt.threshold_dis = 5;        % distance threshold in target association, multiple of the width of target
 opt.rescale_box = [1 1];    % [width height], rescale the bounding box before computing flow
-opt.rescale_img = 0.25;        % rescale the image before computing flow
+opt.rescale_img = 0.5;        % rescale the image before computing flow
 opt.enlarge_box = 5;          % enlarge the box before computing flow
 opt.level_track = 3;          % LK level in tracking
 opt.level_lost =  1;          % LK level in association
@@ -53,7 +53,8 @@ opt.weight_association = 1;   % weight for tracking box in lost state
 opt.overlap_occ = 0.7;
 opt.overlap_pos = 0.5;
 opt.overlap_neg = 0.2;
-opt.overlap_sup = 0.95;  % suppress target used in testing only
+opt.overlap_sup = 0.9;      % suppress target used in testing only
+opt.overlap_sup_lost = 0.8;  % suppress target used in testing only
 opt.max_neg = 100;
 
 % training parameters
