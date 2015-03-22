@@ -1,15 +1,20 @@
 % testing MDP
-function metrics = MDP_test(seq_idx, tracker)
+function metrics = MDP_test(seq_idx, seq_set, tracker)
 
-is_show = 0;
+is_show = 1;
 is_save = 0;
-is_text = 0;
+is_text = 1;
 
 opt = globals();
 opt.is_text = is_text;
-seq_name = opt.mot2d_train_seqs{seq_idx};
-seq_num = opt.mot2d_train_nums(seq_idx);
-seq_set = 'train';
+
+if strcmp(seq_set, 'train') == 1
+    seq_name = opt.mot2d_train_seqs{seq_idx};
+    seq_num = opt.mot2d_train_nums(seq_idx);
+else
+    seq_name = opt.mot2d_test_seqs{seq_idx};
+    seq_num = opt.mot2d_test_nums(seq_idx);
+end
 
 % build the dres structure for images
 filename = sprintf('%s/%s_dres_image.mat', opt.results, seq_name);
@@ -27,10 +32,12 @@ end
 filename = fullfile(opt.mot, opt.mot2d, seq_set, seq_name, 'det', 'det.txt');
 dres_det = read_mot2dres(filename);
 
-% read ground truth
-filename = fullfile(opt.mot, opt.mot2d, seq_set, seq_name, 'gt', 'gt.txt');
-dres_gt = read_mot2dres(filename);
-dres_gt = fix_groundtruth(seq_name, dres_gt);
+if strcmp(seq_set, 'train') == 1
+    % read ground truth
+    filename = fullfile(opt.mot, opt.mot2d, seq_set, seq_name, 'gt', 'gt.txt');
+    dres_gt = read_mot2dres(filename);
+    dres_gt = fix_groundtruth(seq_name, dres_gt);
+end
 
 % load the trained model
 if nargin < 2
@@ -73,8 +80,10 @@ for fr = 1:seq_num
         figure(1);
         
         % show ground truth
-        subplot(2, 2, 1);
-        show_dres(fr, dres_image.I{fr}, 'GT', dres_gt);
+        if strcmp(seq_set, 'train') == 1
+            subplot(2, 2, 1);
+            show_dres(fr, dres_image.I{fr}, 'GT', dres_gt);
+        end
 
         % show detections
         subplot(2, 2, 2);

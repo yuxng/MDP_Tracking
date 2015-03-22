@@ -9,10 +9,23 @@ is_pause = 0;
 if nargin < 2
     opt = globals();
 end
-opt.is_show = is_show;
+
 seq_name = opt.mot2d_train_seqs{seq_idx};
 seq_num = opt.mot2d_train_nums(seq_idx);
 seq_set = 'train';
+
+% try to use trained parameters
+filename = sprintf('%s/%s_opt.mat', opt.results, seq_name);
+if exist(filename, 'file')
+    tmp = opt;
+    object = load(filename);
+    opt = object.opt;
+    fprintf('load parameters from file %s\n', filename);
+    opt.root = tmp.root;
+    opt.mot = tmp.mot;
+    opt.max_count = 40;
+end
+opt.is_show = is_show;
 
 % build the dres structure for images
 filename = sprintf('%s/%s_dres_image.mat', opt.results, seq_name);
