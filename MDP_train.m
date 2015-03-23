@@ -16,7 +16,7 @@ seq_set = 'train';
 
 % try to use trained parameters
 filename = sprintf('%s/%s_opt.mat', opt.results, seq_name);
-if exist(filename, 'file')
+if nargin < 2 && exist(filename, 'file')
     tmp = opt;
     object = load(filename);
     opt = object.opt;
@@ -26,6 +26,10 @@ if exist(filename, 'file')
     opt.max_count = 40;
 end
 opt.is_show = is_show;
+
+if is_show
+    close all;
+end
 
 % build the dres structure for images
 filename = sprintf('%s/%s_dres_image.mat', opt.results, seq_name);
@@ -39,23 +43,12 @@ else
     save(filename, 'dres_image', '-v7.3');
 end
 
-% rescale gray images
-dres_image.Igray_rescale = cell(size(dres_image.Igray));
-for i = 1:numel(dres_image.Igray)
-    if opt.rescale_img ~= 1
-        dres_image.Igray_rescale{i} = imresize(dres_image.Igray{i}, opt.rescale_img);
-    else
-        dres_image.Igray_rescale{i} = dres_image.Igray{i};
-    end
-end
-fprintf('rescale images done\n');
-
 % generate training data
 I = dres_image.I{1};
 [dres_train, dres_det, labels] = generate_training_data(seq_idx, size(I,2), size(I,1), opt);
 
 % for debugging
-% dres_train = {dres_train{2}};
+% dres_train = {dres_train{7}};
 
 num_train = numel(dres_train);
 is_good = zeros(num_train, 1);

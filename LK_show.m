@@ -6,7 +6,7 @@ im3 = appendimages(im1,im2);
 
 % Show a figure with lines joining the accepted matches.
 h = figure(2);
-set(h, 'Position', [100 100 size(im3,2) size(im3,1)]);
+set(h, 'Position', [100 100 2*size(im3,2) 2*size(im3,1)]);
 axis equal;
 colormap('gray');
 imagesc(im3);

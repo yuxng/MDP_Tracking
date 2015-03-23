@@ -33,8 +33,7 @@ tracker.streak_occluded = 0;
 % tracker parameters
 tracker.threshold_ratio = opt.threshold_ratio;
 tracker.threshold_dis = opt.threshold_dis;
-tracker.rescale_box = opt.rescale_box;  % [width height]
-tracker.rescale_img = opt.rescale_img;
+tracker.std_box = opt.std_box;  % [width height]
 tracker.enlarge_box = opt.enlarge_box;
 tracker.level_track = opt.level_track;
 tracker.level_lost = opt.level_lost;

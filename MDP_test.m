@@ -3,7 +3,7 @@ function metrics = MDP_test(seq_idx, seq_set, tracker)
 
 is_show = 1;
 is_save = 0;
-is_text = 1;
+is_text = 0;
 
 opt = globals();
 opt.is_text = is_text;
@@ -48,17 +48,6 @@ end
 % intialize tracker
 I = dres_image.I{1};
 tracker = MDP_initialize_test(tracker, size(I,2), size(I,1), dres_det, is_show);
-
-% rescale gray images
-dres_image.Igray_rescale = cell(size(dres_image.Igray));
-for i = 1:numel(dres_image.Igray)
-    if tracker.rescale_img ~= 1
-        dres_image.Igray_rescale{i} = imresize(dres_image.Igray{i}, tracker.rescale_img);
-    else
-        dres_image.Igray_rescale{i} = dres_image.Igray{i};
-    end
-end
-fprintf('rescale images done\n');
 
 % for each frame
 trackers = [];
@@ -135,7 +124,7 @@ for fr = 1:seq_num
         subplot(2, 2, 4);
         show_dres(fr, dres_image.I{fr}, 'Lost', dres_track, 3);
 
-        pause();
+        pause(0.01);
     end
 end
 
@@ -145,8 +134,12 @@ fprintf('write results: %s\n', filename);
 write_tracking_results(filename, dres_track, opt.tracked);
 
 % evaluation
-benchmark_dir = fullfile(opt.mot, opt.mot2d, seq_set, filesep);
-metrics = evaluateTracking({seq_name}, opt.results, benchmark_dir);
+if strcmp(seq_set, 'train') == 1
+    benchmark_dir = fullfile(opt.mot, opt.mot2d, seq_set, filesep);
+    metrics = evaluateTracking({seq_name}, opt.results, benchmark_dir);
+else
+    metrics = [];
+end
 
 % save results
 if is_save

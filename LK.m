@@ -10,11 +10,11 @@ if isempty(BB1) || ~bb_isdef(BB1)
 end
 
 % estimate BB3
-xFI  = bb_points(BB1,10,10,0); % generate 10x10 grid of points within BB1
+xFI  = bb_points(BB1, 10, 10, [10; 2]); % generate 10x10 grid of points within BB1
 if isempty(BB2) || ~bb_isdef(BB2)
     xFII = xFI;
 else
-    xFII = bb_points(BB2,10,10,0);
+    xFII = bb_points(BB2, 10, 10, [10; 2]);
 end
 % track all points by Lucas-Kanade tracker from frame I to frame J, 
 % estimate Forward-Backward error, and NCC for each point
@@ -29,7 +29,8 @@ medFB_left = median2(xFJ(3,1:50));
 medFB_right = median2(xFJ(3,51:100));
 % fprintf('medFB left %.2f, medFB right %.2f\n', medFB_left, medFB_right);
 % if bb_isdef(BB3)
-%     LK_show(I, J, xFI, BB1, xFJ, BB3);
+%     % LK_show(I, J, xFI, BB1, xFJ, BB3);
+%     LK_show(I, J, xFI(:,idxF), BB1, xFJ(:,idxF), BB3);
 %     pause();
 % end
 

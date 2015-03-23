@@ -17,47 +17,50 @@
 
 function tracker = LK_tracking(frame_id, dres_image, dres_det, tracker)
 
-rescale = tracker.rescale_img;
-
 % current frame
-J = dres_image.Igray_rescale{frame_id};
+J = dres_image.Igray{frame_id};
 
 num_det = numel(dres_det.x);
 for i = 1:tracker.num
-    I = dres_image.Igray_rescale{tracker.frame_ids(i)};
-    
-    BB1 = [tracker.x1(i); tracker.y1(i); tracker.x2(i); tracker.y2(i)] * rescale;
-    BB1 = bb_rescale_relative(BB1, tracker.rescale_box);
-    
+    I = dres_image.Igray{tracker.frame_ids(i)};
+    BB1 = [tracker.x1(i); tracker.y1(i); tracker.x2(i); tracker.y2(i)];
+
     % initialization from the current target location
     if isfield(tracker, 'dres')
         dres_one = sub(tracker.dres, numel(tracker.dres.fr));
-        BB3 = [dres_one.x; dres_one.y; dres_one.x+dres_one.w; dres_one.y+dres_one.h] * rescale;
-        BB3 = bb_rescale_relative(BB3, tracker.rescale_box);
+        BB3 = [dres_one.x; dres_one.y; dres_one.x+dres_one.w; dres_one.y+dres_one.h];
     else
         BB3 = BB1;
-    end
+    end    
     
     % crop images and boxes
-    BB_crop = bb_union(BB1, BB3);
-    BB_crop = bb_rescale_relative(BB_crop, tracker.enlarge_box);
-    BB_crop(1) = max(1, BB_crop(1));
-    BB_crop(2) = max(1, BB_crop(2));
-    BB_crop(3) = min(size(I,2), BB_crop(3));
-    BB_crop(4) = min(size(I,1), BB_crop(4));
-    rect = [BB_crop(1), BB_crop(2), BB_crop(3)-BB_crop(1)+1, BB_crop(4)-BB_crop(2)+1];
-    I_crop = imcrop(I, rect);
-    J_crop = imcrop(J, rect);
-    BB1_crop = bb_shift_absolute(BB1, [-rect(1) -rect(2)]);
-    BB3_crop = bb_shift_absolute(BB3, [-rect(1) -rect(2)]);
+    s = [tracker.std_box(1)/bb_width(BB1), tracker.std_box(2)/bb_height(BB1)];
+    bb_scale = round([BB1(1)*s(1); BB1(2)*s(2); BB1(3)*s(1); BB1(4)*s(2)]);
+    bb_scale(3) = bb_scale(1) + tracker.std_box(1) - 1;
+    bb_scale(4) = bb_scale(2) + tracker.std_box(2) - 1;    
+    imsize = round([size(I,1)*s(2), size(I,2)*s(1)]);
+    I_scale = imresize(I, imsize);
+    bb_crop = bb_rescale_relative(bb_scale, tracker.enlarge_box);
+    I_crop = im_crop(I_scale, bb_crop);
+    BB1_crop = bb_shift_absolute(bb_scale, [-bb_crop(1) -bb_crop(2)]);
     
+    s = [tracker.std_box(1)/bb_width(BB3), tracker.std_box(2)/bb_height(BB3)];
+    bb_scale = round([BB3(1)*s(1); BB3(2)*s(2); BB3(3)*s(1); BB3(4)*s(2)]);
+    bb_scale(3) = bb_scale(1) + tracker.std_box(1) - 1;
+    bb_scale(4) = bb_scale(2) + tracker.std_box(2) - 1;    
+    imsize = round([size(J,1)*s(2), size(J,2)*s(1)]);
+    J_scale = imresize(J, imsize);
+    bb_crop = bb_rescale_relative(bb_scale, tracker.enlarge_box);
+    J_crop = im_crop(J_scale, bb_crop);
+    BB3_crop = bb_shift_absolute(bb_scale, [-bb_crop(1) -bb_crop(2)]);
+    
+    % LK tracking
     [BB2, xFJ, flag, medFB, medNCC, medFB_left, medFB_right] = LK(I_crop, J_crop, ...
         BB1_crop, BB3_crop, tracker.level_track);
     
-    BB2 = bb_shift_absolute(BB2, [rect(1) rect(2)]);
-    BB2 = bb_rescale_relative(BB2, 1./tracker.rescale_box) / rescale;
-    
-    BB1 = bb_rescale_relative(BB1, 1./tracker.rescale_box) / rescale;
+    BB2 = bb_shift_absolute(BB2, [bb_crop(1) bb_crop(2)]);
+    BB2 = [BB2(1)/s(1); BB2(2)/s(2); BB2(3)/s(1); BB2(4)/s(2)];
+
     ratio = (BB2(4)-BB2(2)) / (BB1(4)-BB1(2));
     ratio = min(ratio, 1/ratio);
     
