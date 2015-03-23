@@ -10,23 +10,23 @@ for i = 1:m
     tracker = LK_associate(frame_id, dres_image, dres_one, tracker);
     
     % extract minimal left or right FB error
-    [ml, indl] = min(tracker.medFBs_left);
-    [mr, indr] = min(tracker.medFBs_right);
-    if ml < mr
-        index = indl;
-        m = ml;
-    else
-        index = indr;
-        m = mr;
-    end
+%     [ml, indl] = min(tracker.medFBs_left);
+%     [mr, indr] = min(tracker.medFBs_right);
+%     if ml < mr
+%         index = indl;
+%         m = ml;
+%     else
+%         index = indr;
+%         m = mr;
+%     end
     
     % [~, index] = min(tracker.medFBs);
     
-    f(1) = exp(-m / tracker.fb_factor);
-    f(2) = tracker.medNCCs(index);
-    f(3) = tracker.overlaps(index);
-    f(4) = tracker.nccs(index);
-    f(5) = tracker.angles(index);
+    f(1) = mean(exp(-tracker.medFBs / tracker.fb_factor));
+    f(2) = mean(tracker.medNCCs);
+    f(3) = mean(tracker.overlaps);
+    f(4) = mean(tracker.nccs);
+    f(5) = mean(tracker.angles);
     feature(i,:) = f;
     
     if isempty(find(tracker.flags ~= 2, 1)) == 1

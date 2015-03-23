@@ -4,7 +4,7 @@ function tracker = MDP_train(seq_idx, opt)
 is_show = 1;
 is_save = 0;
 is_text = 1;
-is_pause = 1;
+is_pause = 0;
 
 if nargin < 2
     opt = globals();
@@ -216,12 +216,15 @@ while 1
                     if isempty(find(tracker.flags ~= 2, 1)) == 1
                         reward = 0;  % no update
                     else
-%                         if isempty(find(dres_gt.occluded == 1, 1)) == 1
+                        % if isempty(find(dres_gt.occluded == 1, 1)) == 1
+                        if dres_gt.covered(index) == 0
                             is_end = 1;
                             if is_text
                                 fprintf('target not tracked! Game over\n');
                             end
-%                         end
+                        else
+                            reward = 0;
+                        end
                     end
                 end
             else
@@ -315,9 +318,11 @@ while 1
                                 [~, ind] = max(overlap);
                                 dres_one = sub(dres, index_det(ind));
                                 f = MDP_feature_occluded(fr, dres_image, dres_one, tracker);
-                                is_end = 1;
                                 if is_text
                                     fprintf('Missed association!\n');
+                                end
+                                if dres_gt.covered(index) == 0
+                                    is_end = 1;
                                 end
                             end
                         else
