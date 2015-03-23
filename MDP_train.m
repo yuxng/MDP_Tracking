@@ -1,10 +1,10 @@
 % training MDP
 function tracker = MDP_train(seq_idx, opt)
 
-is_show = 0;
+is_show = 1;
 is_save = 0;
-is_text = 0;
-is_pause = 0;
+is_text = 1;
+is_pause = 1;
 
 if nargin < 2
     opt = globals();
@@ -48,7 +48,7 @@ I = dres_image.I{1};
 [dres_train, dres_det, labels] = generate_training_data(seq_idx, size(I,2), size(I,1), opt);
 
 % for debugging
-% dres_train = {dres_train{7}};
+dres_train = {dres_train{7}};
 
 num_train = numel(dres_train);
 is_good = zeros(num_train, 1);
@@ -216,12 +216,12 @@ while 1
                     if isempty(find(tracker.flags ~= 2, 1)) == 1
                         reward = 0;  % no update
                     else
-                        if isempty(find(dres_gt.occluded == 1, 1)) == 1
+%                         if isempty(find(dres_gt.occluded == 1, 1)) == 1
                             is_end = 1;
                             if is_text
                                 fprintf('target not tracked! Game over\n');
                             end
-                        end
+%                         end
                     end
                 end
             else
