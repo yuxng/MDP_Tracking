@@ -55,7 +55,7 @@ for i = 1:tracker.num
     BB3_crop = bb_shift_absolute(bb_scale, [-bb_crop(1) -bb_crop(2)]);
     
     % LK tracking
-    [BB2, xFJ, flag, medFB, medNCC, medFB_left, medFB_right] = LK(I_crop, J_crop, ...
+    [BB2, xFJ, flag, medFB, medNCC, medFB_left, medFB_right, medFB_up, medFB_down] = LK(I_crop, J_crop, ...
         BB1_crop, BB3_crop, tracker.level_track);
     
     BB2 = bb_shift_absolute(BB2, [bb_crop(1) bb_crop(2)]);
@@ -64,11 +64,13 @@ for i = 1:tracker.num
     ratio = (BB2(4)-BB2(2)) / (BB1(4)-BB1(2));
     ratio = min(ratio, 1/ratio);
     
-    if isnan(medFB) || isnan(medFB_left) || isnan(medFB_right) || isnan(medNCC) ...
-            || ~bb_isdef(BB2) || ratio < tracker.max_ratio
+    if isnan(medFB) || isnan(medFB_left) || isnan(medFB_right) || isnan(medFB_up) || isnan(medFB_down) ...
+            || isnan(medNCC) || ~bb_isdef(BB2) || ratio < tracker.max_ratio
         medFB = inf;
         medFB_left = inf;
         medFB_right = inf;
+        medFB_up = inf;
+        medFB_down = inf;
         medNCC = 0;
         o = 0;
         score = 0;
@@ -110,6 +112,8 @@ for i = 1:tracker.num
     tracker.medFBs(i) = medFB;
     tracker.medFBs_left(i) = medFB_left;
     tracker.medFBs_right(i) = medFB_right;
+    tracker.medFBs_up(i) = medFB_up;
+    tracker.medFBs_down(i) = medFB_down;
     tracker.medNCCs(i) = medNCC;
     tracker.overlaps(i) = o;
     tracker.scores(i) = score;
@@ -148,11 +152,37 @@ if tracker.is_show
         fprintf('%.2f ', tracker.medFBs(i))
     end
     fprintf('\n');
+    
+    fprintf('target %d: medFB left ', tracker.target_id);
+    for i = 1:tracker.num
+        fprintf('%.2f ', tracker.medFBs_left(i))
+    end
+    fprintf('\n');
+    
+    fprintf('target %d: medFB right ', tracker.target_id);
+    for i = 1:tracker.num
+        fprintf('%.2f ', tracker.medFBs_right(i))
+    end
+    fprintf('\n');
+    
+    fprintf('target %d: medFB up ', tracker.target_id);
+    for i = 1:tracker.num
+        fprintf('%.2f ', tracker.medFBs_up(i))
+    end
+    fprintf('\n');
+    
+    fprintf('target %d: medFB down ', tracker.target_id);
+    for i = 1:tracker.num
+        fprintf('%.2f ', tracker.medFBs_down(i))
+    end
+    fprintf('\n');       
+    
     fprintf('target %d: medNCC ', tracker.target_id);
     for i = 1:tracker.num
         fprintf('%.2f ', tracker.medNCCs(i))
     end
     fprintf('\n');
+    
     fprintf('target %d: overlap ', tracker.target_id);
     for i = 1:tracker.num
         fprintf('%.2f ', tracker.overlaps(i))

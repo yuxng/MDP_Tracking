@@ -1,5 +1,8 @@
 % initialization
-function tracker = MDP_initialize(image_width, image_height, dres_det, labels, opt)
+function tracker = MDP_initialize(I, dres_det, labels, opt)
+
+image_width = size(I,2);
+image_height = size(I,1);
 
 % normalization factor for features
 tracker.image_width = image_width;
@@ -22,11 +25,11 @@ tracker.w_active = svmtrain(tracker.lactive, tracker.factive, '-c 1 -q');
 % tracked
 num = opt.num;
 tracker.num = num;
-tracker.fnum_tracked = 5;
+tracker.fnum_tracked = 8;
 tracker.w_tracked = [];
 
 % occluded
-tracker.fnum_occluded = 5;
+tracker.fnum_occluded = 8;
 tracker.w_occluded = [];
 tracker.streak_occluded = 0;
 

@@ -9,10 +9,14 @@ f = zeros(1, tracker.fnum_tracked);
 
 % use mean
 f(1) = mean(exp(-tracker.medFBs / tracker.fb_factor));
-f(2) = mean(tracker.medNCCs);
-f(3) = mean(tracker.bb_overlaps);
-f(4) = mean(tracker.nccs);
-f(5) = mean(tracker.angles);
+f(2) = mean(exp(-tracker.medFBs_left / tracker.fb_factor));
+f(3) = mean(exp(-tracker.medFBs_right / tracker.fb_factor));
+f(4) = mean(exp(-tracker.medFBs_up / tracker.fb_factor));
+f(5) = mean(exp(-tracker.medFBs_down / tracker.fb_factor));
+f(6) = mean(tracker.medNCCs);
+f(7) = mean(tracker.bb_overlaps);
+f(8) = mean(tracker.nccs);
+% f(5) = mean(tracker.angles);
 
 if tracker.is_show
     fprintf('ftracked: ');

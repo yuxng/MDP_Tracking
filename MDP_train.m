@@ -4,7 +4,7 @@ function tracker = MDP_train(seq_idx, opt)
 is_show = 1;
 is_save = 0;
 is_text = 1;
-is_pause = 0;
+is_pause = 1;
 
 if nargin < 2
     opt = globals();
@@ -44,7 +44,7 @@ else
 end
 
 % generate training data
-I = dres_image.I{1};
+I = dres_image.Igray{1};
 [dres_train, dres_det, labels] = generate_training_data(seq_idx, size(I,2), size(I,1), opt);
 
 % for debugging
@@ -54,7 +54,7 @@ num_train = numel(dres_train);
 is_good = zeros(num_train, 1);
 
 % intialize tracker
-tracker = MDP_initialize(size(I,2), size(I,1), dres_det, labels, opt);
+tracker = MDP_initialize(I, dres_det, labels, opt);
 
 % for each training sequence
 t = 0;
