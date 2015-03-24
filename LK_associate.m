@@ -3,38 +3,15 @@ function tracker = LK_associate(frame_id, dres_image, dres_det, tracker)
 
 % current frame
 J = dres_image.Igray{frame_id};
-
 BB2 = [dres_det.x; dres_det.y; dres_det.x + dres_det.w; dres_det.y + dres_det.h];
 
 % crop images and boxes
-s = [tracker.std_box(1)/bb_width(BB2), tracker.std_box(2)/bb_height(BB2)];
-bb_scale = round([BB2(1)*s(1); BB2(2)*s(2); BB2(3)*s(1); BB2(4)*s(2)]);
-bb_scale(3) = bb_scale(1) + tracker.std_box(1) - 1;
-bb_scale(4) = bb_scale(2) + tracker.std_box(2) - 1;
-imsize = round([size(J,1)*s(2), size(J,2)*s(1)]);
-J_scale = imResample(J, imsize, 'bilinear');
-bb_crop = bb_rescale_relative(bb_scale, tracker.enlarge_box);
-J_crop = im_crop(J_scale, bb_crop);
-BB2_crop = bb_shift_absolute(bb_scale, [-bb_crop(1) -bb_crop(2)]); 
-
-bb_crop_J = bb_crop;
-s_J = s;
+[J_crop, BB2_crop, bb_crop_J, s_J] = LK_crop_image_box(J, BB2, tracker);
 
 for i = 1:tracker.num
-    I = dres_image.Igray{tracker.frame_ids(i)};
-    
     BB1 = [tracker.x1(i); tracker.y1(i); tracker.x2(i); tracker.y2(i)];
-    
-    % crop images and boxes
-    s = [tracker.std_box(1)/bb_width(BB1), tracker.std_box(2)/bb_height(BB1)];
-    bb_scale = round([BB1(1)*s(1); BB1(2)*s(2); BB1(3)*s(1); BB1(4)*s(2)]);
-    bb_scale(3) = bb_scale(1) + tracker.std_box(1) - 1;
-    bb_scale(4) = bb_scale(2) + tracker.std_box(2) - 1;    
-    imsize = round([size(I,1)*s(2), size(I,2)*s(1)]);
-    I_scale = imResample(I, imsize, 'bilinear');
-    bb_crop = bb_rescale_relative(bb_scale, tracker.enlarge_box);
-    I_crop = im_crop(I_scale, bb_crop);
-    BB1_crop = bb_shift_absolute(bb_scale, [-bb_crop(1) -bb_crop(2)]);
+    I_crop = tracker.Is{i};
+    BB1_crop = tracker.BBs{i};
     
     % LK tracking
     [BB3, xFJ, flag, medFB, medNCC, medFB_left, medFB_right, medFB_up, medFB_down] = LK(I_crop, ...
