@@ -11,11 +11,11 @@ if isempty(BB1) || ~bb_isdef(BB1)
 end
 
 % estimate BB3
-xFI  = bb_points(BB1, 10, 10, [10; 2]); % generate 10x10 grid of points within BB1
+xFI  = bb_points(BB1, 10, 10, [5; 2]); % generate 10x10 grid of points within BB1
 if isempty(BB2) || ~bb_isdef(BB2)
     xFII = xFI;
 else
-    xFII = bb_points(BB2, 10, 10, [10; 2]);
+    xFII = bb_points(BB2, 10, 10, [5; 2]);
 end
 
 % track all points by Lucas-Kanade tracker from frame I to frame J, 

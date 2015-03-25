@@ -67,20 +67,24 @@ if isempty(tracker.w_tracked) == 1
     labels = [+1; -1];
     tracker.f_tracked = features;
     tracker.l_tracked = labels;
-    tracker.w_tracked = svmtrain(labels, features, '-c 1 -b 1 -q'); 
+    tracker.w_tracked = svmtrain(labels, features, '-c 1 -b 1 -q -g 1'); 
 end
 
 % compute features for occluded state
 if isempty(tracker.w_occluded) == 1
     features = MDP_feature(frame_id, dres_image, dres, tracker);
-    m = size(features, 1);
-    labels = -1 * ones(m, 1);
-    labels(ind) = 1;
-    ov = calc_overlap(dres, ind, dres, 1:numel(dres.fr));
-    ov(ind) = 0;
-    index = find(ov > 0.5);
-    features(index,:) = [];
-    labels(index,:) = [];
+    
+%     m = size(features, 1);
+%     labels = -1 * ones(m, 1);
+%     labels(ind) = 1;
+%     ov = calc_overlap(dres, ind, dres, 1:numel(dres.fr));
+%     ov(ind) = 0;
+%     index = find(ov > 0.5);
+%     features(index,:) = [];
+%     labels(index,:) = [];
+
+    features = features(ind,:);
+    labels = 1;
     
     % add default negative example
     features = [features; zeros(1, tracker.fnum)];
@@ -88,5 +92,5 @@ if isempty(tracker.w_occluded) == 1
     
     tracker.f_occluded = features;
     tracker.l_occluded = labels;
-    tracker.w_occluded = svmtrain(labels, features, '-c 1 -b 1 -q');
+    tracker.w_occluded = svmtrain(labels, features, '-c 1 -b 1 -q -g 1');
 end

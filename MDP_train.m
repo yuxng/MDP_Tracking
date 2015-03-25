@@ -1,9 +1,9 @@
 % training MDP
 function tracker = MDP_train(seq_idx, opt)
 
-is_show = 0;
+is_show = 1;
 is_save = 0;
-is_text = 0;
+is_text = 1;
 is_pause = 0;
 
 if nargin < 2
@@ -217,7 +217,8 @@ while 1
                             end
                         end
                     else  % target not associated
-                        if dres_gt.covered(index) < opt.overlap_neg
+                        % if dres_gt.covered(index) < opt.overlap_neg
+                        if dres_gt.covered(index) == 0
                             if isempty(find(tracker.flags ~= 2, 1)) == 1
                                 reward = 0;  % no update
                             else
@@ -262,14 +263,14 @@ while 1
                     if tracker.prev_state == 3
                         tracker.f_occluded(end+1,:) = f;
                         tracker.l_occluded(end+1) = label;
-                        tracker.w_occluded = svmtrain(tracker.l_occluded, tracker.f_occluded, '-c 1 -b 1 -q');
+                        tracker.w_occluded = svmtrain(tracker.l_occluded, tracker.f_occluded, '-c 1 -b 1 -q -g 1');
                         if is_text
                             fprintf('training examples in occluded state %d\n', size(tracker.f_occluded,1));
                         end
                     elseif tracker.prev_state == 2
                         tracker.f_tracked(end+1,:) = f;
                         tracker.l_tracked(end+1) = label;
-                        tracker.w_tracked = svmtrain(tracker.l_tracked, tracker.f_tracked, '-c 1 -b 1 -q');
+                        tracker.w_tracked = svmtrain(tracker.l_tracked, tracker.f_tracked, '-c 1 -b 1 -q -g 1');
                         if is_text
                             fprintf('training examples in tracked state %d\n', size(tracker.f_tracked,1));
                         end
