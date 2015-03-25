@@ -72,6 +72,7 @@ for i = 1:tracker.num
     tracker.scores(i) = score;
     tracker.indexes(i) = ind;
     tracker.angles(i) = angle;
+    tracker.ratios(i) = ratio;
 end
 
 % combine tracking and detection results
@@ -157,4 +158,11 @@ if tracker.is_show
         fprintf('%.2f ', tracker.angles(i));
     end
     fprintf('\n');
+    
+    fprintf('LK association, target %d detection %.2f, ratios ', ...
+        tracker.target_id, dres_det.r);
+    for i = 1:tracker.num
+        fprintf('%.2f ', tracker.ratios(i));
+    end
+    fprintf('\n');    
 end

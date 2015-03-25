@@ -13,7 +13,12 @@ else
 
     m = size(features, 1);
     labels = -1 * ones(m, 1);
-    [labels, ~, probs] = svmpredict(labels, features, tracker.w, '-b 1 -q');
+    if tracker.state == 2
+        w = tracker.w_tracked;
+    else
+        w = tracker.w_occluded;
+    end
+    [labels, ~, probs] = svmpredict(labels, features, w, '-b 1 -q');
 
     probs(flag == 0, 1) = 0;
     probs(flag == 0, 2) = 1;
@@ -29,7 +34,7 @@ else
 end
 
 % make a decision
-prev_state = tracker.state;
+tracker.prev_state = tracker.state;
 if label > 0
     tracker.state = 2;
     % build the dres structure
@@ -45,21 +50,14 @@ if label > 0
     % update LK tracker
     tracker = LK_update(frame_id, tracker, dres_image.Igray{frame_id}, dres);           
 else
-    if tracker.prev_state == 1
-        state = 0;
-    else
-        state = 3;
-    end
-    
-    tracker.state = state;
+    tracker.state = 3;
     dres_one = sub(tracker.dres, numel(tracker.dres.fr));
     dres_one.fr = frame_id;
     dres_one.id = tracker.target_id;
-    dres_one.state = state;
+    dres_one.state = 3;
     tracker.dres = concatenate_dres(tracker.dres, dres_one);          
 end
-tracker.prev_state = prev_state;
 
 if tracker.is_show
-    fprintf('qscore in lost %.2f\n', qscore);
+    fprintf('qscore %.2f\n', qscore);
 end

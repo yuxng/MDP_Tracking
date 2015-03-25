@@ -59,9 +59,19 @@ tracker.scores = zeros(num, 1);
 tracker.indexes = zeros(num, 1);
 tracker.nccs = zeros(num, 1);
 tracker.angles = zeros(num, 1);
+tracker.ratios = zeros(num, 1);
+
+% compute features for tracked state
+if isempty(tracker.w_tracked) == 1
+    features = [ones(1, tracker.fnum); zeros(1, tracker.fnum)];
+    labels = [+1; -1];
+    tracker.f_tracked = features;
+    tracker.l_tracked = labels;
+    tracker.w_tracked = svmtrain(labels, features, '-c 1 -b 1 -q'); 
+end
 
 % compute features for occluded state
-if isempty(tracker.w) == 1
+if isempty(tracker.w_occluded) == 1
     features = MDP_feature(frame_id, dres_image, dres, tracker);
     m = size(features, 1);
     labels = -1 * ones(m, 1);
@@ -76,7 +86,7 @@ if isempty(tracker.w) == 1
     features = [features; zeros(1, tracker.fnum)];
     labels = [labels; -1];
     
-    tracker.features = features;
-    tracker.labels = labels;
-    tracker.w = svmtrain(tracker.labels, tracker.features, '-c 1 -b 1 -q');    
+    tracker.f_occluded = features;
+    tracker.l_occluded = labels;
+    tracker.w_occluded = svmtrain(labels, features, '-c 1 -b 1 -q');
 end

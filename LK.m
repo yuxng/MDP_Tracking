@@ -40,11 +40,11 @@ index = xFI(2,:) >= (BB1(2)+BB1(4)) / 2;
 medFB_down = median2(xFJ(3, index));
 
 % fprintf('medFB left %.2f, medFB right %.2f\n', medFB_left, medFB_right);
-if bb_isdef(BB3)
-    LK_show(I, J, xFI, BB1, xFJ, BB3);
-%     LK_show(I, J, xFI(:,idxF), BB1, xFJ(:,idxF), BB3);
-    pause();
-end
+% if bb_isdef(BB3)
+%     LK_show(I, J, xFI, BB1, xFJ, BB3);
+% %     LK_show(I, J, xFI(:,idxF), BB1, xFJ(:,idxF), BB3);
+%     pause();
+% end
 
 % save selected points (only for display purposes)
 xFJ = xFJ(:, idxF);

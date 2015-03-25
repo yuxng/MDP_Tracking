@@ -83,7 +83,7 @@ for i = 1:numel(ids)
     end
     
     % start with bounding overlap > opt.overlap_pos
-    index = find(dres.overlap > opt.overlap_pos & dres.r > start_conf);
+    index = find(dres.overlap > opt.overlap_pos & dres.r > start_conf & dres.covered == 0);
     if isempty(index) == 0
         index_start = index(1);
         count = count + 1;

@@ -18,10 +18,14 @@ tracker.state = 1;
 tracker.initial = 0;
 
 % association model
-tracker.fnum = 8;
-tracker.w = [];
-tracker.features = [];
-tracker.labels = [];
+tracker.fnum = 10;
+tracker.w_tracked = [];
+tracker.f_tracked = [];
+tracker.l_tracked = [];
+
+tracker.w_occluded = [];
+tracker.f_occluded = [];
+tracker.l_occluded = [];
 tracker.streak_occluded = 0;
 
 % tracker parameters
