@@ -39,10 +39,6 @@ for i = 1:num
     end
 end
 
-% compute start conf
-scores = sort(dres_det.r(labels == 1));
-start_conf = scores(round(0.05*num));
-
 % build the training sequences
 ids = unique(dres_gt.id);
 dres_train = [];
@@ -82,8 +78,8 @@ for i = 1:numel(ids)
         end
     end
     
-    % start with bounding overlap > opt.overlap_pos
-    index = find(dres.overlap > opt.overlap_pos & dres.r > start_conf & dres.covered == 0);
+    % start with bounding overlap > opt.overlap_pos and non-occluded box
+    index = find(dres.overlap > opt.overlap_pos & dres.covered == 0);
     if isempty(index) == 0
         index_start = index(1);
         count = count + 1;

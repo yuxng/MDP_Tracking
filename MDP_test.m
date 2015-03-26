@@ -65,9 +65,11 @@ for fr = 1:seq_num
             fprintf('\n');
         end        
     end
+    
     % extract detection
     index = find(dres_det.fr == fr);
     dres = sub(dres_det, index);
+    dres = MDP_crop_image_box(dres, dres_image.Igray{fr}, tracker);
     
     if is_show
         figure(1);
@@ -121,8 +123,8 @@ for fr = 1:seq_num
         subplot(2, 2, 4);
         show_dres(fr, dres_image.I{fr}, 'Lost', dres_track, 3);
 
-        pause(0.01);
-    end
+        pause();
+    end  
 end
 
 % write tracking results

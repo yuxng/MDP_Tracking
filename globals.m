@@ -38,14 +38,12 @@ opt.fb_factor = 10;           % normalization factor for forward-backward error 
 opt.threshold_ratio = 0.7;    % aspect ratio threshold in target association
 opt.threshold_dis = 3;        % distance threshold in target association, multiple of the width of target
 opt.std_box = [40 80];        % [width height] of the stanford box in computing flow
+opt.margin_box = [5, 2];      % [width height] of the margin in computing flow
 opt.enlarge_box = [5, 3];     % enlarge the box before computing flow
-opt.level_track = 5;          % LK level in tracking
-opt.level_lost =  1;          % LK level in association
-opt.max_ratio = 0.6;          % max allowed aspect ratio change in LK
+opt.level =  1;               % LK level in association
 opt.min_vnorm = 0.2;          % min allowed velocity norm in LK
 opt.overlap_box = 0.5;        % overlap with detection in LK
 opt.patchsize = [24 12];      % patch size for target appearance
-opt.weight_tracking = 1;      % weight for tracking box in tracked state, do not change
 opt.weight_association = 1;   % weight for tracking box in lost state
 
 % parameters for generating training data
@@ -53,12 +51,11 @@ opt.overlap_occ = 0.7;
 opt.overlap_pos = 0.5;
 opt.overlap_neg = 0.2;
 opt.overlap_sup = 0.9;      % suppress target used in testing only
-opt.overlap_sup_lost = 0.8;  % suppress target used in testing only
-opt.max_neg = 100;
 
 % training parameters
-opt.max_iter = 100000;    % max iterations in total
+opt.max_iter = 10000;     % max iterations in total
 opt.max_count = inf;      % max iterations per sequence
+opt.max_pass = 4;
 
 % parameters to transite to inactive
 opt.max_occlusion = 50;

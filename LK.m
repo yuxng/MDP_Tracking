@@ -1,6 +1,6 @@
 % Estimates motion from bounding box BB1 in frame I to bounding box BB2 in frame J
 % obj is the background model
-function [BB3, xFJ, flag, medFB, medNCC, medFB_left, medFB_right, medFB_up, medFB_down] = LK(I, J, BB1, BB2, level)
+function [BB3, xFJ, flag, medFB, medNCC, medFB_left, medFB_right, medFB_up, medFB_down] = LK(I, J, BB1, BB2, margin, level)
 
 % initialize output variables
 BB3 = []; % estimated bounding
@@ -11,11 +11,11 @@ if isempty(BB1) || ~bb_isdef(BB1)
 end
 
 % estimate BB3
-xFI  = bb_points(BB1, 10, 10, [5; 2]); % generate 10x10 grid of points within BB1
+xFI  = bb_points(BB1, 10, 10, [margin(1); margin(2)]); % generate 10x10 grid of points within BB1
 if isempty(BB2) || ~bb_isdef(BB2)
     xFII = xFI;
 else
-    xFII = bb_points(BB2, 10, 10, [5; 2]);
+    xFII = bb_points(BB2, 10, 10, [margin(1); margin(2)]);
 end
 
 % track all points by Lucas-Kanade tracker from frame I to frame J, 

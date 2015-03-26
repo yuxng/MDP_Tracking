@@ -33,14 +33,12 @@ tracker.num = opt.num;
 tracker.threshold_ratio = opt.threshold_ratio;
 tracker.threshold_dis = opt.threshold_dis;
 tracker.std_box = opt.std_box;  % [width height]
+tracker.margin_box = opt.margin_box;
 tracker.enlarge_box = opt.enlarge_box;
-tracker.level_track = opt.level_track;
-tracker.level_lost = opt.level_lost;
-tracker.max_ratio = opt.max_ratio;
+tracker.level = opt.level;
 tracker.min_vnorm = opt.min_vnorm;
 tracker.overlap_box = opt.overlap_box;
 tracker.patchsize = opt.patchsize;
-tracker.weight_tracking = opt.weight_tracking;
 tracker.weight_association = opt.weight_association;
 
 % display results or not

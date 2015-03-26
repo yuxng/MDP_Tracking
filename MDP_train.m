@@ -1,10 +1,10 @@
 % training MDP
 function tracker = MDP_train(seq_idx, opt)
 
-is_show = 1;
+is_show = 0;
 is_save = 1;
-is_text = 1;
-is_pause = 1;
+is_text = 0;
+is_pause = 0;
 
 if nargin < 2
     opt = globals();
@@ -23,7 +23,6 @@ if nargin < 2 && exist(filename, 'file')
     fprintf('load parameters from file %s\n', filename);
     opt.root = tmp.root;
     opt.mot = tmp.mot;
-    opt.max_count = 40;
 end
 opt.is_show = is_show;
 
@@ -78,7 +77,7 @@ while 1
     end
     if isempty(find(is_good == 0, 1)) == 1
         % two pass training
-        if count == 4
+        if count == opt.max_pass
             break;
         else
             count = count + 1;
@@ -121,6 +120,7 @@ while 1
         % extract detection
         index = find(dres_det.fr == fr);
         dres = sub(dres_det, index);
+        dres = MDP_crop_image_box(dres, dres_image.Igray{fr}, tracker);
         num_det = numel(dres.fr);
         
         % show results

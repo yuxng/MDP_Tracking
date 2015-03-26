@@ -1,12 +1,11 @@
 % use LK trackers for association
 function tracker = LK_associate(frame_id, dres_image, dres_det, tracker)
 
-% current frame
-J = dres_image.Igray{frame_id};
-BB2 = [dres_det.x; dres_det.y; dres_det.x + dres_det.w; dres_det.y + dres_det.h];
-
-% crop images and boxes
-[J_crop, BB2_crop, bb_crop_J, s_J] = LK_crop_image_box(J, BB2, tracker);
+% get cropped images and boxes
+J_crop = dres_det.I_crop{1};
+BB2_crop = dres_det.BB_crop{1};
+bb_crop_J = dres_det.bb_crop{1};
+s_J = dres_det.scale{1};
 
 for i = 1:tracker.num
     BB1 = [tracker.x1(i); tracker.y1(i); tracker.x2(i); tracker.y2(i)];
@@ -15,7 +14,7 @@ for i = 1:tracker.num
     
     % LK tracking
     [BB3, xFJ, flag, medFB, medNCC, medFB_left, medFB_right, medFB_up, medFB_down] = LK(I_crop, ...
-        J_crop, BB1_crop, BB2_crop, tracker.level_lost);
+        J_crop, BB1_crop, BB2_crop, tracker.margin_box, tracker.level);
     
     BB3 = bb_shift_absolute(BB3, [bb_crop_J(1) bb_crop_J(2)]);
     BB3 = [BB3(1)/s_J(1); BB3(2)/s_J(2); BB3(3)/s_J(1); BB3(4)/s_J(2)];
@@ -24,7 +23,7 @@ for i = 1:tracker.num
     ratio = min(ratio, 1/ratio);    
     
     if isnan(medFB) || isnan(medFB_left) || isnan(medFB_right) || isnan(medFB_up) || isnan(medFB_down)  ...
-        || isnan(medNCC) || ~bb_isdef(BB3) %|| ratio < tracker.max_ratio
+        || isnan(medNCC) || ~bb_isdef(BB3)
         medFB = inf;
         medFB_left = inf;
         medFB_right = inf;

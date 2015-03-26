@@ -73,16 +73,6 @@ end
 % compute features for occluded state
 if isempty(tracker.w_occluded) == 1
     features = MDP_feature(frame_id, dres_image, dres, tracker);
-    
-%     m = size(features, 1);
-%     labels = -1 * ones(m, 1);
-%     labels(ind) = 1;
-%     ov = calc_overlap(dres, ind, dres, 1:numel(dres.fr));
-%     ov(ind) = 0;
-%     index = find(ov > 0.5);
-%     features(index,:) = [];
-%     labels(index,:) = [];
-
     features = features(ind,:);
     labels = 1;
     
