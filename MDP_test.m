@@ -3,7 +3,7 @@ function metrics = MDP_test(seq_idx, seq_set, tracker)
 
 is_show = 1;
 is_save = 0;
-is_text = 0;
+is_text = 1;
 
 opt = globals();
 opt.is_text = is_text;
@@ -225,9 +225,11 @@ else
     num_track = numel(dres_track.fr);
 end
 
+flag = zeros(num_track, 1);
 for i = 1:num_track
     [~, o] = calc_overlap(dres_track, i, dres_track, 1:num_track);
     o(i) = 0;
+    o(flag == 1) = 0;
     [mo, ind] = max(o);
     if mo > opt.overlap_sup
         o1 = calc_overlap(dres_track, i, dres_det, 1:num_det);
@@ -238,12 +240,14 @@ for i = 1:num_track
             if opt.is_text
                 fprintf('target %d suppressed\n', dres_track.id(ind));
             end
+            flag(ind) = 1;
         else
             trackers{dres_track.id(i)}.state = 3;
             trackers{dres_track.id(i)}.dres.state(end) = 3;
             if opt.is_text
                 fprintf('target %d suppressed\n', dres_track.id(i));
             end
+            flag(i) = 1;
         end
     end
 end
