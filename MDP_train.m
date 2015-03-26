@@ -2,9 +2,9 @@
 function tracker = MDP_train(seq_idx, opt)
 
 is_show = 1;
-is_save = 0;
+is_save = 1;
 is_text = 1;
-is_pause = 0;
+is_pause = 1;
 
 if nargin < 2
     opt = globals();
@@ -45,10 +45,10 @@ end
 
 % generate training data
 I = dres_image.Igray{1};
-[dres_train, dres_det] = generate_training_data(seq_idx, size(I,2), size(I,1), opt);
+[dres_train, dres_det] = generate_training_data(seq_idx, opt);
 
 % for debugging
-% dres_train = {dres_train{1}};
+% dres_train = {dres_train{2}};
 
 num_train = numel(dres_train);
 is_good = zeros(num_train, 1);
@@ -78,7 +78,7 @@ while 1
     end
     if isempty(find(is_good == 0, 1)) == 1
         % two pass training
-        if count == 2
+        if count == 4
             break;
         else
             count = count + 1;

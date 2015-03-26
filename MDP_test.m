@@ -121,7 +121,7 @@ for fr = 1:seq_num
         subplot(2, 2, 4);
         show_dres(fr, dres_image.I{fr}, 'Lost', dres_track, 3);
 
-        pause();
+        pause(0.01);
     end
 end
 
