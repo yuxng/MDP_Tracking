@@ -174,7 +174,7 @@ function tracker = associate(fr, state, dres_image, dres_associate, tracker, opt
 if tracker.state == state && double(max(tracker.dres.fr)) ~= fr
     
     % find a set of detections for association
-    index_det = generate_association_index(tracker, fr, dres_associate);
+    [dres_associate, index_det] = generate_association_index(tracker, fr, dres_associate);
     tracker = MDP_value(tracker, fr, dres_image, dres_associate, index_det);
     
     if tracker.state == 2

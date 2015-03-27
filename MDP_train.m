@@ -34,10 +34,7 @@ I = dres_image.Igray{1};
 [dres_train, dres_det] = generate_training_data(seq_idx, opt);
 
 % for debugging
-% dres_train = {dres_train{2}};
-
-num_train = numel(dres_train);
-is_good = zeros(num_train, 1);
+% dres_train = {dres_train{15}};
 
 % intialize tracker
 if nargin < 2 || isempty(tracker) == 1
@@ -55,7 +52,9 @@ iter = 0;
 max_iter = opt.max_iter;
 max_count = opt.max_count;
 count = 0;
+num_train = numel(dres_train);
 counter = zeros(num_train, 1);
+is_good = zeros(num_train, 1);
 while 1
     iter = iter + 1;
     if is_text
@@ -67,6 +66,7 @@ while 1
         end
     end
     if iter > max_iter
+        fprintf('max iteration exceeds\n');
         break;
     end
     if isempty(find(is_good == 0, 1)) == 1
@@ -75,7 +75,9 @@ while 1
             break;
         else
             count = count + 1;
+            fprintf('***pass %d finished***\n', count);
             is_good = zeros(num_train, 1);
+            counter = zeros(num_train, 1);
             t = 0;
         end
     end
@@ -132,9 +134,7 @@ while 1
         if tracker.state == 0
             if reward == 1
                 is_good(t) = 1;
-                if is_text
-                    fprintf('sequence %d is good\n', t);
-                end
+                fprintf('sequence %d is good\n', t);
             end
             break;
             
@@ -167,7 +167,7 @@ while 1
             end
             
             % find a set of detections for association
-            index_det = generate_association_index(tracker, fr, dres);
+            [dres, index_det] = generate_association_index(tracker, fr, dres);
             [tracker, ~, f] = MDP_value(tracker, fr, dres_image, dres, index_det);
 
             if is_show
@@ -331,16 +331,12 @@ while 1
     
     if fr > seq_num
         is_good(t) = 1;
-        if is_text
-            fprintf('sequence %d is good\n', t);
-        end
+        fprintf('sequence %d is good\n', t);
     end
     counter(t) = counter(t) + 1;
     if counter(t) > max_count
         is_good(t) = 1;
-        if is_text
-            fprintf('sequence %d max iteration\n', t);
-        end
+        fprintf('sequence %d max iteration\n', t);
     end
 end
 fprintf('Finish training %s\n', seq_name);

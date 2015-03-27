@@ -72,14 +72,8 @@ end
 
 % compute features for occluded state
 if isempty(tracker.w_occluded) == 1
-    features = MDP_feature(frame_id, dres_image, dres, tracker);
-    features = features(ind,:);
-    labels = 1;
-    
-    % add default negative example
-    features = [features; zeros(1, tracker.fnum)];
-    labels = [labels; -1];
-    
+    features = [ones(1, tracker.fnum); zeros(1, tracker.fnum)];
+    labels = [+1; -1];
     tracker.f_occluded = features;
     tracker.l_occluded = labels;
     tracker.w_occluded = svmtrain(labels, features, '-c 1 -b 1 -q -g 1');

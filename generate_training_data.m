@@ -99,6 +99,11 @@ for i = 1:numel(ids)
 %         end
 %     end
 end
+
+if strcmp(seq_name, 'PETS09-S2L1') == 1
+    dres_train([9, 15, 19]) = [];
+end
+
 fprintf('%s: %d positive sequences\n', seq_name, numel(dres_train));
 
 

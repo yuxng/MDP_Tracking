@@ -1,7 +1,7 @@
 function show_groundtruth
 
 opt = globals();
-seq_idx = 4;
+seq_idx = 3;
 seq_name = opt.mot2d_train_seqs{seq_idx};
 seq_num = opt.mot2d_train_nums(seq_idx);
 seq_set = 'train';

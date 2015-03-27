@@ -18,7 +18,7 @@ tracker.state = 1;
 tracker.initial = 0;
 
 % association model
-tracker.fnum = 10;
+tracker.fnum = 12;
 tracker.w_tracked = [];
 tracker.f_tracked = [];
 tracker.l_tracked = [];

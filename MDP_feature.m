@@ -22,6 +22,8 @@ for i = 1:m
         f(8) = mean(tracker.nccs(index));
         f(9) = mean(tracker.ratios(index));
         f(10) = tracker.scores(1) / tracker.max_score;
+        f(11) = dres_one.ratios(1);
+        f(12) = exp(-dres_one.distances(1) / tracker.threshold_dis);
     else
         f = zeros(1, tracker.fnum);
     end
