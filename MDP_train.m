@@ -1,30 +1,17 @@
 % training MDP
-function tracker = MDP_train(seq_idx, opt)
+function tracker = MDP_train(seq_idx, tracker)
 
 is_show = 0;
 is_save = 1;
 is_text = 0;
 is_pause = 0;
 
-if nargin < 2
-    opt = globals();
-end
+opt = globals();
+opt.is_show = is_show;
 
 seq_name = opt.mot2d_train_seqs{seq_idx};
 seq_num = opt.mot2d_train_nums(seq_idx);
 seq_set = 'train';
-
-% try to use trained parameters
-filename = sprintf('%s/%s_opt.mat', opt.results, seq_name);
-if nargin < 2 && exist(filename, 'file')
-    tmp = opt;
-    object = load(filename);
-    opt = object.opt;
-    fprintf('load parameters from file %s\n', filename);
-    opt.root = tmp.root;
-    opt.mot = tmp.mot;
-end
-opt.is_show = is_show;
 
 if is_show
     close all;
@@ -53,7 +40,14 @@ num_train = numel(dres_train);
 is_good = zeros(num_train, 1);
 
 % intialize tracker
-tracker = MDP_initialize(I, dres_det, opt);
+if nargin < 2 || isempty(tracker) == 1
+    fprintf('initialize tracker from scratch\n');
+    tracker = MDP_initialize(I, dres_det, opt);
+else
+    % continuous training
+    fprintf('continuous training\n');
+    tracker = MDP_initialize_test(tracker, size(I,2), size(I,1), dres_det, is_show);
+end
 
 % for each training sequence
 t = 0;
@@ -353,5 +347,6 @@ fprintf('Finish training %s\n', seq_name);
 
 % save model
 if is_save
-    save('tracker.mat', 'tracker');
+    filename = sprintf('%s/%s_tracker.mat', opt.results, seq_name);
+    save(filename, 'tracker');
 end

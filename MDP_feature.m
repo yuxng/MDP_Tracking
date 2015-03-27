@@ -10,17 +10,21 @@ for i = 1:m
     tracker = LK_associate(frame_id, dres_image, dres_one, tracker);
     
     % design features
-    index = tracker.flags ~= 2;
-    f(1) = mean(exp(-tracker.medFBs(index) / tracker.fb_factor));
-    f(2) = mean(exp(-tracker.medFBs_left(index) / tracker.fb_factor));
-    f(3) = mean(exp(-tracker.medFBs_right(index) / tracker.fb_factor));
-    f(4) = mean(exp(-tracker.medFBs_up(index) / tracker.fb_factor));
-    f(5) = mean(exp(-tracker.medFBs_down(index) / tracker.fb_factor));
-    f(6) = mean(tracker.medNCCs(index));
-    f(7) = mean(tracker.overlaps(index));
-    f(8) = mean(tracker.nccs(index));
-    f(9) = mean(tracker.ratios(index));
-    f(10) = tracker.scores(1) / tracker.max_score;
+    index = find(tracker.flags ~= 2);
+    if isempty(index) == 0
+        f(1) = mean(exp(-tracker.medFBs(index) / tracker.fb_factor));
+        f(2) = mean(exp(-tracker.medFBs_left(index) / tracker.fb_factor));
+        f(3) = mean(exp(-tracker.medFBs_right(index) / tracker.fb_factor));
+        f(4) = mean(exp(-tracker.medFBs_up(index) / tracker.fb_factor));
+        f(5) = mean(exp(-tracker.medFBs_down(index) / tracker.fb_factor));
+        f(6) = mean(tracker.medNCCs(index));
+        f(7) = mean(tracker.overlaps(index));
+        f(8) = mean(tracker.nccs(index));
+        f(9) = mean(tracker.ratios(index));
+        f(10) = tracker.scores(1) / tracker.max_score;
+    else
+        f = zeros(1, tracker.fnum);
+    end
     
     % f(5) = mean(tracker.angles);
     feature(i,:) = f;

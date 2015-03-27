@@ -35,7 +35,7 @@ end
 % tracking parameters
 opt.num = 10;                 % number of templates in tracker
 opt.fb_factor = 10;           % normalization factor for forward-backward error in optical flow
-opt.threshold_ratio = 0.7;    % aspect ratio threshold in target association
+opt.threshold_ratio = 0.6;    % aspect ratio threshold in target association
 opt.threshold_dis = 3;        % distance threshold in target association, multiple of the width of target
 opt.std_box = [40 80];        % [width height] of the stanford box in computing flow
 opt.margin_box = [5, 2];      % [width height] of the margin in computing flow
@@ -55,7 +55,7 @@ opt.overlap_sup = 0.9;      % suppress target used in testing only
 % training parameters
 opt.max_iter = 10000;     % max iterations in total
 opt.max_count = inf;      % max iterations per sequence
-opt.max_pass = 4;
+opt.max_pass = 5;
 
 % parameters to transite to inactive
 opt.max_occlusion = 50;

@@ -1,9 +1,9 @@
 % testing MDP
 function metrics = MDP_test(seq_idx, seq_set, tracker)
 
-is_show = 1;
-is_save = 0;
-is_text = 1;
+is_show = 0;
+is_save = 1;
+is_text = 0;
 
 opt = globals();
 opt.is_text = is_text;
@@ -123,7 +123,7 @@ for fr = 1:seq_num
         subplot(2, 2, 4);
         show_dres(fr, dres_image.I{fr}, 'Lost', dres_track, 3);
 
-        pause();
+        pause(0.01);
     end  
 end
 
@@ -142,7 +142,7 @@ end
 
 % save results
 if is_save
-    filename = sprintf('%s/%s.mat', opt.results, seq_name);
+    filename = sprintf('%s/%s_results.mat', opt.results, seq_name);
     save(filename, 'dres_track', 'metrics');
 end
 
