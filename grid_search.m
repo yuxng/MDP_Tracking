@@ -52,7 +52,7 @@ for i = 1:num
     
     opt.(fname) = values{i};
     tracker = MDP_train(seq_idx, opt);
-    metrics = MDP_test(seq_idx, tracker);
+    metrics = MDP_test(seq_idx, 'train', tracker);
     mota(i) = metrics.mets2d.m(12);
     
     fprintf('Test parameter %s, mota %.2f, ', fname, mota(i));

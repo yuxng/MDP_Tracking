@@ -1,4 +1,4 @@
-function [dres_train, dres_det, labels] = generate_training_data(seq_idx, width, height, opt)
+function [dres_train, dres_det, labels] = generate_training_data(seq_idx, opt)
 
 % is_show = 0;
 
@@ -39,11 +39,7 @@ for i = 1:num
     end
 end
 
-% compute start conf
-scores = sort(dres_det.r(labels == 1));
-start_conf = scores(round(0.05*num));
-
-
+% build the training sequences
 ids = unique(dres_gt.id);
 dres_train = [];
 count = 0;
@@ -82,8 +78,8 @@ for i = 1:numel(ids)
         end
     end
     
-    % start with bounding overlap > opt.overlap_pos
-    index = find(dres.overlap > opt.overlap_pos & dres.r > start_conf);
+    % start with bounding overlap > opt.overlap_pos and non-occluded box
+    index = find(dres.overlap > opt.overlap_pos & dres.covered == 0);
     if isempty(index) == 0
         index_start = index(1);
         count = count + 1;
@@ -107,22 +103,22 @@ fprintf('%s: %d positive sequences\n', seq_name, numel(dres_train));
 
 
 % extract false alarms and append to training sequences
-index = find(overlaps < opt.overlap_neg);
-if numel(index) > opt.max_neg
-    ind = randi(numel(index), [1, opt.max_neg]);
-    index = sort(index(ind));
-end
-dres = sub(dres_det, index);
-num = numel(dres.fr);
-dres.occluded = zeros(num, 1);
-dres.covered = zeros(num, 1);
-dres.overlap = ones(num, 1);
-for i = 1:num
-    dres_one = sub(dres, i);
-    % ignore detections near the borders
-    if dres_one.x > width*0.05 && dres_one.x+dres_one.w < width*0.95 && ...
-            dres_one.y > height*0.05 && dres_one.y+dres_one.h < height*0.95
-        dres_train{end+1} = dres_one;
-    end
-end
-fprintf('%s: %d negative sequences\n', seq_name, numel(dres_train) - count);
+% index = find(overlaps < opt.overlap_neg);
+% if numel(index) > opt.max_neg
+%     ind = randi(numel(index), [1, opt.max_neg]);
+%     index = sort(index(ind));
+% end
+% dres = sub(dres_det, index);
+% num = numel(dres.fr);
+% dres.occluded = zeros(num, 1);
+% dres.covered = zeros(num, 1);
+% dres.overlap = ones(num, 1);
+% for i = 1:num
+%     dres_one = sub(dres, i);
+%     % ignore detections near the borders
+%     if dres_one.x > width*0.05 && dres_one.x+dres_one.w < width*0.95 && ...
+%             dres_one.y > height*0.05 && dres_one.y+dres_one.h < height*0.95
+%         dres_train{end+1} = dres_one;
+%     end
+% end
+% fprintf('%s: %d negative sequences\n', seq_name, numel(dres_train) - count);

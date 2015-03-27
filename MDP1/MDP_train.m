@@ -1,17 +1,31 @@
 % training MDP
-function tracker = MDP_train(seq_idx, tracker)
+function tracker = MDP_train(seq_idx, opt)
 
-is_show = 0;
-is_save = 1;
-is_text = 0;
-is_pause = 0;
+is_show = 1;
+is_save = 0;
+is_text = 1;
+is_pause = 1;
 
-opt = globals();
-opt.is_show = is_show;
+if nargin < 2
+    opt = globals();
+end
 
 seq_name = opt.mot2d_train_seqs{seq_idx};
 seq_num = opt.mot2d_train_nums(seq_idx);
 seq_set = 'train';
+
+% try to use trained parameters
+filename = sprintf('%s/%s_opt.mat', opt.results, seq_name);
+if nargin < 2 && exist(filename, 'file')
+    tmp = opt;
+    object = load(filename);
+    opt = object.opt;
+    fprintf('load parameters from file %s\n', filename);
+    opt.root = tmp.root;
+    opt.mot = tmp.mot;
+    opt.max_count = 40;
+end
+opt.is_show = is_show;
 
 if is_show
     close all;
@@ -31,23 +45,16 @@ end
 
 % generate training data
 I = dres_image.Igray{1};
-[dres_train, dres_det] = generate_training_data(seq_idx, opt);
+[dres_train, dres_det, labels] = generate_training_data(seq_idx, size(I,2), size(I,1), opt);
 
 % for debugging
-% dres_train = {dres_train{2}};
+dres_train = {dres_train{7}};
 
 num_train = numel(dres_train);
 is_good = zeros(num_train, 1);
 
 % intialize tracker
-if nargin < 2 || isempty(tracker) == 1
-    fprintf('initialize tracker from scratch\n');
-    tracker = MDP_initialize(I, dres_det, opt);
-else
-    % continuous training
-    fprintf('continuous training\n');
-    tracker = MDP_initialize_test(tracker, size(I,2), size(I,1), dres_det, is_show);
-end
+tracker = MDP_initialize(I, dres_det, labels, opt);
 
 % for each training sequence
 t = 0;
@@ -71,7 +78,7 @@ while 1
     end
     if isempty(find(is_good == 0, 1)) == 1
         % two pass training
-        if count == opt.max_pass
+        if count == 2
             break;
         else
             count = count + 1;
@@ -114,7 +121,6 @@ while 1
         % extract detection
         index = find(dres_det.fr == fr);
         dres = sub(dres_det, index);
-        dres = MDP_crop_image_box(dres, dres_image.Igray{fr}, tracker);
         num_det = numel(dres.fr);
         
         % show results
@@ -137,7 +143,8 @@ while 1
                 end
             end
             break;
-            
+
+        % active
         elseif tracker.state == 1
             
             % compute overlap
@@ -149,27 +156,121 @@ while 1
 
             % initialize the LK tracker
             tracker = LK_initialize(tracker, fr, id, dres, ind, dres_image);
-            tracker.state = 2;
-            tracker.streak_occluded = 0;
-
-            % build the dres structure
-            dres_one = sub(dres, ind);
-            tracker.dres = dres_one;
-            tracker.dres.id = tracker.target_id;
-            tracker.dres.state = tracker.state;
             
-        % occluded
-        else
-            if tracker.state == 2
-                tracker.streak_occluded = 0;
-            elseif tracker.state == 3
-                tracker.streak_occluded = tracker.streak_occluded + 1;
+            % qscore
+            [tracker, ~, f] = MDP_value(tracker, fr, dres_image, dres, ind);
+
+            % compute reward
+            if id == -1
+                if tracker.state == 0
+                    reward = 1;
+                else
+                    reward = -1;
+                end
+                label = -1;
+            else
+                if tracker.state == 2
+                    reward = 1;
+                else
+                    reward = -1;
+                end
+                label = 1;
+            end
+            if is_text
+                fprintf('reward %.1f\n', reward);
             end
             
+            % update weights
+            if reward == -1
+                tracker.factive(end+1,:) = f;
+                tracker.lactive(end+1) = label;
+                tracker.w_active = svmtrain(tracker.lactive, tracker.factive, '-c 1 -q');
+            end
+            
+        % tracked    
+        elseif tracker.state == 2
+            tracker.streak_occluded = 0;
+            [tracker, ~, f] = MDP_value(tracker, fr, dres_image, dres, []);
+            
+            % check if tracking result overlaps with gt
+            is_end = 0;
+            index = find(dres_gt.fr == fr);
+            if isempty(index) == 1
+                overlap = 0;
+            else
+                if dres_gt.covered(index) > opt.overlap_occ
+                    overlap = 0;
+                else
+                    overlap = calc_overlap(dres_gt, index, tracker.dres, numel(tracker.dres.fr));
+                end
+            end
+            if is_text
+                fprintf('overlap in tracked %.2f\n', overlap);
+            end
+            if overlap > opt.overlap_pos
+                if tracker.state == 2
+                    reward = 1;
+                else
+                    reward = -1;
+                    label = 1;
+                    if isempty(find(tracker.flags ~= 2, 1)) == 1
+                        reward = 0;  % no update
+                    else
+                        % if isempty(find(dres_gt.occluded == 1, 1)) == 1
+                        if dres_gt.covered(index) == 0
+                            is_end = 1;
+                            if is_text
+                                fprintf('target not tracked! Game over\n');
+                            end
+                        else
+                            reward = 0;
+                        end
+                    end
+                end
+            else
+                if tracker.state == 3
+                    reward = 1;
+                else
+                    if overlap < opt.overlap_neg
+                        reward = -1;                       
+                    else
+                        reward = 0;  % no update
+                    end
+                    label = -1;
+                    % possible drift
+                    if isempty(index) == 0 && dres_gt.covered(index) > 0.9
+                        is_end = 1;
+                        if is_text
+                            fprintf('target drift! Game over\n');
+                        end
+                    end
+                end
+            end
+            if is_text
+                fprintf('reward %.1f\n', reward);
+            end
+            
+            % update weights
+            if reward == -1
+                tracker.ftracked(end+1,:) = f;
+                tracker.ltracked(end+1) = label;
+                tracker.w_tracked = svmtrain(tracker.ltracked, tracker.ftracked, '-c 1 -b 1 -q');
+                if is_text
+                    fprintf('training examples in tracked state %d\n', size(tracker.ftracked,1));
+                end
+            end
+            
+            if is_end
+                tracker.state = 0;
+            end
+            
+        % occluded
+        elseif tracker.state == 3
+            tracker.streak_occluded = tracker.streak_occluded + 1;
             % find a set of detections for association
-            index_det = generate_association_index(tracker, fr, dres);
+            index_det = generate_association_index(tracker, fr, dres_image.w(fr), dres_image.h(fr), dres, 0);
             [tracker, ~, f] = MDP_value(tracker, fr, dres_image, dres, index_det);
-
+            
             if is_show
                 figure(1);
                 subplot(2, 3, 3);
@@ -199,20 +300,15 @@ while 1
                         if ov > opt.overlap_pos
                             reward = 1;
                         else
-                            if ov < opt.overlap_neg
-                                reward = -1;
-                                label = -1;
-                                is_end = 1;
-                                if is_text
-                                    fprintf('associated to wrong target (%.2f, %.2f)! Game over\n', max(overlap), ov);
-                                end
-                            else
-                                reward = 0;
+                            reward = -1;
+                            label = -1;
+                            is_end = 1;
+                            if is_text
+                                fprintf('associated to wrong target (%.2f, %.2f)! Game over\n', max(overlap), ov);
                             end
                         end
                     else  % target not associated
-                        % if dres_gt.covered(index) < opt.overlap_neg
-                        if dres_gt.covered(index) == 0
+                        if dres_gt.covered(index) < opt.overlap_neg
                             if isempty(find(tracker.flags ~= 2, 1)) == 1
                                 reward = 0;  % no update
                             else
@@ -221,11 +317,13 @@ while 1
                                 % extract features
                                 [~, ind] = max(overlap);
                                 dres_one = sub(dres, index_det(ind));
-                                f = MDP_feature(fr, dres_image, dres_one, tracker);
+                                f = MDP_feature_occluded(fr, dres_image, dres_one, tracker);
                                 if is_text
                                     fprintf('Missed association!\n');
                                 end
-                                is_end = 1;
+                                if dres_gt.covered(index) == 0
+                                    is_end = 1;
+                                end
                             end
                         else
                             reward = 1;
@@ -235,16 +333,11 @@ while 1
                     if tracker.state == 3
                         reward = 1;
                     else
-                        ov = calc_overlap(dres_gt, index, tracker.dres, numel(tracker.dres.fr));
-                        if ov < opt.overlap_neg || max(overlap) < opt.overlap_neg
-                            reward = -1;
-                            label = -1;
-                            is_end = 1;
-                            if is_text
-                                fprintf('associated to wrong target! Game over\n');
-                            end
-                        else
-                            reward = 0;
+                        reward = -1;
+                        label = -1;
+                        is_end = 1;
+                        if is_text
+                            fprintf('associated to wrong target! Game over\n');
                         end
                     end
                 end
@@ -254,23 +347,14 @@ while 1
 
                 % update weights
                 if reward == -1
-                    if tracker.prev_state == 3
-                        tracker.f_occluded(end+1,:) = f;
-                        tracker.l_occluded(end+1) = label;
-                        tracker.w_occluded = svmtrain(tracker.l_occluded, tracker.f_occluded, '-c 1 -b 1 -q -g 1');
-                        if is_text
-                            fprintf('training examples in occluded state %d\n', size(tracker.f_occluded,1));
-                        end
-                    elseif tracker.prev_state == 2
-                        tracker.f_tracked(end+1,:) = f;
-                        tracker.l_tracked(end+1) = label;
-                        tracker.w_tracked = svmtrain(tracker.l_tracked, tracker.f_tracked, '-c 1 -b 1 -q -g 1');
-                        if is_text
-                            fprintf('training examples in tracked state %d\n', size(tracker.f_tracked,1));
-                        end
+                    tracker.foccluded(end+1,:) = f;
+                    tracker.loccluded(end+1) = label;
+                    tracker.w_occluded = svmtrain(tracker.loccluded, tracker.foccluded, '-c 1 -b 1 -q');
+                    if is_text
+                        fprintf('training examples in occluded state %d\n', size(tracker.foccluded,1));
                     end
                 end
-
+                
                 if is_end
                     tracker.state = 0;
                 end
@@ -347,6 +431,5 @@ fprintf('Finish training %s\n', seq_name);
 
 % save model
 if is_save
-    filename = sprintf('%s/%s_tracker.mat', opt.results, seq_name);
-    save(filename, 'tracker');
+    save('tracker.mat', 'tracker');
 end

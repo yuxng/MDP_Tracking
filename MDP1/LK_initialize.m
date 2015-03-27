@@ -24,19 +24,6 @@ tracker.y1 = bb(2,:)';
 tracker.x2 = bb(3,:)';
 tracker.y2 = bb(4,:)';
 
-% initialze the images for LK association
-tracker.Is = cell(num, 1);
-tracker.BBs = cell(num, 1);
-for i = 1:num
-    I = dres_image.Igray{tracker.frame_ids(i)};
-    BB = [tracker.x1(i); tracker.y1(i); tracker.x2(i); tracker.y2(i)];
-    
-    % crop images and boxes
-    [I_crop, BB_crop] = LK_crop_image_box(I, BB, tracker);
-    tracker.Is{i} = I_crop;
-    tracker.BBs{i} = BB_crop;
-end
-
 % initialize the patterns
 img = dres_image.Igray{frame_id};
 tracker.patterns = generate_pattern(img, bb, tracker.patchsize);
@@ -59,28 +46,32 @@ tracker.scores = zeros(num, 1);
 tracker.indexes = zeros(num, 1);
 tracker.nccs = zeros(num, 1);
 tracker.angles = zeros(num, 1);
-tracker.ratios = zeros(num, 1);
 
-% compute features for tracked state
 if isempty(tracker.w_tracked) == 1
-    features = [ones(1, tracker.fnum); zeros(1, tracker.fnum)];
+    features = [ones(1, tracker.fnum_tracked); zeros(1, tracker.fnum_tracked)];
     labels = [+1; -1];
-    tracker.f_tracked = features;
-    tracker.l_tracked = labels;
-    tracker.w_tracked = svmtrain(labels, features, '-c 1 -b 1 -q -g 1'); 
+    tracker.ftracked = features;
+    tracker.ltracked = labels;
+    tracker.w_tracked = svmtrain(tracker.ltracked, tracker.ftracked, '-c 1 -b 1 -q'); 
 end
 
 % compute features for occluded state
 if isempty(tracker.w_occluded) == 1
-    features = MDP_feature(frame_id, dres_image, dres, tracker);
-    features = features(ind,:);
-    labels = 1;
+    features = MDP_feature_occluded(frame_id, dres_image, dres, tracker);
+    m = size(features, 1);
+    labels = -1 * ones(m, 1);
+    labels(ind) = 1;
+    ov = calc_overlap(dres, ind, dres, 1:numel(dres.fr));
+    ov(ind) = 0;
+    index = find(ov > 0.5);
+    features(index,:) = [];
+    labels(index,:) = [];
     
     % add default negative example
-    features = [features; zeros(1, tracker.fnum)];
+    features = [features; zeros(1, tracker.fnum_occluded)];
     labels = [labels; -1];
     
-    tracker.f_occluded = features;
-    tracker.l_occluded = labels;
-    tracker.w_occluded = svmtrain(labels, features, '-c 1 -b 1 -q -g 1');
+    tracker.foccluded = features;
+    tracker.loccluded = labels;
+    tracker.w_occluded = svmtrain(tracker.loccluded, tracker.foccluded, '-c 1 -b 1 -q');    
 end

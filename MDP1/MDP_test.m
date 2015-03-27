@@ -1,16 +1,12 @@
 % testing MDP
 function metrics = MDP_test(seq_idx, seq_set, tracker)
 
-is_show = 0;
-is_save = 1;
+is_show = 1;
+is_save = 0;
 is_text = 0;
 
 opt = globals();
 opt.is_text = is_text;
-
-if is_show
-    close all;
-end
 
 if strcmp(seq_set, 'train') == 1
     seq_name = opt.mot2d_train_seqs{seq_idx};
@@ -44,7 +40,7 @@ if strcmp(seq_set, 'train') == 1
 end
 
 % load the trained model
-if nargin < 3
+if nargin < 2
     object = load('tracker.mat');
     tracker = object.tracker;
 end
@@ -65,11 +61,9 @@ for fr = 1:seq_num
             fprintf('\n');
         end        
     end
-    
     % extract detection
     index = find(dres_det.fr == fr);
     dres = sub(dres_det, index);
-    dres = MDP_crop_image_box(dres, dres_image.Igray{fr}, tracker);
     
     if is_show
         figure(1);
@@ -85,16 +79,23 @@ for fr = 1:seq_num
         show_dres(fr, dres_image.I{fr}, 'Detections', dres_det);
     end
     
-    % associate tracked targets
+    % track targets
     for i = 1:numel(trackers)
-        trackers{i} = associate(fr, 2, dres_image, dres, trackers{i}, opt);
-    end    
+        trackers{i} = track(fr, dres_image, dres, trackers{i}, opt);    
+    end
     
-    % associate lost targets
+    % connect targets
     [dres_tmp, index] = generate_initial_index(trackers, dres);
     dres_associate = sub(dres_tmp, index);
     for i = 1:numel(trackers)
-        trackers{i} = associate(fr, 3, dres_image, dres_associate, trackers{i}, opt);    
+        trackers{i} = connect(fr, dres_image, dres_associate, trackers{i}, opt);
+    end    
+    
+    % associate targets
+    [dres_tmp, index] = generate_initial_index(trackers, dres);
+    dres_associate = sub(dres_tmp, index);
+    for i = 1:numel(trackers)
+        trackers{i} = associate(fr, dres_image, dres_associate, trackers{i}, opt);    
     end
     
     % find detections for initialization
@@ -124,7 +125,7 @@ for fr = 1:seq_num
         show_dres(fr, dres_image.I{fr}, 'Lost', dres_track, 3);
 
         pause(0.01);
-    end  
+    end
 end
 
 % write tracking results
@@ -142,7 +143,7 @@ end
 
 % save results
 if is_save
-    filename = sprintf('%s/%s_results.mat', opt.results, seq_name);
+    filename = sprintf('%s/%s.mat', opt.results, seq_name);
     save(filename, 'dres_track', 'metrics');
 end
 
@@ -156,31 +157,42 @@ else  % active
 
     % initialize the LK tracker
     tracker = LK_initialize(tracker, fr, id, dres, ind, dres_image);
-    tracker.state = 2;
-    tracker.streak_occluded = 0;
-
-    % build the dres structure
-    dres_one = sub(dres, ind);
-    tracker.dres = dres_one;
-    tracker.dres.id = tracker.target_id;
-    tracker.dres.state = tracker.state;
+    
+    tracker = MDP_value(tracker, fr, dres_image, dres, ind);
 end
 
 
-% associate a target
-function tracker = associate(fr, state, dres_image, dres_associate, tracker, opt)
+% apply a single tracker
+% dres: detections
+function tracker = track(fr, dres_image, dres, tracker, opt)
+
+% tracked    
+if tracker.state == 2
+    tracker.streak_occluded = 0;
+    tracker = MDP_value(tracker, fr, dres_image, dres, []);
+
+    % check if target outside image
+    [~, ov] = calc_overlap(tracker.dres, numel(tracker.dres.fr), dres_image, fr);
+    if ov < opt.exit_threshold
+        if opt.is_text
+            fprintf('target outside image by checking boarders\n');
+        end
+        tracker.state = 0;
+    end    
+end
+
+
+% associate a lost target
+function tracker = associate(fr, dres_image, dres_associate, tracker, opt)
 
 % occluded
-if tracker.state == state && double(max(tracker.dres.fr)) ~= fr
-    
+if tracker.state == 3 && double(max(tracker.dres.fr)) ~= fr
+    tracker.streak_occluded = tracker.streak_occluded + 1;
     % find a set of detections for association
-    index_det = generate_association_index(tracker, fr, dres_associate);
+    index_det = generate_association_index(tracker, fr, dres_image.w(fr), dres_image.h(fr), dres_associate, 1);
     tracker = MDP_value(tracker, fr, dres_image, dres_associate, index_det);
-    
     if tracker.state == 2
         tracker.streak_occluded = 0;
-    elseif tracker.state == 3
-        tracker.streak_occluded = tracker.streak_occluded + 1;
     end
 
     if tracker.streak_occluded > opt.max_occlusion
@@ -198,6 +210,30 @@ if tracker.state == state && double(max(tracker.dres.fr)) ~= fr
         end
         tracker.state = 0;
     end    
+end
+
+
+function tracker = connect(fr, dres_image, dres_associate, tracker, opt)
+
+% occluded
+if tracker.state == 3 && tracker.prev_state == 2
+    % find a set of detections for association
+    index_det = generate_association_index(tracker, fr, dres_image.w(fr), dres_image.h(fr), dres_associate, 1);
+    tracker = MDP_value(tracker, fr, dres_image, dres_associate, index_det);
+    
+    % erase last second
+    dres = tracker.dres;
+    index = [1:numel(dres.fr)-2, numel(dres.fr)];
+    tracker.dres = sub(dres, index);
+    
+    % check if target outside image
+    [~, ov] = calc_overlap(tracker.dres, numel(tracker.dres.fr), dres_image, fr);
+    if ov < opt.exit_threshold
+        if opt.is_text
+            fprintf('target outside image by checking boarders\n');
+        end
+        tracker.state = 0;
+    end       
 end
 
 
@@ -227,11 +263,9 @@ else
     num_track = numel(dres_track.fr);
 end
 
-flag = zeros(num_track, 1);
 for i = 1:num_track
     [~, o] = calc_overlap(dres_track, i, dres_track, 1:num_track);
     o(i) = 0;
-    o(flag == 1) = 0;
     [mo, ind] = max(o);
     if mo > opt.overlap_sup
         o1 = calc_overlap(dres_track, i, dres_det, 1:num_det);
@@ -242,14 +276,62 @@ for i = 1:num_track
             if opt.is_text
                 fprintf('target %d suppressed\n', dres_track.id(ind));
             end
-            flag(ind) = 1;
         else
             trackers{dres_track.id(i)}.state = 3;
             trackers{dres_track.id(i)}.dres.state(end) = 3;
             if opt.is_text
                 fprintf('target %d suppressed\n', dres_track.id(i));
             end
+        end
+    end
+end
+
+
+% collect dres from trackers
+dres_track = [];
+for i = 1:numel(trackers)
+    tracker = trackers{i};
+    dres = sub(tracker.dres, numel(tracker.dres.fr));
+    
+    if tracker.state == 3
+        if isempty(dres_track)
+            dres_track = dres;
+        else
+            dres_track = concatenate_dres(dres_track, dres);
+        end
+    end
+end   
+
+% compute overlaps
+if isempty(dres_track)
+    num_track = 0;
+else
+    num_track = numel(dres_track.fr);
+end
+
+flag = zeros(num_track, 1);
+for i = 1:num_track
+    [~, o] = calc_overlap(dres_track, i, dres_track, 1:num_track);
+    o(i) = 0;
+    o(flag == 1) = 0;
+    [mo, ind] = max(o);
+    if mo > opt.overlap_sup_lost
+        f1 = dres_track.fr(i);
+        f2 = dres_track.fr(ind);
+        if f1 > f2
+            trackers{dres_track.id(ind)}.state = 0;
+            trackers{dres_track.id(ind)}.dres.state(end) = 0;
+            flag(ind) = 1;
+            if opt.is_text
+                fprintf('target %d suppressed\n', dres_track.id(ind));
+            end
+        else
+            trackers{dres_track.id(i)}.state = 0;
+            trackers{dres_track.id(i)}.dres.state(end) = 0;
             flag(i) = 1;
+            if opt.is_text
+                fprintf('target %d suppressed\n', dres_track.id(i));
+            end
         end
     end
 end

@@ -2,7 +2,7 @@ function evaluate_cem
 
 opt = globals();
 seq_set = 'train';
-seq_name = 'ETH-Sunnyday';
+seq_name = 'TUD-Campus';
 results = '/home/yuxiang/Projects/Multitarget_Tracking/MOTbenchmark/devkit/res/data';
 
 

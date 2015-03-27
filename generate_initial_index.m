@@ -22,9 +22,9 @@ for i = 1:numel(trackers)
 end
 
 % nms
-bbox = [dres_det.x dres_det.y dres_det.x+dres_det.w dres_det.y+dres_det.h dres_det.r];
-index_nms = nms(bbox, 0.5);
-dres_det = sub(dres_det, index_nms);    
+% bbox = [dres_det.x dres_det.y dres_det.x+dres_det.w dres_det.y+dres_det.h dres_det.r];
+% index_nms = nms(bbox, 0.5);
+% dres_det = sub(dres_det, index_nms);
 
 % compute overlaps
 num_det = numel(dres_det.fr);
@@ -41,7 +41,7 @@ if num_track
         o1(i) = max(o);
         o2(i) = sum(oo);
     end
-    index_det = find(o1 < 0.4 & o2 < 0.4);
+    index_det = find(o1 < 0.5 & o2 < 0.5);
 else
     index_det = 1:num_det;
 end
