@@ -58,6 +58,6 @@ else
     tracker.dres = concatenate_dres(tracker.dres, dres_one);          
 end
 
-if tracker.is_show
-    fprintf('qscore %.2f\n', qscore);
-end
+% if tracker.is_show
+%     fprintf('qscore %.2f\n', qscore);
+% end

@@ -8,4 +8,5 @@ tracker.max_width = max(dres_det.w);
 tracker.max_height = max(dres_det.h);
 tracker.max_score = max(dres_det.r);
 
+tracker.num_tracked = 0;
 tracker.is_show = is_show;

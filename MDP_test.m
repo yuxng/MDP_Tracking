@@ -1,7 +1,7 @@
 % testing MDP
 function metrics = MDP_test(seq_idx, seq_set, tracker)
 
-is_show = 0;
+is_show = 1;
 is_save = 1;
 is_text = 0;
 
@@ -168,17 +168,42 @@ end
 
 
 % associate a target
-function tracker = associate(fr, state, dres_image, dres_associate, tracker, opt)
+function tracker = associate(fr, state, dres_image, dres, tracker, opt)
 
 % occluded
 if tracker.state == state && double(max(tracker.dres.fr)) ~= fr
     
+    % LK tracking
+    if tracker.state == 2 && tracker.num_tracked >= 5
+        tracker = LK_tracking(fr, dres_image, dres, tracker);
+        
+        % expand detection with tracking
+        if bb_isdef(tracker.bb) && bb_near_border(tracker.bb, dres_image.w(fr), dres_image.h(fr)) == 0
+            dres_one = [];
+            dres_one.fr = fr;
+            dres_one.id = -1;
+            dres_one.x = tracker.bb(1);
+            dres_one.y = tracker.bb(2);
+            dres_one.w = tracker.bb(3) - tracker.bb(1) + 1;
+            dres_one.h = tracker.bb(4) - tracker.bb(2) + 1;
+            dres_one.r = mean(dres.r);
+            overlap = calc_overlap(dres_one, 1, dres, 1:numel(dres.fr));
+            o = max(overlap);
+            if isempty(o) == 1 || o < 0.7
+                fprintf('target %d uses tracking extension\n', tracker.target_id);
+                dres_one = MDP_crop_image_box(dres_one, dres_image.Igray{fr}, tracker);
+                dres = concatenate_dres(dres, dres_one);
+            end
+        end
+    end
+    
     % find a set of detections for association
-    [dres_associate, index_det] = generate_association_index(tracker, fr, dres_associate);
-    tracker = MDP_value(tracker, fr, dres_image, dres_associate, index_det);
+    [dres, index_det] = generate_association_index(tracker, fr, dres);
+    tracker = MDP_value(tracker, fr, dres_image, dres, index_det);
     
     if tracker.state == 2
         tracker.streak_occluded = 0;
+        tracker.num_tracked = tracker.num_tracked + 1;
     elseif tracker.state == 3
         tracker.streak_occluded = tracker.streak_occluded + 1;
     end

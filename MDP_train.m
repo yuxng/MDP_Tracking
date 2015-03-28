@@ -34,7 +34,7 @@ I = dres_image.Igray{1};
 [dres_train, dres_det] = generate_training_data(seq_idx, opt);
 
 % for debugging
-% dres_train = {dres_train{15}};
+% dres_train = {dres_train{6}};
 
 % intialize tracker
 if nargin < 2 || isempty(tracker) == 1
@@ -116,7 +116,6 @@ while 1
         % extract detection
         index = find(dres_det.fr == fr);
         dres = sub(dres_det, index);
-        dres = MDP_crop_image_box(dres, dres_image.Igray{fr}, tracker);
         num_det = numel(dres.fr);
         
         % show results
@@ -162,11 +161,33 @@ while 1
         else
             if tracker.state == 2
                 tracker.streak_occluded = 0;
+                
+                % LK tracking
+                tracker = LK_tracking(fr, dres_image, dres, tracker);
+
+                % expand detection with tracking
+                if bb_isdef(tracker.bb)
+                    dres_one = [];
+                    dres_one.fr = fr;
+                    dres_one.id = -1;
+                    dres_one.x = tracker.bb(1);
+                    dres_one.y = tracker.bb(2);
+                    dres_one.w = tracker.bb(3) - tracker.bb(1) + 1;
+                    dres_one.h = tracker.bb(4) - tracker.bb(2) + 1;
+                    dres_one.r = mean(dres.r);
+                    overlap = calc_overlap(dres_one, 1, dres, 1:num_det);
+                    o = max(overlap);
+                    if isempty(o) == 1 || o < 0.7
+                        dres = concatenate_dres(dres, dres_one);
+                    end
+                end
+                
             elseif tracker.state == 3
                 tracker.streak_occluded = tracker.streak_occluded + 1;
             end
             
             % find a set of detections for association
+            dres = MDP_crop_image_box(dres, dres_image.Igray{fr}, tracker);
             [dres, index_det] = generate_association_index(tracker, fr, dres);
             [tracker, ~, f] = MDP_value(tracker, fr, dres_image, dres, index_det);
 
@@ -257,14 +278,14 @@ while 1
                     if tracker.prev_state == 3
                         tracker.f_occluded(end+1,:) = f;
                         tracker.l_occluded(end+1) = label;
-                        tracker.w_occluded = svmtrain(tracker.l_occluded, tracker.f_occluded, '-c 1 -b 1 -q -g 1');
+                        tracker.w_occluded = svmtrain(tracker.l_occluded, tracker.f_occluded, '-c 1 -q -g 1 -b 1');
                         if is_text
                             fprintf('training examples in occluded state %d\n', size(tracker.f_occluded,1));
                         end
                     elseif tracker.prev_state == 2
                         tracker.f_tracked(end+1,:) = f;
                         tracker.l_tracked(end+1) = label;
-                        tracker.w_tracked = svmtrain(tracker.l_tracked, tracker.f_tracked, '-c 1 -b 1 -q -g 1');
+                        tracker.w_tracked = svmtrain(tracker.l_tracked, tracker.f_tracked, '-c 1 -q -g 1 -b 1');
                         if is_text
                             fprintf('training examples in tracked state %d\n', size(tracker.f_tracked,1));
                         end

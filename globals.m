@@ -40,10 +40,12 @@ opt.threshold_dis = 3;        % distance threshold in target association, multip
 opt.std_box = [40 80];        % [width height] of the stanford box in computing flow
 opt.margin_box = [5, 2];      % [width height] of the margin in computing flow
 opt.enlarge_box = [5, 3];     % enlarge the box before computing flow
+opt.level_track = 3;          % LK level in association
 opt.level =  1;               % LK level in association
 opt.min_vnorm = 0.2;          % min allowed velocity norm in LK
 opt.overlap_box = 0.5;        % overlap with detection in LK
 opt.patchsize = [24 12];      % patch size for target appearance
+opt.weight_tracking = 1;   % weight for tracking box in tracked state
 opt.weight_association = 1;   % weight for tracking box in lost state
 
 % parameters for generating training data
@@ -59,5 +61,5 @@ opt.max_pass = 2;
 
 % parameters to transite to inactive
 opt.max_occlusion = 50;
-opt.exit_threshold = 0.2;
+opt.exit_threshold = 0.1;
 opt.tracked = 4;
