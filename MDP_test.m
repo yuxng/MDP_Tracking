@@ -8,8 +8,6 @@ is_pause = 1;
 
 opt = globals();
 opt.is_text = is_text;
-opt.exit_threshold = 0.7;
-opt.threshold_initial = 20;
 
 if is_show
     close all;
@@ -118,9 +116,16 @@ for fr = 1:seq_num
     % find detections for initialization
     [dres, index] = generate_initial_index(trackers, dres);
     for i = 1:numel(index)
-        if dres.r(index(i)) < opt.threshold_initial
+        % extract features
+        dres_one = sub(dres, index(i));
+        f = MDP_feature_active(tracker, dres_one);
+        % prediction
+        label = svmpredict(1, f, tracker.w_active, '-q');
+        % make a decision
+        if label < 0
             continue;
         end
+        
         % reset tracker
         tracker.prev_state = 1;
         tracker.state = 1;            

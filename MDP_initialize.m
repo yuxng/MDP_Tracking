@@ -1,5 +1,5 @@
 % initialization
-function tracker = MDP_initialize(I, dres_det, opt)
+function tracker = MDP_initialize(I, dres_det, labels, opt)
 
 image_width = size(I,2);
 image_height = size(I,1);
@@ -11,6 +11,14 @@ tracker.max_width = max(dres_det.w);
 tracker.max_height = max(dres_det.h);
 tracker.max_score = max(dres_det.r);
 tracker.fb_factor = opt.fb_factor;
+
+% active
+tracker.fnum_active = 6;
+factive = MDP_feature_active(tracker, dres_det);
+index = labels ~= 0;
+tracker.factive = factive(index,:);
+tracker.lactive = labels(index);
+tracker.w_active = svmtrain(tracker.lactive, tracker.factive, '-c 1 -q');
 
 % initial state
 tracker.prev_state = 1;

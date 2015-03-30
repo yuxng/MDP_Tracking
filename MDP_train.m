@@ -31,7 +31,7 @@ end
 
 % generate training data
 I = dres_image.Igray{1};
-[dres_train, dres_det] = generate_training_data(seq_idx, opt);
+[dres_train, dres_det, labels] = generate_training_data(seq_idx, opt);
 
 % for debugging
 % dres_train = {dres_train{1}};
@@ -39,7 +39,7 @@ I = dres_image.Igray{1};
 % intialize tracker
 if nargin < 2 || isempty(tracker) == 1
     fprintf('initialize tracker from scratch\n');
-    tracker = MDP_initialize(I, dres_det, opt);
+    tracker = MDP_initialize(I, dres_det, labels, opt);
 else
     % continuous training
     fprintf('continuous training\n');
