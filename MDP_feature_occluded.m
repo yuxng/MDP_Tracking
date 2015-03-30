@@ -1,9 +1,9 @@
 % extract features for occluded state
-function [feature, flag] = MDP_feature(frame_id, dres_image, dres, tracker)
+function [feature, flag] = MDP_feature_occluded(frame_id, dres_image, dres, tracker)
 
-f = zeros(1, tracker.fnum);
+f = zeros(1, tracker.fnum_occluded);
 m = numel(dres.fr);
-feature = zeros(m, tracker.fnum);
+feature = zeros(m, tracker.fnum_occluded);
 flag = zeros(m, 1);
 for i = 1:m
     dres_one = sub(dres, i);
@@ -25,7 +25,7 @@ for i = 1:m
         f(11) = dres_one.ratios(1);
         f(12) = exp(-dres_one.distances(1) / tracker.threshold_dis);
     else
-        f = zeros(1, tracker.fnum);
+        f = zeros(1, tracker.fnum_occluded);
     end
     
     % f(5) = mean(tracker.angles);

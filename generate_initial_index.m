@@ -41,7 +41,7 @@ if num_track
         o1(i) = max(o);
         o2(i) = sum(oo);
     end
-    index_det = find(o1 < 0.5 & o2 < 0.5);
+    index_det = find(o1 < 0.4 & o2 < 0.4);
 else
     index_det = 1:num_det;
 end

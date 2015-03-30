@@ -23,6 +23,7 @@ tracker.x1 = bb(1,:)';
 tracker.y1 = bb(2,:)';
 tracker.x2 = bb(3,:)';
 tracker.y2 = bb(4,:)';
+tracker.anchor = 1;
 
 % initialze the images for LK association
 tracker.Is = cell(num, 1);
@@ -63,7 +64,7 @@ tracker.ratios = zeros(num, 1);
 
 % compute features for tracked state
 if isempty(tracker.w_tracked) == 1
-    features = [ones(1, tracker.fnum); zeros(1, tracker.fnum)];
+    features = [ones(1, tracker.fnum_tracked); zeros(1, tracker.fnum_tracked)];
     labels = [+1; -1];
     tracker.f_tracked = features;
     tracker.l_tracked = labels;
@@ -72,7 +73,7 @@ end
 
 % compute features for occluded state
 if isempty(tracker.w_occluded) == 1
-    features = [ones(1, tracker.fnum); zeros(1, tracker.fnum)];
+    features = [ones(1, tracker.fnum_occluded); zeros(1, tracker.fnum_occluded)];
     labels = [+1; -1];
     tracker.f_occluded = features;
     tracker.l_occluded = labels;

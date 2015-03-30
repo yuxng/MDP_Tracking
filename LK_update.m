@@ -1,8 +1,15 @@
 % update the LK tracker
-function tracker = LK_update(frame_id, tracker, img, dres_det)
+function tracker = LK_update(frame_id, tracker, img, dres_det, is_change_anchor)
 
-% find the template with max FB error
-[~, index] = max(tracker.medFBs);
+medFBs = tracker.medFBs;
+if is_change_anchor == 0
+% find the template with max FB error but not the anchor
+    medFBs(tracker.anchor) = -inf;
+    [~, index] = max(medFBs);
+else
+    [~, index] = max(medFBs);
+    tracker.anchor = index;    
+end
 
 % update
 tracker.frame_ids(index) = frame_id;

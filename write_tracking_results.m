@@ -4,7 +4,7 @@ function write_tracking_results(filename, dres, threshold)
 num = max(dres.id);
 len = zeros(num, 1);
 for i = 1:num
-    len(i) = numel(find(dres.id == i));
+    len(i) = numel(find(dres.id == i & dres.state == 2));
 end
 
 fid = fopen(filename, 'w');

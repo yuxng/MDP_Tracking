@@ -18,7 +18,11 @@ for i = 1:num
     I = dres_image.I{frame_ids(i)};
     rect = [x1(i) y1(i) x2(i)-x1(i) y2(i)-y1(i)];
     T = imcrop(I, rect);
-    T = padarray(T, [pad pad 0], 255);
+    if tracker.anchor == index(i)
+        T = padarray(T, [pad pad 0], 128);
+    else
+        T = padarray(T, [pad pad 0], 255);
+    end
     
     T1 = uint8(zeros([hmax, wmax, 3]));
     T1(1:size(T,1), 1:size(T,2), :) = T;

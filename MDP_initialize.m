@@ -18,11 +18,12 @@ tracker.state = 1;
 tracker.initial = 0;
 
 % association model
-tracker.fnum = 12;
+tracker.fnum_tracked = 2;
 tracker.w_tracked = [];
 tracker.f_tracked = [];
 tracker.l_tracked = [];
 
+tracker.fnum_occluded = 12;
 tracker.w_occluded = [];
 tracker.f_occluded = [];
 tracker.l_occluded = [];
@@ -37,6 +38,7 @@ tracker.margin_box = opt.margin_box;
 tracker.enlarge_box = opt.enlarge_box;
 tracker.level_track = opt.level_track;
 tracker.level = opt.level;
+tracker.max_ratio = opt.max_ratio;
 tracker.min_vnorm = opt.min_vnorm;
 tracker.overlap_box = opt.overlap_box;
 tracker.patchsize = opt.patchsize;
