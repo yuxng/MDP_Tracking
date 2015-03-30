@@ -4,7 +4,7 @@ function tracker = MDP_train(seq_idx, tracker)
 is_show = 1;
 is_save = 1;
 is_text = 1;
-is_pause = 0;
+is_pause = 1;
 
 opt = globals();
 opt.is_show = is_show;
@@ -34,7 +34,7 @@ I = dres_image.Igray{1};
 [dres_train, dres_det] = generate_training_data(seq_idx, opt);
 
 % for debugging
-% dres_train = {dres_train{6}};
+dres_train = {dres_train{1}};
 
 % intialize tracker
 if nargin < 2 || isempty(tracker) == 1
@@ -168,7 +168,7 @@ while 1
             
             % find a set of detections for association
             dres = MDP_crop_image_box(dres, dres_image.Igray{fr}, tracker);
-            [dres, index_det] = generate_association_index(tracker, fr, dres);
+            [dres, index_det, ctrack] = generate_association_index(tracker, fr, dres);
             index_gt = find(dres_gt.fr == fr, 1);
             if dres_gt.covered(index_gt) ~= 0
                 index_det = [];
@@ -179,6 +179,9 @@ while 1
                 figure(1);
                 subplot(2, 3, 3);
                 show_dres(fr, dres_image.I{fr}, 'Potential Associations', sub(dres, index_det));
+                hold on;
+                plot(ctrack(1), ctrack(2), 'ro', 'LineWidth', 2);
+                hold off;
             end
 
             if isempty(index_det) == 0

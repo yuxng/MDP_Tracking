@@ -1,5 +1,5 @@
 % find detections for association
-function [dres_det, index_det] = generate_association_index(tracker, frame_id, dres_det)
+function [dres_det, index_det, ctrack] = generate_association_index(tracker, frame_id, dres_det)
 
 ctrack = apply_motion_prediction(frame_id, tracker);
 

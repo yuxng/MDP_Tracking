@@ -102,6 +102,17 @@ end
 
 if strcmp(seq_name, 'PETS09-S2L1') == 1
     dres_train([9, 15, 19]) = [];
+    pole = [409.0000, 102.0000, 39.0000, 294.0000];
+    dres_pole.x = pole(1);
+    dres_pole.y = pole(2);
+    dres_pole.w = pole(3);
+    dres_pole.h = pole(4);
+    for i = 1:numel(dres_train)
+        dres = dres_train{i};
+        [~, ~, overlap] = calc_overlap(dres_pole, 1, dres, 1:numel(dres.fr));
+        dres.covered = max([dres.covered, overlap'], [], 2);
+        dres_train{i} = dres;
+    end
 end
 
 fprintf('%s: %d positive sequences\n', seq_name, numel(dres_train));
