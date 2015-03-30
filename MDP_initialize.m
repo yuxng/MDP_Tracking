@@ -23,7 +23,7 @@ tracker.w_tracked = [];
 tracker.f_tracked = [];
 tracker.l_tracked = [];
 
-tracker.fnum_occluded = 12;
+tracker.fnum_occluded = 8;
 tracker.w_occluded = [];
 tracker.f_occluded = [];
 tracker.l_occluded = [];

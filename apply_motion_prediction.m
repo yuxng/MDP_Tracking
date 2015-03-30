@@ -33,8 +33,13 @@ if count
     vx = vx / count;
     vy = vy / count;
 end
-fprintf('velocity: %f, %f\n', vx, vy);
 
-cx_new = cx(end) + vx * (fr_current + 1 - fr(end));
-cy_new = cy(end) + vy * (fr_current + 1 - fr(end));
+if isempty(cx) == 1
+    dres = tracker.dres;
+    cx_new = dres.x(end) + dres.w(end)/2;
+    cy_new = dres.y(end) + dres.h(end)/2;
+else
+    cx_new = cx(end) + vx * (fr_current + 1 - fr(end));
+    cy_new = cy(end) + vy * (fr_current + 1 - fr(end));
+end
 prediction = [cx_new cy_new];

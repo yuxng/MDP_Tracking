@@ -4,10 +4,12 @@ function metrics = MDP_test(seq_idx, seq_set, tracker)
 is_show = 1;
 is_save = 1;
 is_text = 1;
+is_pause = 1;
 
 opt = globals();
 opt.is_text = is_text;
 opt.exit_threshold = 0.7;
+opt.threshold_initial = 20;
 
 if is_show
     close all;
@@ -70,6 +72,12 @@ for fr = 1:seq_num
     % extract detection
     index = find(dres_det.fr == fr);
     dres = sub(dres_det, index);
+    
+    % nms
+%     boxes = [dres.x dres.y dres.x+dres.w dres.y+dres.h dres.r];
+%     index = nms_new(boxes, 0.6);
+%     dres = sub(dres, index);
+    
     dres = MDP_crop_image_box(dres, dres_image.Igray{fr}, tracker);
     
     if is_show
@@ -110,6 +118,9 @@ for fr = 1:seq_num
     % find detections for initialization
     [dres, index] = generate_initial_index(trackers, dres);
     for i = 1:numel(index)
+        if dres.r(index(i)) < opt.threshold_initial
+            continue;
+        end
         % reset tracker
         tracker.prev_state = 1;
         tracker.state = 1;            
@@ -133,7 +144,11 @@ for fr = 1:seq_num
         subplot(2, 2, 4);
         show_dres(fr, dres_image.I{fr}, 'Lost', dres_track, 3);
 
-        pause(0.01);
+        if is_pause
+            pause();
+        else
+            pause(0.01);
+        end
     end  
 end
 

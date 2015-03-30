@@ -1,10 +1,10 @@
 % training MDP
 function tracker = MDP_train(seq_idx, tracker)
 
-is_show = 1;
+is_show = 0;
 is_save = 1;
-is_text = 1;
-is_pause = 1;
+is_text = 0;
+is_pause = 0;
 
 opt = globals();
 opt.is_show = is_show;
@@ -34,7 +34,7 @@ I = dres_image.Igray{1};
 [dres_train, dres_det] = generate_training_data(seq_idx, opt);
 
 % for debugging
-dres_train = {dres_train{1}};
+% dres_train = {dres_train{1}};
 
 % intialize tracker
 if nargin < 2 || isempty(tracker) == 1
@@ -55,6 +55,7 @@ count = 0;
 num_train = numel(dres_train);
 counter = zeros(num_train, 1);
 is_good = zeros(num_train, 1);
+is_difficult = zeros(num_train, 1);
 while 1
     iter = iter + 1;
     if is_text
@@ -77,6 +78,7 @@ while 1
             count = count + 1;
             fprintf('***pass %d finished***\n', count);
             is_good = zeros(num_train, 1);
+            is_good(is_difficult == 1) = 1;
             counter = zeros(num_train, 1);
             t = 0;
         end
@@ -265,6 +267,7 @@ while 1
     counter(t) = counter(t) + 1;
     if counter(t) > max_count
         is_good(t) = 1;
+        is_difficult(t) = 1;
         fprintf('sequence %d max iteration\n', t);
     end
 end
