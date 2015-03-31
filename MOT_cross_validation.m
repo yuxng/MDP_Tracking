@@ -1,5 +1,5 @@
 % cross_validation
-function cross_validation_mot
+function MOT_cross_validation
 
 mot2d_train_seqs = {'TUD-Stadtmitte', 'TUD-Campus', 'PETS09-S2L1', ...
    'ETH-Bahnhof', 'ETH-Sunnyday', 'ETH-Pedcross2', 'ADL-Rundle-6', ...

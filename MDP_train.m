@@ -42,8 +42,18 @@ if nargin < 2 || isempty(tracker) == 1
     tracker = MDP_initialize(I, dres_det, labels, opt);
 else
     % continuous training
-    fprintf('continuous training\n');
-    tracker = MDP_initialize_test(tracker, size(I,2), size(I,1), dres_det, is_show);
+    fprintf('continuous training\n');    
+    tracker.image_width = size(I,2);
+    tracker.image_height = size(I,1);
+    tracker.max_width = max(dres_det.w);
+    tracker.max_height = max(dres_det.h);
+    tracker.max_score = max(dres_det.r);
+    
+    factive = MDP_feature_active(tracker, dres_det);
+    index = labels ~= 0;
+    tracker.factive = [tracker.factive; factive(index,:)];
+    tracker.lactive = [tracker.lactive; labels(index)];
+    tracker.w_active = svmtrain(tracker.lactive, tracker.factive, '-c 1 -q');    
 end
 
 % for each training sequence

@@ -23,13 +23,9 @@ tracker.w_active = svmtrain(tracker.lactive, tracker.factive, '-c 1 -q');
 % initial state
 tracker.prev_state = 1;
 tracker.state = 1;
-tracker.initial = 0;
 
 % association model
 tracker.fnum_tracked = 2;
-tracker.w_tracked = [];
-tracker.f_tracked = [];
-tracker.l_tracked = [];
 
 tracker.fnum_occluded = 8;
 tracker.w_occluded = [];
