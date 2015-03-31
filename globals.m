@@ -53,7 +53,7 @@ opt.weight_association = 1;   % weight for tracking box in lost state
 opt.overlap_occ = 0.7;
 opt.overlap_pos = 0.5;
 opt.overlap_neg = 0.2;
-opt.overlap_sup = 0.9;      % suppress target used in testing only
+opt.overlap_sup = 0.7;      % suppress target used in testing only
 
 % training parameters
 opt.max_iter = 10000;     % max iterations in total

@@ -1,13 +1,14 @@
 % testing MDP
 function metrics = MDP_test(seq_idx, seq_set, tracker)
 
-is_show = 1;
+is_show = 0;
 is_save = 1;
-is_text = 1;
-is_pause = 1;
+is_text = 0;
+is_pause = 0;
 
 opt = globals();
 opt.is_text = is_text;
+opt.exit_threshold = 0.7;
 
 if is_show
     close all;
@@ -92,25 +93,28 @@ for fr = 1:seq_num
         show_dres(fr, dres_image.I{fr}, 'Detections', dres_det);
     end
     
-    % track targets
-    for i = 1:numel(trackers)
-        trackers{i} = track(fr, dres_image, dres, trackers{i}, opt);    
-    end
+    % sort trackers
+    index_track = sort_trackers(trackers);
     
-    % connect targets
-    [dres_tmp, index] = generate_initial_index(trackers, dres);
-    dres_associate = sub(dres_tmp, index);    
-    for i = 1:numel(trackers)
-        if trackers{i}.state == 3 && trackers{i}.prev_state == 2
-            trackers{i} = associate(fr, dres_image,  dres_associate, trackers{i}, opt);
+    % process trackers
+    for i = 1:numel(index_track)
+        ind = index_track(i);
+        
+        if trackers{ind}.state == 2
+            % track target
+            trackers{ind} = track(fr, dres_image, dres, trackers{ind}, opt);
+            % connect target
+            if trackers{ind}.state == 3
+                [dres_tmp, index] = generate_initial_index(trackers(index_track(1:i-1)), dres);
+                dres_associate = sub(dres_tmp, index);
+                trackers{ind} = associate(fr, dres_image,  dres_associate, trackers{ind}, opt);
+            end
+        elseif trackers{ind}.state == 3
+            % associate target
+            [dres_tmp, index] = generate_initial_index(trackers(index_track(1:i-1)), dres);
+            dres_associate = sub(dres_tmp, index);    
+            trackers{ind} = associate(fr, dres_image, dres_associate, trackers{ind}, opt);
         end
-    end    
-    
-    % associate targets
-    [dres_tmp, index] = generate_initial_index(trackers, dres);
-    dres_associate = sub(dres_tmp, index);
-    for i = 1:numel(trackers)
-        trackers{i} = associate(fr, dres_image, dres_associate, trackers{i}, opt);    
     end
     
     % find detections for initialization
@@ -176,6 +180,28 @@ if is_save
     save(filename, 'dres_track', 'metrics');
 end
 
+
+% sort trackers according to number of tracked frames
+function index = sort_trackers(trackers)
+
+sep = 10;
+num = numel(trackers);
+len = zeros(num, 1);
+state = zeros(num, 1);
+for i = 1:num
+    len(i) = trackers{i}.streak_tracked;
+    state(i) = trackers{i}.state;
+end
+
+index1 = find(len > sep);
+[~, ind] = sort(state(index1));
+index1 = index1(ind);
+
+index2 = find(len <= sep);
+[~, ind] = sort(state(index2));
+index2 = index2(ind);
+index = [index1; index2];
+
 % initialize a tracker
 % dres: detections
 function tracker = initialize(fr, dres_image, id, dres, ind, tracker)
@@ -229,7 +255,6 @@ function tracker = associate(fr, dres_image, dres_associate, tracker, opt)
 if tracker.state == 3
     tracker.streak_occluded = tracker.streak_occluded + 1;
     % find a set of detections for association
-    dres_associate = MDP_crop_image_box(dres_associate, dres_image.Igray{fr}, tracker);
     [dres_associate, index_det] = generate_association_index(tracker, fr, dres_associate);
     tracker = MDP_value(tracker, fr, dres_image, dres_associate, index_det);
     if tracker.state == 2
