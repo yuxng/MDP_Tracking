@@ -265,6 +265,7 @@ while 1
 %             hgexport(h, filename, hgexport('factorystyle'), 'Format', 'png');
         end
         
+        % try to connect recently lost target
         if ~(tracker.state == 3 && tracker.prev_state == 2)
             fr = fr + 1;
         end

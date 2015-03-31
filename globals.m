@@ -37,6 +37,7 @@ opt.num = 10;                 % number of templates in tracker
 opt.fb_factor = 30;           % normalization factor for forward-backward error in optical flow
 opt.threshold_ratio = 0.6;    % aspect ratio threshold in target association
 opt.threshold_dis = 3;        % distance threshold in target association, multiple of the width of target
+opt.threshold_box = 0.8;      % bounding box overlap threshold in tracked state
 opt.std_box = [30 60];        % [width height] of the stanford box in computing flow
 opt.margin_box = [5, 2];      % [width height] of the margin in computing flow
 opt.enlarge_box = [5, 3];     % enlarge the box before computing flow

@@ -37,6 +37,7 @@ tracker.streak_occluded = 0;
 tracker.num = opt.num;
 tracker.threshold_ratio = opt.threshold_ratio;
 tracker.threshold_dis = opt.threshold_dis;
+tracker.threshold_box = opt.threshold_box;
 tracker.std_box = opt.std_box;  % [width height]
 tracker.margin_box = opt.margin_box;
 tracker.enlarge_box = opt.enlarge_box;

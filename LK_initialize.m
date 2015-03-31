@@ -62,7 +62,7 @@ tracker.nccs = zeros(num, 1);
 tracker.angles = zeros(num, 1);
 tracker.ratios = zeros(num, 1);
 
-% compute features for occluded state
+% initialize features for occluded state
 if isempty(tracker.w_occluded) == 1
     features = [ones(1, tracker.fnum_occluded); zeros(1, tracker.fnum_occluded)];
     labels = [+1; -1];

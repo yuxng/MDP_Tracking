@@ -33,7 +33,6 @@ if max(overlap) > opt.overlap_pos
             end
         end
     else  % target not associated
-        % if dres_gt.covered(index) < opt.overlap_neg
         if dres_gt.covered(index) == 0
             if isempty(find(tracker.flags ~= 2, 1)) == 1
                 reward = 0;  % no update
