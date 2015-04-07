@@ -31,10 +31,10 @@ end
 
 % generate training data
 I = dres_image.Igray{1};
-[dres_train, dres_det, labels] = generate_training_data(seq_idx, opt);
+[dres_train, dres_det, labels] = generate_training_data(seq_idx, dres_image, opt);
 
 % for debugging
-% dres_train = {dres_train{1}};
+% dres_train = {dres_train{6}};
 
 % intialize tracker
 if nargin < 2 || isempty(tracker) == 1

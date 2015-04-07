@@ -5,8 +5,8 @@ mot2d_train_seqs = {'TUD-Stadtmitte', 'TUD-Campus', 'PETS09-S2L1', ...
    'ETH-Bahnhof', 'ETH-Sunnyday', 'ETH-Pedcross2', 'ADL-Rundle-6', ...
    'ADL-Rundle-8', 'KITTI-13', 'KITTI-17', 'Venice-2'};
 
-seq_idx_train = {{1}, {4},    {7}, {9},  {3}};
-seq_idx_test  = {{2}, {5, 6}, {8}, {10}, {11}};
+seq_idx_train = {{1}, {4},    {7},     {9}};
+seq_idx_test  = {{2}, {5, 6}, {8, 11}, {10}};
 seq_set_test = 'train';
 N = numel(seq_idx_train);
 
@@ -30,3 +30,10 @@ for i = 1:N
         MDP_test(idx_test{j}, seq_set_test, tracker);
     end    
 end
+
+% evaluation for all test sequences
+opt = globals();
+benchmark_dir = fullfile(opt.mot, opt.mot2d, seq_set_test, filesep);
+seqs = {'TUD-Campus', 'ETH-Sunnyday', 'ETH-Pedcross2', ...
+   'ADL-Rundle-8', 'Venice-2', 'KITTI-17'};
+evaluateTracking(seqs, opt.results, benchmark_dir);

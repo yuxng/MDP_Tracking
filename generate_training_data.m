@@ -1,4 +1,4 @@
-function [dres_train, dres_det, labels] = generate_training_data(seq_idx, opt)
+function [dres_train, dres_det, labels] = generate_training_data(seq_idx, dres_image, opt)
 
 % is_show = 0;
 
@@ -53,6 +53,7 @@ for i = 1:numel(ids)
     dres.covered = zeros(num, 1);
     dres.overlap = zeros(num, 1);
     dres.r = zeros(num, 1);
+    dres.area_inside = zeros(num, 1);
     y = dres.y + dres.h;
     for j = 1:num
         fr = dres.fr(j);
@@ -75,11 +76,15 @@ for i = 1:numel(ids)
             [o, ind] = max(overlap);
             dres.overlap(j) = o;
             dres.r(j) = dres_det.r(index(ind));
+            
+            % area inside image
+            [~, overlap] = calc_overlap(dres_det, index(ind), dres_image, fr);
+            dres.area_inside(j) = overlap;
         end
     end
     
     % start with bounding overlap > opt.overlap_pos and non-occluded box
-    index = find(dres.overlap > opt.overlap_pos & dres.covered == 0);
+    index = find(dres.overlap > opt.overlap_pos & dres.covered == 0 & dres.area_inside > opt.exit_threshold);
     if isempty(index) == 0
         index_start = index(1);
         count = count + 1;

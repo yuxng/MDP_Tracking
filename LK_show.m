@@ -14,15 +14,17 @@ hold on;
 cols1 = size(im1,2);
 loc1 = xFI(1:2,:)';
 loc2 = xFJ(1:2,:)';
-plot(loc1(:,1), loc1(:,2), 'ro');
+plot(loc1(:,1), loc1(:,2), 'ro', 'LineWidth', 2);
+plot(loc2(:,1)+cols1, loc2(:,2), 'yo', 'LineWidth', 2);
 for i = 1: size(loc1,1)
     if isnan(loc2(i,1)) == 0
-        line([loc1(i,1) loc2(i,1)+cols1], [loc1(i,2) loc2(i,2)], 'Color', 'c');
+        line([loc1(i,1) loc2(i,1)+cols1], [loc1(i,2) loc2(i,2)], 'Color', 'c', 'LineWidth', 2);
     end
 end
 
-rectangle('Position', [BB1(1) BB1(2) BB1(3)-BB1(1) BB1(4)-BB1(2)], 'EdgeColor', 'g', 'LineWidth', 2);
-rectangle('Position', [BB2(1)+cols1 BB2(2) BB2(3)-BB2(1) BB2(4)-BB2(2)], 'EdgeColor', 'g', 'LineWidth', 2);
+rectangle('Position', [BB1(1) BB1(2) BB1(3)-BB1(1) BB1(4)-BB1(2)], 'EdgeColor', 'g', 'LineWidth', 4);
+rectangle('Position', [BB2(1)+cols1 BB2(2) BB2(3)-BB2(1) BB2(4)-BB2(2)], 'EdgeColor', 'y', 'LineWidth', 4);
+axis off;
 hold off;
 
 % Return a new image that appends the two images side-by-side.
