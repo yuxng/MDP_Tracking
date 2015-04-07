@@ -17,10 +17,12 @@
 
 function tracker = LK_tracking(frame_id, dres_image, dres_det, tracker)
 
-% current frame
+% current frame + motion
 J = dres_image.Igray{frame_id};
-[~, ind] = max(tracker.frame_ids);
-BB3 = [tracker.x1(ind); tracker.y1(ind); tracker.x2(ind); tracker.y2(ind)];
+ctrack = apply_motion_prediction(frame_id, tracker);
+w = tracker.dres.w(end);
+h = tracker.dres.h(end);
+BB3 = [ctrack(1)-w/2; ctrack(2)-h/2; ctrack(1)+w/2; ctrack(2)+h/2]; 
 [J_crop, BB3_crop, bb_crop, s] = LK_crop_image_box(J, BB3, tracker);
 
 num_det = numel(dres_det.x);

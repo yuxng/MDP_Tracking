@@ -27,7 +27,7 @@ tracker.state = 1;
 % association model
 tracker.fnum_tracked = 2;
 
-tracker.fnum_occluded = 8;
+tracker.fnum_occluded = 12;
 tracker.w_occluded = [];
 tracker.f_occluded = [];
 tracker.l_occluded = [];
