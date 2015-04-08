@@ -64,4 +64,4 @@ opt.max_pass = 2;
 % parameters to transite to inactive
 opt.max_occlusion = 50;
 opt.exit_threshold = 0.95;
-opt.tracked = 4;
+opt.tracked = 5;

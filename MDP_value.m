@@ -92,7 +92,7 @@ elseif tracker.state == 3
             index = 1:numel(dres.fr)-1;
             tracker.dres = sub(dres, index);            
         end
-        tracker.dres = concatenate_dres(tracker.dres, dres_one);
+        tracker.dres = interpolate_dres(tracker.dres, dres_one);
         % update LK tracker
         tracker = LK_update(frame_id, tracker, dres_image.Igray{frame_id}, dres_det, 1);           
     else
@@ -105,7 +105,7 @@ elseif tracker.state == 3
         if tracker.dres.fr(end) == frame_id
             dres = tracker.dres;
             index = 1:numel(dres.fr)-1;
-            tracker.dres = sub(dres, index);            
+            tracker.dres = sub(dres, index);
         end        
         tracker.dres = concatenate_dres(tracker.dres, dres_one);          
     end
