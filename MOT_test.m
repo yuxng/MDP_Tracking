@@ -14,6 +14,7 @@ seq_idx_test  = {{1},    {2, 6}, {3, 4, 5}, {7, 8}, {9, 10}, {11}};
 seq_set_test = 'test';
 N = numel(seq_idx_train);
 
+test_time = 0;
 for i = 1:N
     % training
     idx_train = seq_idx_train{i};
@@ -31,6 +32,10 @@ for i = 1:N
     num = numel(idx_test);
     for j = 1:num
         fprintf('Testing on sequence: %s\n', mot2d_test_seqs{idx_test{j}});
+        tic;
         MDP_test(idx_test{j}, seq_set_test, tracker);
+        test_time = test_time + toc;
     end
 end
+
+fprintf('Total time for testing: %f\n', test_time);
