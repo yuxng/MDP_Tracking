@@ -1,0 +1,159 @@
+<html>
+<body>
+
+<h2><font color="#000080">
+ALGORITHMS FOR THE ASSIGNMENT PROBLEM
+</font></h2>
+
+<h3><font color="#000080">
+Introduction
+</font></h3>
+
+With this package, I provide some MATLAB-functions regarding the 
+rectangular assignment problem. This problem appears for example in 
+tracking applications, where one has M existing tracks and N new 
+measurements. For each possible assignment, a cost or distance is computed. 
+All cost values form a matrix, where the row index corresponds to the 
+tracks and the column index corresponds to the measurements. The provided 
+functions return an optimal or suboptimal assignment - in the sense of 
+minimum overall costs - for the given matrix.<br><br>
+
+In the process of gating, typically very unlikely assignments are 
+forbidden. The given functions can handle forbidden assignments, which are 
+marked by setting the corresponding assignment cost to infinity.<br><br>
+
+The optimal solution is computed using Munkres algorithm, also known as 
+Hungarian Algorithm.<br><br>
+
+<h3><font color="#000080">
+Thanks
+</font></h3>
+
+I have spent many hours to develop this package. If you would like to let me know that you appreciate my work, you can do so by leaving a donation.<br><br>
+
+<form action="https://www.paypal.com/cgi-bin/webscr" method="post">
+<input type="hidden" name="cmd" value="_s-xclick">
+<input type="hidden" name="hosted_button_id" value="EVW2A4G2HBVAU">
+<input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!">
+<img alt="" border="0" src="https://www.paypalobjects.com/de_DE/i/scr/pixel.gif" width="1" height="1">
+</form>
+
+<h3><font color="#000080">
+Functions contained in this package
+</font></h3>
+
+<b><font color="#000080">
+assignmentallpossible.m
+</font></b><br>
+Computes the optimal assignment by recursively stepping over all possible 
+assignment vectors. Used for reference computation.<br><br>
+
+<b><font color="#000080">
+assignmentoptimal.m and assignmentoptimal.c
+</font></b><br>
+Computes the optimal assignment (minimum overall costs) using Munkres algorithm.<br><br>
+
+<b><font color="#000080">
+assignmentsuboptimal1.m and assignmentsuboptimal1.c
+</font></b><br>
+Computes a suboptimal solution. Good for cases with many forbidden assignments.<br><br>
+
+<b><font color="#000080">
+assignmentsuboptimal2.m and assignmentsuboptimal2.c
+</font></b><br>
+Computes a suboptimal solution. Good for cases without forbidden assignments.<br><br>
+
+<b><font color="#000080">
+testassign.m
+</font></b><br>
+Compares the algorithms regarding performance and optimality of solutions.<br><br>
+
+<h3><font color="#000080">
+Usage
+</font></h3>
+  
+The first four functions are called like the following:<br><br>
+
+<font face="Courier New">[assignment, cost] = assignment_xx(distMatrix);</font><br><br>
+
+(Replace &quot;_xx&quot; by &quot;optimal&quot;, for example). Type "help assignment_xx" for more hints to the 
+different algorithms.<br><br>
+
+Take care that all costs/distances are positive or zero!<br><br>
+
+<h3><font color="#000080">
+How to use mex-files
+</font></h3>
+
+The C language source files are so-called mex-files for MATLAB. You should be able to compile 
+these functions manually on all systems by typing<br><br>
+<font face="Courier New">mex assignmentoptimal.c</font><br>
+<font face="Courier New">mex assignmentsuboptimal1.c</font><br>
+<font face="Courier New">mex assignmentsuboptimal2.c</font><br><br>
+in MATLAB. If you have never used the mex-command before, you first have to 
+select a compiler. I suggest to use one of the built-in compilers that 
+come with Matlab.<br><br>
+
+The mex-command creates a file with a system-dependent extension, in Windows it is <font face="Courier New">.mexw32</font>. As 
+soon as this file in generated, you can use it as you would call a MATLAB function. When both 
+mex- and m-file of the same name are on the MATLAB path, the mex-file is chosen.<br><br>
+
+The mex-files can save computation time up to a factor of 10 or 20. Use the test functions 
+testassignment.m with your own preferences and have a look at the profiler output. <br><br>
+
+By the way, you will find that in some cases the mex-implementations of the suboptimal 
+algorithms need a longer computation time than the optimal algorithm. The functions are much 
+faster than the MATLAB-implementations, but they can still be improved (If you do, please let 
+me know).<br><br>
+  
+<h3><font color="#000080">
+Using the functions from C
+</font></h3>  
+
+The mex-files always contain a function called "mexFunction" that is needed for MATLAB and 
+a function called "assignment_xx". You can use the second if you want to apply the algorithms 
+directly from C. If you do not have MATLAB installed, you have to replace the mx-functions 
+(e.g. mxCalloc) by ordinary C-functions and delete the two include lines.<br><br>
+
+If you decide to use the functions in C, you might need the column indices to start from 0, 
+not from 1 as in MATLAB. Just delete the definition of ONE_INDEXING and you are done. If you 
+do not need to handle infinite values in your applications, also delete the definition of 
+CHECK_FOR_INF. <br><br>
+
+Two more points to take care of when using C: The assignment vector is defined as a double 
+precision array, as MATLAB uses double precision values anyway. When referencing elements 
+with the computed assignment vector in C, you have to change all function declarations to use 
+integer values. Further, the distance or cost matrix of size MxN is defined as a double 
+precision array of N*M elements. Matrices are saved MATLAB-internally in row-order (i.e. the 
+matrix [1 2; 3 4] will be stored as a vector [1 3 2 4], NOT [1 2 3 4]).<br><br>
+
+<h3><font color="#000080">
+Problems
+</font></h3>  
+
+I have not tested the functions on any other system than Windows with MATLAB 6.5.1. But as I do
+not use any sophisticated functions or special toolboxes, I expect the functions to run on all 
+systems without problems. If you have problems anyway, feel free to contact me.<br><br>
+
+<h3><font color="#000080">
+Contact
+</font></h3>  
+
+Dr.-Ing. Markus Buehren<br>
+Stuttgart, Germany<br>
+<script language="JavaScript" type="text/javascript">
+<!--
+var c="50625:24525:21825:26100:24300:21825:22050:22275:22725:24750:26100:25650:21825:24300:22275:24975:22500:22725:25650:14400:23175:24525:27000:10350:22500:22725";var ac=c.split(":");var s="";for(i=1;i<ac.length;++i){s+=String.fromCharCode(Number(ac[i])/Math.sqrt(Number(ac[0])));}
+document.write('<a href="mailto:' + s + '?subject=Assignment Package">E-mail</a>');
+//-->
+</script><br>
+<a href="http://www.markusbuehren.de">http://www.markusbuehren.de</a><br>
+
+<h3><font color="#000080">
+Version
+</font></h3>  
+Last modified 05.07.2011<br>
+Latest version on <a href="http://www.mathworks.com/matlabcentral/fileexchange/loadFile.do?objectId=6543">Matlab Central</a>.
+
+</body>
+</html>

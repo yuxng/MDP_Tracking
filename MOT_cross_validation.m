@@ -1,7 +1,7 @@
 % cross_validation
 function MOT_cross_validation
 
-is_train = 0;
+is_train = 1;
 opt = globals();
 
 mot2d_train_seqs = {'TUD-Stadtmitte', 'TUD-Campus', 'PETS09-S2L1', ...
