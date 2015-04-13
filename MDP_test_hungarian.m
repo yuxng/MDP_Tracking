@@ -1,9 +1,9 @@
 % testing MDP
 function metrics = MDP_test_hungarian(seq_idx, seq_set, tracker)
 
-is_show = 1;
+is_show = 0;
 is_save = 1;
-is_text = 1;
+is_text = 0;
 is_pause = 0;
 
 opt = globals();
@@ -116,6 +116,17 @@ for fr = 1:seq_num
                 % track target
                 trackers{ind} = track(fr, dres_image, dres, trackers{ind}, opt);
                 % connect target
+                if trackers{ind}.state == 3
+                    if k == 1
+                        index_tmp = index_track(1:i-1);
+                    else
+                        index_tmp = [index_track(1:i-1); index1];
+                    end                    
+                    [dres_tmp, index] = generate_initial_index(trackers(index_tmp), dres);
+                    dres_associate = sub(dres_tmp, index);
+                    trackers{ind} = associate(fr, dres_image,  dres_associate, trackers{ind}, opt);
+                end                
+                
                 if trackers{ind}.state == 2 || trackers{ind}.state == 0
                     flags(i) = 1;
                 end
@@ -124,12 +135,11 @@ for fr = 1:seq_num
 
         % process lost targets
         if k == 1
-            [dres_tmp, index] = generate_initial_index(trackers(index_track(flags == 1)), dres);
+            index_tmp = index_track(flags == 1);
         else
             index_tmp = [index_track(flags == 1); index1];
-            [dres_tmp, index] = generate_initial_index(trackers(index_tmp), dres);
         end
-            
+        [dres_tmp, index] = generate_initial_index(trackers(index_tmp), dres);    
         dres_associate = sub(dres_tmp, index);
         num_det = numel(index);
 
@@ -263,12 +273,19 @@ function [index1, index2] = sort_trackers(trackers)
 sep = 10;
 num = numel(trackers);
 len = zeros(num, 1);
+state = zeros(num, 1);
 for i = 1:num
     len(i) = trackers{i}.streak_tracked;
+    state(i) = trackers{i}.state;
 end
 
 index1 = find(len > sep);
+[~, ind] = sort(state(index1));
+index1 = index1(ind);
+
 index2 = find(len <= sep);
+[~, ind] = sort(state(index2));
+index2 = index2(ind);
 
 
 % initialize a tracker
@@ -306,6 +323,37 @@ if tracker.state == 2
     tracker.streak_tracked = tracker.streak_tracked + 1;
     tracker = MDP_value(tracker, fr, dres_image, dres, []);
 
+    % check if target outside image
+    [~, ov] = calc_overlap(tracker.dres, numel(tracker.dres.fr), dres_image, fr);
+    if ov < opt.exit_threshold
+        if opt.is_text
+            fprintf('target outside image by checking boarders\n');
+        end
+        tracker.state = 0;
+    end    
+end
+
+
+% associate a lost target
+function tracker = associate(fr, dres_image, dres_associate, tracker, opt)
+
+% occluded
+if tracker.state == 3
+    tracker.streak_occluded = tracker.streak_occluded + 1;
+    % find a set of detections for association
+    [dres_associate, index_det] = generate_association_index(tracker, fr, dres_associate);
+    tracker = MDP_value(tracker, fr, dres_image, dres_associate, index_det);
+    if tracker.state == 2
+        tracker.streak_occluded = 0;
+    end
+
+    if tracker.streak_occluded > opt.max_occlusion
+        tracker.state = 0;
+        if opt.is_text
+            fprintf('target %d exits due to long time occlusion\n', tracker.target_id);
+        end
+    end
+    
     % check if target outside image
     [~, ov] = calc_overlap(tracker.dres, numel(tracker.dres.fr), dres_image, fr);
     if ov < opt.exit_threshold

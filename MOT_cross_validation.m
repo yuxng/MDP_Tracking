@@ -39,7 +39,7 @@ for i = 1:N
     num = numel(idx_test);
     for j = 1:num
         fprintf('Testing on sequence: %s\n', mot2d_train_seqs{idx_test{j}});
-        MDP_test(idx_test{j}, seq_set_test, tracker);
+        MDP_test_hungarian(idx_test{j}, seq_set_test, tracker);
     end    
 end
 
