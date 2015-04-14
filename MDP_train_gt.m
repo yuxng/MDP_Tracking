@@ -128,10 +128,19 @@ for t = 1:num_train
             [dres, index_det, ctrack] = generate_association_index(tracker, fr, dres);
             
             % check if occluded or not
-            index_gt = find(dres_gt.fr == fr, 1);
-            if dres_gt.covered(index_gt) ~= 0
+            index_gt = find(dres_gt.fr == fr);
+            if isempty(index_gt) == 1 || dres_gt.covered(index_gt) ~= 0
                 index_det = [];
             end
+            
+            if is_show
+                figure(1);
+                subplot(2, 3, 3);
+                show_dres(fr, dres_image.I{fr}, 'Potential Associations', sub(dres, index_det));
+                hold on;
+                plot(ctrack(1), ctrack(2), 'ro', 'LineWidth', 2);
+                hold off;
+            end            
             
             % compute features
             if isempty(index_det) == 0
@@ -194,14 +203,7 @@ for t = 1:num_train
                 tracker.dres = concatenate_dres(tracker.dres, dres_one);          
             end
 
-            if is_show
-                figure(1);
-                subplot(2, 3, 3);
-                show_dres(fr, dres_image.I{fr}, 'Potential Associations', sub(dres, index_det));
-                hold on;
-                plot(ctrack(1), ctrack(2), 'ro', 'LineWidth', 2);
-                hold off;
-            end
+
             
         end
             
