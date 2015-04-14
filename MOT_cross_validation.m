@@ -23,7 +23,7 @@ for i = 1:N
         tracker = [];
         for j = 1:num
             fprintf('Training on sequence: %s\n', mot2d_train_seqs{idx_train{j}});
-            tracker = MDP_train(idx_train{j}, tracker);
+            tracker = MDP_train_gt(idx_train{j}, tracker);
         end
     else
         % load tracker from file
@@ -39,7 +39,7 @@ for i = 1:N
     num = numel(idx_test);
     for j = 1:num
         fprintf('Testing on sequence: %s\n', mot2d_train_seqs{idx_test{j}});
-        MDP_test_hungarian(idx_test{j}, seq_set_test, tracker);
+        MDP_test(idx_test{j}, seq_set_test, tracker);
     end    
 end
 
