@@ -1,7 +1,7 @@
 % cross_validation
 function MOT_test
 
-is_train = 0;
+is_train = 1;
 opt = globals();
 
 mot2d_train_seqs = {'TUD-Stadtmitte', 'TUD-Campus', 'PETS09-S2L1', ...
@@ -29,6 +29,8 @@ for i = 1:N
         for j = 1:num
             fprintf('Training on sequence: %s\n', mot2d_train_seqs{idx_train{j}});
             tracker = MDP_train(idx_train{j}, tracker);
+            fprintf('%d training examples after training on %s\n', ...
+                size(tracker.f_occluded, 1), mot2d_train_seqs{idx_train{j}});
         end
     else
         % load tracker from file
@@ -45,7 +47,7 @@ for i = 1:N
     for j = 1:num
         fprintf('Testing on sequence: %s\n', mot2d_test_seqs{idx_test{j}});
         tic;
-        MDP_test_hungarian(idx_test{j}, seq_set_test, tracker);
+        MDP_test(idx_test{j}, seq_set_test, tracker);
         test_time = test_time + toc;
     end
 end

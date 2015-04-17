@@ -33,8 +33,8 @@ seqs = {'TUD-Stadtmitte', 'TUD-Campus', 'PETS09-S2L1', ...
 
 for i = 1:numel(seqs)    
     % tracker
-    file_src = sprintf('results/%s_tracker.mat', seqs{i});
+    file_src = sprintf('results/%s_tracker_det.mat', seqs{i});
     disp(file_src);
-    file_dst = sprintf('results_MOT/%s_tracker.mat', seqs{i});
+    file_dst = sprintf('results_MOT/%s_tracker_det.mat', seqs{i});
     copyfile(file_src, file_dst);    
 end

@@ -11,10 +11,11 @@ fr = double(dres.fr);
 
 % only use the past 10 frames
 num = numel(fr);
-if num > 10
-    cx = cx(num-9:num);
-    cy = cy(num-9:num);
-    fr = fr(num-9:num);
+K = 10;
+if num > K
+    cx = cx(num-K+1:num);
+    cy = cy(num-K+1:num);
+    fr = fr(num-K+1:num);
 end
 
 fr_current = double(fr_current);

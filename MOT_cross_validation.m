@@ -10,6 +10,7 @@ mot2d_train_seqs = {'TUD-Stadtmitte', 'TUD-Campus', 'PETS09-S2L1', ...
 
 seq_idx_train = {{1}, {4},    {7},     {9}};
 seq_idx_test  = {{2}, {5, 6}, {8, 11}, {10}};
+
 seq_set_test = 'train';
 N = numel(seq_idx_train);
 
@@ -21,10 +22,14 @@ for i = 1:N
         % number of training sequences
         num = numel(idx_train);
         tracker = [];
+        
+        % online training
         for j = 1:num
-            fprintf('Training on sequence: %s\n', mot2d_train_seqs{idx_train{j}});
-            tracker = MDP_train_gt(idx_train{j}, tracker);
+            fprintf('Online training on sequence: %s\n', mot2d_train_seqs{idx_train{j}});
+            tracker = MDP_train(idx_train{j}, tracker);
         end
+        fprintf('%d training examples after online training\n', size(tracker.f_occluded, 1));
+        
     else
         % load tracker from file
         filename = sprintf('%s/%s_tracker.mat', opt.results, mot2d_train_seqs{idx_train{end}});

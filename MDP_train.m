@@ -50,7 +50,7 @@ else
     tracker.max_score = max(dres_det.r);
     
     factive = MDP_feature_active(tracker, dres_det);
-    index = labels ~= 0;
+    index = labels ~= 0;    
     tracker.factive = [tracker.factive; factive(index,:)];
     tracker.lactive = [tracker.lactive; labels(index)];
     tracker.w_active = svmtrain(tracker.lactive, tracker.factive, '-c 1 -q');    

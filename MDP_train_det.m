@@ -1,5 +1,5 @@
-% offline training using ground truth annotations
-function tracker = MDP_train_gt(seq_idx, tracker)
+% offline training using object detections
+function tracker = MDP_train_det(seq_idx, tracker)
 
 is_show = 0;
 is_save = 1;
@@ -28,11 +28,6 @@ else
     fprintf('read images done\n');
     save(filename, 'dres_image', '-v7.3');
 end
-
-% read ground truth
-filename = fullfile(opt.mot, opt.mot2d, seq_set, seq_name, 'gt', 'gt.txt');
-dres_gt_all = read_mot2dres(filename);
-dres_gt_all = fix_groundtruth(seq_name, dres_gt_all);
 
 % generate training data
 I = dres_image.Igray{1};
@@ -84,6 +79,11 @@ for t = 1:num_train
             fprintf('\nframe %d, state %d\n', fr, tracker.state);
         end
         
+        % extract detection
+        index = find(dres_det.fr == fr);
+        dres = sub(dres_det, index);
+        num_det = numel(dres.fr);        
+        
         % show results
         if is_show
             figure(1);
@@ -100,36 +100,33 @@ for t = 1:num_train
             break;
             
         elseif tracker.state == 1
+            
+            % compute overlap
+            overlap = calc_overlap(dres_gt, 1, dres, 1:num_det);
+            [ov, ind] = max(overlap);
+            if is_text
+                fprintf('Start: first frame overlap %.2f\n', ov);
+            end
 
-            % initialize the LK tracker with gt
-            tracker = LK_initialize(tracker, fr, id, dres_gt, 1, dres_image);
+            % initialize the LK tracker
+            tracker = LK_initialize(tracker, fr, id, dres, ind, dres_image);
             tracker.state = 2;
             tracker.streak_occluded = 0;
 
-            % build the dres structure            
-            dres_one = [];
-            dres_one.fr = fr;
-            dres_one.id = id;
-            dres_one.x = dres_gt.x(1);
-            dres_one.y = dres_gt.y(1);
-            dres_one.w = dres_gt.w(1);
-            dres_one.h = dres_gt.h(1);
-            dres_one.r = 1;
-            dres_one.state = 2;            
+            % build the dres structure
+            dres_one = sub(dres, ind);
             tracker.dres = dres_one;
+            tracker.dres.id = tracker.target_id;
+            tracker.dres.state = tracker.state;
             
         % tracking by association
         else
             
-            % find the ground truths for association
-            index_gt = find(dres_gt_all.fr == fr);
-            dres = sub(dres_gt_all, index_gt);
+            % find object detections for association
             dres = MDP_crop_image_box(dres, dres_image.Igray{fr}, tracker);
             [dres, index_det, ctrack] = generate_association_index(tracker, fr, dres);
-            
-            % check if occluded or not
             index_gt = find(dres_gt.fr == fr);
-            if isempty(index_gt) == 1 || dres_gt.covered(index_gt) ~= 0
+            if dres_gt.covered(index_gt) ~= 0
                 index_det = [];
             end
             
@@ -143,16 +140,24 @@ for t = 1:num_train
             end            
             
             % compute features
-            if isempty(index_det) == 0 && isempty(find(dres.id(index_det) == tracker.target_id, 1)) == 0
+            if isempty(index_det) == 0
                 % extract features with LK association
                 dres_associate = sub(dres, index_det);
                 features = MDP_feature_occluded(fr, dres_image, dres_associate, tracker);
                 
                 % compute labels
+                flag_update = 0;
                 m = size(features, 1);
                 labels = -1 * ones(m, 1);
-                ind = find(dres_associate.id == tracker.target_id);
-                labels(ind) = 1;
+                % compute overlap
+                if isempty(index_gt) == 0
+                    overlap = calc_overlap(dres_gt, index_gt, dres_associate, 1:numel(index_det));
+                    [ov, ind] = max(overlap);
+                    if ov > opt.overlap_pos
+                        labels(ind) = 1;
+                        flag_update = 1;
+                    end
+                end
                 
                 % update features
                 tracker.f_occluded(end+1:end+m,:) = features;
@@ -162,31 +167,45 @@ for t = 1:num_train
                 end
                 
                 % update template
-                dres_one = sub(dres_associate, ind);
-                tracker = LK_associate(fr, dres_image, dres_one, tracker);
+                if flag_update
+                    dres_one = sub(dres_associate, ind);
+                    tracker = LK_associate(fr, dres_image, dres_one, tracker);
 
-                tracker.prev_state = tracker.state;
-                tracker.state = 2;
-                % build the dres structure
-                dres_one = [];
-                dres_one.fr = fr;
-                dres_one.id = tracker.target_id;
-                dres_one.x = tracker.bb(1);
-                dres_one.y = tracker.bb(2);
-                dres_one.w = tracker.bb(3) - tracker.bb(1);
-                dres_one.h = tracker.bb(4) - tracker.bb(2);
-                dres_one.r = 1;
-                dres_one.state = 2;
+                    tracker.prev_state = tracker.state;
+                    tracker.state = 2;
+                    % build the dres structure
+                    dres_one = [];
+                    dres_one.fr = fr;
+                    dres_one.id = tracker.target_id;
+                    dres_one.x = tracker.bb(1);
+                    dres_one.y = tracker.bb(2);
+                    dres_one.w = tracker.bb(3) - tracker.bb(1);
+                    dres_one.h = tracker.bb(4) - tracker.bb(2);
+                    dres_one.r = 1;
+                    dres_one.state = 2;
 
-                if tracker.dres.fr(end) == fr
-                    dres_tmp = tracker.dres;
-                    index_tmp = 1:numel(dres_tmp.fr)-1;
-                    tracker.dres = sub(dres_tmp, index_tmp);            
+                    if tracker.dres.fr(end) == fr
+                        dres_tmp = tracker.dres;
+                        index_tmp = 1:numel(dres_tmp.fr)-1;
+                        tracker.dres = sub(dres_tmp, index_tmp);            
+                    end
+                    tracker.dres = interpolate_dres(tracker.dres, dres_one);
+                    % update LK tracker
+                    tracker = LK_update(fr, tracker, dres_image.Igray{fr}, dres_associate, 1);
+                else
+                    tracker.state = 3;
+                    dres_one = sub(tracker.dres, numel(tracker.dres.fr));
+                    dres_one.fr = fr;
+                    dres_one.id = tracker.target_id;
+                    dres_one.state = 3;
+
+                    if tracker.dres.fr(end) == fr
+                        dres_tmp = tracker.dres;
+                        index_tmp = 1:numel(dres_tmp.fr)-1;
+                        tracker.dres = sub(dres_tmp, index_tmp);            
+                    end      
+                    tracker.dres = concatenate_dres(tracker.dres, dres_one);                        
                 end
-                tracker.dres = interpolate_dres(tracker.dres, dres_one);
-                % update LK tracker
-                tracker = LK_update(fr, tracker, dres_image.Igray{fr}, dres_associate, 1);
-                
             else
                 tracker.state = 3;
                 dres_one = sub(tracker.dres, numel(tracker.dres.fr));
@@ -201,7 +220,7 @@ for t = 1:num_train
                 end      
                 tracker.dres = concatenate_dres(tracker.dres, dres_one);          
             end
-            
+  
         end
             
         % show results
@@ -232,13 +251,13 @@ for t = 1:num_train
         
         fr = fr + 1;
     end
-    
+
 end
 tracker.w_occluded = svmtrain(tracker.l_occluded, tracker.f_occluded, '-c 1 -q -g 1 -b 1');
 fprintf('Finish training %s\n', seq_name);
 
 % save model
 if is_save
-    filename = sprintf('%s/%s_tracker_gt.mat', opt.results, seq_name);
+    filename = sprintf('%s/%s_tracker_det.mat', opt.results, seq_name);
     save(filename, 'tracker');
 end
