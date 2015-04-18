@@ -59,7 +59,7 @@ opt.overlap_sup = 0.7;      % suppress target used in testing only
 
 % training parameters
 opt.max_iter = 10000;     % max iterations in total
-opt.max_count = 10;      % max iterations per sequence
+opt.max_count = 10;       % max iterations per sequence
 opt.max_pass = 2;
 
 % parameters to transite to inactive
