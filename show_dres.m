@@ -1,11 +1,14 @@
 % draw dres structure
-function show_dres(frame_id, I, tit, dres, state)
+function show_dres(frame_id, I, tit, dres, state, cmap)
 
 if nargin < 5
     state = 1;
 end
 
-cmap = colormap;
+if nargin < 6
+    cmap = colormap;
+end
+
 imshow(I);
 title(tit);
 hold on;
@@ -20,6 +23,7 @@ else
     end
 end
 
+ids = unique(dres.id);
 for i = 1:numel(index)
     ind = index(i);
     
@@ -31,25 +35,27 @@ for i = 1:numel(index)
     
     if isfield(dres, 'id') && dres.id(ind) > 0
         id = dres.id(ind);
-        text(x, y, sprintf('%d', id), 'BackgroundColor',[.7 .9 .7]);
-        index_color = min(1 + floor((id-1) * size(cmap,1) / max(dres.id)), size(cmap,1));
+        id_index = find(id == ids);
+        str = sprintf('%d', id_index);
+        index_color = min(1 + floor((id_index-1) * size(cmap,1) / numel(ids)), size(cmap,1));
         c = cmap(index_color,:);
     else
         c = 'g';
-        text(x, y, sprintf('%.2f', r), 'BackgroundColor',[.7 .9 .7]);
+        str = sprintf('%.2f', r);
     end
     if isfield(dres, 'occluded') && dres.occluded(ind) > 0
         s = '--';
     else
         s = '-';
     end
-    rectangle('Position', [x y w h], 'EdgeColor', c, 'LineWidth', 2, 'LineStyle', s);
+    rectangle('Position', [x y w h], 'EdgeColor', c, 'LineWidth', 4, 'LineStyle', s);
+    text(x, y, str, 'BackgroundColor', [.7 .9 .7], 'FontSize', 14);
     
     if isfield(dres, 'id') && dres.id(ind) > 0
         % show the previous path
         ind = find(dres.id == id & dres.fr <= frame_id);
-        centers = [dres.x(ind)+dres.w(ind)/2, dres.y(ind)+dres.h(ind)/2];
-        plot(centers(:,1), centers(:,2), 'LineWidth', 2, 'Color', c);
+        centers = [dres.x(ind)+dres.w(ind)/2, dres.y(ind)+dres.h(ind)];
+        plot(centers(:,1), centers(:,2), 'LineWidth', 4, 'Color', c);
     end
 end
 hold off;
