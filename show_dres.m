@@ -49,13 +49,13 @@ for i = 1:numel(index)
         s = '-';
     end
     rectangle('Position', [x y w h], 'EdgeColor', c, 'LineWidth', 4, 'LineStyle', s);
-    text(x, y, str, 'BackgroundColor', [.7 .9 .7], 'FontSize', 14);
-    
+    text(x, y-size(I,1)*0.01, str, 'BackgroundColor', [.7 .9 .7], 'FontSize', 14);    
+
     if isfield(dres, 'id') && dres.id(ind) > 0
         % show the previous path
         ind = find(dres.id == id & dres.fr <= frame_id);
         centers = [dres.x(ind)+dres.w(ind)/2, dres.y(ind)+dres.h(ind)];
-        plot(centers(:,1), centers(:,2), 'LineWidth', 4, 'Color', c);
+        patchline(centers(:,1), centers(:,2), 'LineWidth', 4, 'edgecolor', c, 'edgealpha', 0.3);
     end
 end
 hold off;
