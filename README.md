@@ -4,19 +4,17 @@ Created by Yu Xiang at CVGL, Stanford University.
 
 ### Introduction
 
-**L2A** is a online multi-object tracking framework based on Markov Decision Processes (MDPs).
-The naming stands for "Learning to Associate" when this project started.
-Then we moved to learning to track with the same repository.
+**MDP_Tracking** is a online multi-object tracking framework based on Markov Decision Processes (MDPs).
 
 http://cvgl.stanford.edu/projects/MDP_tracking/
 
 ### License
 
-L2A is released under the MIT License (refer to the LICENSE file for details).
+MDP_Tracking is released under the MIT License (refer to the LICENSE file for details).
 
 ### Citation
 
-If you find L2A useful in your research, please consider citing:
+If you find MDP_Tracking useful in your research, please consider citing:
 
     @inproceedings{xiang2015learning,
         Author = {Xiang, Yu and Alahi, Alexandre and Savarese, Silvio},
