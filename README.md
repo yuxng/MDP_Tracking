@@ -27,7 +27,7 @@ If you find L2A useful in your research, please consider citing:
 
 ### Usage
 
-1. Download the 2D MOT benchmark from https://motchallenge.net/data/2D_MOT_2015/
+1. Download the 2D MOT benchmark (data and development kit) from https://motchallenge.net/data/2D_MOT_2015/
 
 2. Set the path of the MOT dataset in global.m
 
