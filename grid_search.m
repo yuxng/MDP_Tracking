@@ -1,3 +1,10 @@
+% --------------------------------------------------------
+% MDP Tracking
+% Copyright (c) 2015 CVGL Stanford
+% Licensed under The MIT License [see LICENSE for details]
+% Written by Yu Xiang
+% --------------------------------------------------------
+%
 % find parameters by grid search
 function opt = grid_search(seq_idx)
 

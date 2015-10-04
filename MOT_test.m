@@ -1,4 +1,11 @@
-% cross_validation
+% --------------------------------------------------------
+% MDP Tracking
+% Copyright (c) 2015 CVGL Stanford
+% Licensed under The MIT License [see LICENSE for details]
+% Written by Yu Xiang
+% --------------------------------------------------------
+%
+% test on MOT benchmark
 function MOT_test
 
 is_train = 1;
@@ -12,6 +19,7 @@ mot2d_test_seqs = {'TUD-Crossing', 'PETS09-S2L2', 'ETH-Jelmoli', ...
     'ETH-Linthescher', 'ETH-Crossing', 'AVG-TownCentre', 'ADL-Rundle-1', ...
     'ADL-Rundle-3', 'KITTI-16', 'KITTI-19', 'Venice-1'};
 
+% training and testing pairs
 seq_idx_train = {{1, 2}, {3},    {4, 5, 6}, {7, 8}, {9, 10}, {11}};
 seq_idx_test  = {{1},    {2, 6}, {3, 4, 5}, {7, 8}, {9, 10}, {11}};
 seq_set_test = 'test';

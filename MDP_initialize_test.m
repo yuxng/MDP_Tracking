@@ -1,4 +1,11 @@
-% initialization
+% --------------------------------------------------------
+% MDP Tracking
+% Copyright (c) 2015 CVGL Stanford
+% Licensed under The MIT License [see LICENSE for details]
+% Written by Yu Xiang
+% --------------------------------------------------------
+%
+% initialization for testing
 function tracker = MDP_initialize_test(tracker, image_width, image_height, dres_det, is_show)
 
 % normalization factor for features

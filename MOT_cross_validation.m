@@ -1,6 +1,14 @@
+% --------------------------------------------------------
+% MDP Tracking
+% Copyright (c) 2015 CVGL Stanford
+% Licensed under The MIT License [see LICENSE for details]
+% Written by Yu Xiang
+% --------------------------------------------------------
+%
 % cross_validation on the MOT benchmark
 function MOT_cross_validation
 
+% set is_train to 0 if testing trained trackers only
 is_train = 1;
 opt = globals();
 
@@ -8,12 +16,14 @@ mot2d_train_seqs = {'TUD-Stadtmitte', 'TUD-Campus', 'PETS09-S2L1', ...
    'ETH-Bahnhof', 'ETH-Sunnyday', 'ETH-Pedcross2', 'ADL-Rundle-6', ...
    'ADL-Rundle-8', 'KITTI-13', 'KITTI-17', 'Venice-2'};
 
+% training and testing pairs
 seq_idx_train = {{1}, {4},    {7},     {9}};
 seq_idx_test  = {{2}, {5, 6}, {8, 11}, {10}};
 
 seq_set_test = 'train';
 N = numel(seq_idx_train);
 
+% for each training-testing pair
 for i = 1:N
     % training
     idx_train = seq_idx_train{i};

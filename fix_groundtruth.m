@@ -1,3 +1,11 @@
+% --------------------------------------------------------
+% MDP Tracking
+% Copyright (c) 2015 CVGL Stanford
+% Licensed under The MIT License [see LICENSE for details]
+% Written by Yu Xiang
+% --------------------------------------------------------
+%
+% fix annotation errors in ETH-Bahnhof
 function dres_gt = fix_groundtruth(seq_name, dres_gt)
 
 % fix ground truth error

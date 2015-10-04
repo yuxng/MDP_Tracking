@@ -1,3 +1,12 @@
+% --------------------------------------------------------
+% MDP Tracking
+% Copyright (c) 2015 CVGL Stanford
+% Licensed under The MIT License [see LICENSE for details]
+% Written by Yu Xiang
+% --------------------------------------------------------
+%
+% compile cpp files
+% change the include and lib path if necessary
 function compile
 
 include = ' -I/usr/local/include/opencv/ -I/usr/local/include/';

@@ -1,3 +1,10 @@
+% --------------------------------------------------------
+% MDP Tracking
+% Copyright (c) 2015 CVGL Stanford
+% Licensed under The MIT License [see LICENSE for details]
+% Written by Yu Xiang
+% --------------------------------------------------------
+%
 % use LK trackers for association
 function tracker = LK_associate(frame_id, dres_image, dres_det, tracker)
 

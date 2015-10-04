@@ -15,6 +15,8 @@
 % You should have received a copy of the GNU General Public License
 % along with TLD.  If not, see <http://www.gnu.org/licenses/>.
 
+% modified by Yu Xiang
+
 function tracker = LK_tracking(frame_id, dres_image, dres_det, tracker)
 
 % current frame + motion

@@ -1,3 +1,10 @@
+% --------------------------------------------------------
+% MDP Tracking
+% Copyright (c) 2015 CVGL Stanford
+% Licensed under The MIT License [see LICENSE for details]
+% Written by Yu Xiang
+% --------------------------------------------------------
+%
 % find detections for initialization
 function [dres_det, index_det] = generate_initial_index(trackers, dres_det)
 

@@ -1,3 +1,10 @@
+% --------------------------------------------------------
+% MDP Tracking
+% Copyright (c) 2015 CVGL Stanford
+% Licensed under The MIT License [see LICENSE for details]
+% Written by Yu Xiang
+% --------------------------------------------------------
+%
 % apply motion models to predict the next locations of the targets
 function prediction = apply_motion_prediction(fr_current, tracker)
 

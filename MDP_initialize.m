@@ -1,4 +1,11 @@
-% initialization
+% --------------------------------------------------------
+% MDP Tracking
+% Copyright (c) 2015 CVGL Stanford
+% Licensed under The MIT License [see LICENSE for details]
+% Written by Yu Xiang
+% --------------------------------------------------------
+%
+% initialization of the tracker
 function tracker = MDP_initialize(I, dres_det, labels, opt)
 
 image_width = size(I,2);

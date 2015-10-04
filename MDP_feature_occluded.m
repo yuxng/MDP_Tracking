@@ -1,3 +1,10 @@
+% --------------------------------------------------------
+% MDP Tracking
+% Copyright (c) 2015 CVGL Stanford
+% Licensed under The MIT License [see LICENSE for details]
+% Written by Yu Xiang
+% --------------------------------------------------------
+%
 % extract features for occluded state
 function [feature, flag] = MDP_feature_occluded(frame_id, dres_image, dres, tracker)
 
@@ -28,7 +35,6 @@ for i = 1:m
         f = zeros(1, tracker.fnum_occluded);
     end
     
-    % f(5) = mean(tracker.angles);
     feature(i,:) = f;
     
     if isempty(find(tracker.flags ~= 2, 1)) == 1

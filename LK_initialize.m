@@ -1,3 +1,10 @@
+% --------------------------------------------------------
+% MDP Tracking
+% Copyright (c) 2015 CVGL Stanford
+% Licensed under The MIT License [see LICENSE for details]
+% Written by Yu Xiang
+% --------------------------------------------------------
+%
 % initialize the LK tracker
 function tracker = LK_initialize(tracker, frame_id, target_id, dres, ind, dres_image)
 

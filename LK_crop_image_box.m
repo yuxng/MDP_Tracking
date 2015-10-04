@@ -1,3 +1,10 @@
+% --------------------------------------------------------
+% MDP Tracking
+% Copyright (c) 2015 CVGL Stanford
+% Licensed under The MIT License [see LICENSE for details]
+% Written by Yu Xiang
+% --------------------------------------------------------
+%
 % crop canonical image and bounding box
 function [I_crop, BB_crop, bb_crop, s] = LK_crop_image_box(I, BB, tracker)
 

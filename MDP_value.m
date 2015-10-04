@@ -1,3 +1,10 @@
+% --------------------------------------------------------
+% MDP Tracking
+% Copyright (c) 2015 CVGL Stanford
+% Licensed under The MIT License [see LICENSE for details]
+% Written by Yu Xiang
+% --------------------------------------------------------
+%
 % MDP value function
 function [tracker, qscore, f] = MDP_value(tracker, frame_id, dres_image, dres_det, index_det)
 
@@ -75,6 +82,7 @@ elseif tracker.state == 3
     % make a decision
     tracker.prev_state = tracker.state;
     if label > 0
+        % association
         tracker.state = 2;
         % build the dres structure
         dres_one = [];
@@ -96,6 +104,7 @@ elseif tracker.state == 3
         % update LK tracker
         tracker = LK_update(frame_id, tracker, dres_image.Igray{frame_id}, dres_det, 1);           
     else
+        % no association
         tracker.state = 3;
         dres_one = sub(tracker.dres, numel(tracker.dres.fr));
         dres_one.fr = frame_id;

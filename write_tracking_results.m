@@ -1,3 +1,9 @@
+% --------------------------------------------------------
+% MDP Tracking
+% Copyright (c) 2015 CVGL Stanford
+% Licensed under The MIT License [see LICENSE for details]
+% Written by Yu Xiang
+% --------------------------------------------------------
 function write_tracking_results(filename, dres, threshold)
 
 % compute target lengths

@@ -1,3 +1,10 @@
+% --------------------------------------------------------
+% MDP Tracking
+% Copyright (c) 2015 CVGL Stanford
+% Licensed under The MIT License [see LICENSE for details]
+% Written by Yu Xiang
+% --------------------------------------------------------
+%
 % compute reward in tracked state
 function [reward, label, f, is_end] = MDP_reward_occluded(fr, f, dres_image, dres_gt, ...
     dres, index_det, tracker, opt, is_text)

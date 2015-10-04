@@ -1,3 +1,9 @@
+% --------------------------------------------------------
+% MDP Tracking
+% Copyright (c) 2015 CVGL Stanford
+% Licensed under The MIT License [see LICENSE for details]
+% Written by Yu Xiang
+% --------------------------------------------------------
 function pattern = generate_pattern(img, bb, patchsize)
 % get patch under bounding box (bb), normalize it size, reshape to a column
 % vector and normalize to zero mean and unit variance (ZMUV)

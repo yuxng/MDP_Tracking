@@ -1,3 +1,11 @@
+% --------------------------------------------------------
+% MDP Tracking
+% Copyright (c) 2015 CVGL Stanford
+% Licensed under The MIT License [see LICENSE for details]
+% Written by Yu Xiang
+% --------------------------------------------------------
+%
+% generate training data
 function [dres_train, dres_det, labels] = generate_training_data(seq_idx, dres_image, opt)
 
 % is_show = 0;
@@ -105,6 +113,7 @@ for i = 1:numel(ids)
 %     end
 end
 
+% handle occlusion by a pole in PETS09-S2L1
 if strcmp(seq_name, 'PETS09-S2L1') == 1
     dres_train([9, 15, 19]) = [];
     pole = [409.0000, 102.0000, 39.0000, 294.0000];
@@ -121,25 +130,3 @@ if strcmp(seq_name, 'PETS09-S2L1') == 1
 end
 
 fprintf('%s: %d positive sequences\n', seq_name, numel(dres_train));
-
-
-% extract false alarms and append to training sequences
-% index = find(overlaps < opt.overlap_neg);
-% if numel(index) > opt.max_neg
-%     ind = randi(numel(index), [1, opt.max_neg]);
-%     index = sort(index(ind));
-% end
-% dres = sub(dres_det, index);
-% num = numel(dres.fr);
-% dres.occluded = zeros(num, 1);
-% dres.covered = zeros(num, 1);
-% dres.overlap = ones(num, 1);
-% for i = 1:num
-%     dres_one = sub(dres, i);
-%     % ignore detections near the borders
-%     if dres_one.x > width*0.05 && dres_one.x+dres_one.w < width*0.95 && ...
-%             dres_one.y > height*0.05 && dres_one.y+dres_one.h < height*0.95
-%         dres_train{end+1} = dres_one;
-%     end
-% end
-% fprintf('%s: %d negative sequences\n', seq_name, numel(dres_train) - count);

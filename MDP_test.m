@@ -1,10 +1,17 @@
+% --------------------------------------------------------
+% MDP Tracking
+% Copyright (c) 2015 CVGL Stanford
+% Licensed under The MIT License [see LICENSE for details]
+% Written by Yu Xiang
+% --------------------------------------------------------
+%
 % testing MDP
 function metrics = MDP_test(seq_idx, seq_set, tracker)
 
-is_show = 0;
-is_save = 1;
-is_text = 0;
-is_pause = 0;
+is_show = 0;   % set is_show to 1 to show tracking results in testing
+is_save = 1;   % set is_save to 1 to save tracking result
+is_text = 0;   % set is_text to 1 to display detailed info
+is_pause = 0;  % set is_pause to 1 to debug
 
 opt = globals();
 opt.is_text = is_text;

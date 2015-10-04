@@ -1,10 +1,17 @@
+% --------------------------------------------------------
+% MDP Tracking
+% Copyright (c) 2015 CVGL Stanford
+% Licensed under The MIT License [see LICENSE for details]
+% Written by Yu Xiang
+% --------------------------------------------------------
+%
 % training MDP
 function tracker = MDP_train(seq_idx, tracker)
 
-is_show = 0;
-is_save = 1;
-is_text = 0;
-is_pause = 0;
+is_show = 0;   % set is_show to 1 to show tracking results in training
+is_save = 1;   % set is_save to 1 to save trained tracker
+is_text = 0;   % set is_text to 1 to display detailed info in training
+is_pause = 0;  % set is_pause to 1 to debug
 
 opt = globals();
 opt.is_show = is_show;
@@ -49,6 +56,7 @@ else
     tracker.max_height = max(dres_det.h);
     tracker.max_score = max(dres_det.r);
     
+    % update weights of active state
     factive = MDP_feature_active(tracker, dres_det);
     index = labels ~= 0;    
     tracker.factive = [tracker.factive; factive(index,:)];
@@ -142,6 +150,7 @@ while 1
             show_dres(fr, dres_image.I{fr}, 'Detections', dres_det);
         end
         
+        % inactive
         if tracker.state == 0
             if reward == 1
                 is_good(t) = 1;
@@ -149,6 +158,7 @@ while 1
             end
             break;
             
+        % active    
         elseif tracker.state == 1
             
             % compute overlap
@@ -201,7 +211,7 @@ while 1
                 [reward, label, f, is_end] = MDP_reward_occluded(fr, f, dres_image, ...
                     dres_gt, dres, index_det, tracker, opt, is_text);
 
-                % update weights
+                % update weights if negative reward
                 if reward == -1
                     tracker.f_occluded(end+1,:) = f;
                     tracker.l_occluded(end+1) = label;
@@ -216,6 +226,7 @@ while 1
                 end
             end
             
+            % transition to inactive if lost for a long time
             if tracker.streak_occluded > opt.max_occlusion
                 tracker.state = 0;
                 if isempty(find(dres_gt.fr == fr, 1)) == 1
