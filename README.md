@@ -29,8 +29,13 @@ If you find MDP_Tracking useful in your research, please consider citing:
 
 2. Set the path of the MOT dataset in global.m
 
-3. Run compile.m
+3. Run compile.m. OpenCV is needed.
 
 4. For validataion, use MOT_cross_validation.m
 
 5. For testing, use MOT_test.m
+
+### Contact
+
+If you find any bug or issue of the software, please contact yuxiang at umich dot edu
+
