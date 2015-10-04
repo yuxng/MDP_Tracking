@@ -1,4 +1,4 @@
-% cross_validation
+% cross_validation on the MOT benchmark
 function MOT_cross_validation
 
 is_train = 1;

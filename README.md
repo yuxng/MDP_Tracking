@@ -29,6 +29,8 @@ If you find MDP_Tracking useful in your research, please consider citing:
 
 2. Set the path of the MOT dataset in global.m
 
-3. For validataion, use MOT_cross_validation.m
+3. Run compile.m
 
-4. For testing, use MOT_test.m
+4. For validataion, use MOT_cross_validation.m
+
+5. For testing, use MOT_test.m
