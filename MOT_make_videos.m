@@ -11,7 +11,7 @@ is_save = 1;
 opt = globals();
 N = numel(opt.mot2d_test_seqs);
 
-for seq_idx = 5%1:N
+for seq_idx = 1:N
     close all;
     hf = figure(1);
     seq_name = opt.mot2d_test_seqs{seq_idx};
