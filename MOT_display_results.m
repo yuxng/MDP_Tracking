@@ -10,6 +10,7 @@ is_save = 1;
 
 opt = globals();
 N = numel(opt.mot2d_test_seqs);
+seq_set = 'test';
 
 for seq_idx = 1:N
     close all;
