@@ -31,7 +31,31 @@ opt.mot2d_test_seqs = {'TUD-Crossing', 'PETS09-S2L2', 'ETH-Jelmoli', ...
     'ADL-Rundle-3', 'KITTI-16', 'KITTI-19', 'Venice-1'};
 opt.mot2d_test_nums = [201, 436, 440, 1194, 219, 450, 500, 625, 209, 1059, 450];
 
+% path for KITTI tracking dataset
+kitti_paths = {'/home/yuxiang/Projects/KITTI_Tracking'};
+for i = 1:numel(kitti_paths)
+    if exist(kitti_paths{i}, 'dir')
+        opt.kitti = kitti_paths{i};
+        break;
+    end
+end
+
+opt.kitti_train_seqs = {'0000', '0001', '0002', '0003', '0004', '0005', ...
+    '0006', '0007', '0008', '0009', '0010', '0011', '0012', '0013', '0014', ...
+    '0015', '0016', '0017', '0018', '0019', '0020'};
+opt.kitti_train_nums = [154, 447, 233, 144, 314, 297, 270, 800, 390, 803, 294, ...
+    373, 78, 340, 106, 376, 209, 145, 339, 1059, 837];
+
+opt.kitti_test_seqs = {'0000', '0001', '0002', '0003', '0004', '0005', ...
+    '0006', '0007', '0008', '0009', '0010', '0011', '0012', '0013', '0014', ...
+    '0015', '0016', '0017', '0018', '0019', '0020', '0021', '0022', ...
+    '0023', '0024', '0025', '0026', '0027', '0028'};
+opt.kitti_test_nums = [465, 147, 243, 257, 421, 809, 114, 215, 165, 349, 1176, ...
+    774, 694, 152, 850, 701, 510, 305, 180, 404, 173, 203, 436, 430, 316, 176, ...
+    170, 85, 175];
+
 addpath(fullfile(opt.mot, 'devkit', 'utils'));
+addpath(fullfile(opt.kitti, 'devkit', 'matlab'));
 addpath([opt.root '/3rd_party/libsvm-3.20/matlab']);
 addpath([opt.root '/3rd_party/Hungarian']);
 
