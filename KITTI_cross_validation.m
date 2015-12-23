@@ -43,7 +43,7 @@ for i = 1:N
         
     else
         % load tracker from file
-        filename = sprintf('%s/kitti_training_%s_tracker.mat', opt.results, kitti_train_seqs{idx_train{end}});
+        filename = sprintf('%s/kitti_training_%s_tracker.mat', opt.results_kitti, kitti_train_seqs{idx_train{end}});
         object = load(filename);
         tracker = object.tracker;
         fprintf('load tracker from file %s\n', filename);
@@ -58,9 +58,3 @@ for i = 1:N
         MDP_test(idx_test{j}, seq_set_test, tracker, is_kitti);
     end    
 end
-
-% evaluation for all test sequences
-benchmark_dir = fullfile(opt.mot, opt.mot2d, seq_set_test, filesep);
-seqs = {'TUD-Campus', 'ETH-Sunnyday', 'ETH-Pedcross2', ...
-   'ADL-Rundle-8', 'Venice-2', 'KITTI-17'};
-evaluateTracking(seqs, opt.results, benchmark_dir);

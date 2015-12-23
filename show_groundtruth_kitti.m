@@ -13,7 +13,7 @@ seq_num = opt.kitti_train_nums(seq_idx);
 seq_set = 'training';
 
 % build the dres structure for images
-filename = sprintf('results/kitti_%s_%s_dres_image.mat', seq_set, seq_name);
+filename = sprintf('%s/kitti_%s_%s_dres_image.mat', opt.results_kitti, seq_set, seq_name);
 if exist(filename, 'file') ~= 0
     object = load(filename);
     dres_image = object.dres_image;

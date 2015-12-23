@@ -50,7 +50,7 @@ else
     seq_set = 'training';
 
     % build the dres structure for images
-    filename = sprintf('%s/kitti_%s_%s_dres_image.mat', opt.results, seq_set, seq_name);
+    filename = sprintf('%s/kitti_%s_%s_dres_image.mat', opt.results_kitti, seq_set, seq_name);
     if exist(filename, 'file') ~= 0
         object = load(filename);
         dres_image = object.dres_image;
@@ -326,7 +326,7 @@ if is_save
     if is_kitti == 0
         filename = sprintf('%s/%s_tracker.mat', opt.results, seq_name);
     else
-        filename = sprintf('%s/kitti_%s_%s_tracker.mat', opt.results, seq_set, seq_name);
+        filename = sprintf('%s/kitti_%s_%s_tracker.mat', opt.results_kitti, seq_set, seq_name);
     end
     save(filename, 'tracker');
 end

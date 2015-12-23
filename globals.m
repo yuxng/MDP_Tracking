@@ -20,6 +20,7 @@ end
 
 opt.mot2d = '2DMOT2015';
 opt.results = 'results';
+opt.results_kitti = 'results_kitti';
 
 opt.mot2d_train_seqs = {'TUD-Stadtmitte', 'TUD-Campus', 'PETS09-S2L1', ...
     'ETH-Bahnhof', 'ETH-Sunnyday', 'ETH-Pedcross2', 'ADL-Rundle-6', ...
@@ -61,6 +62,10 @@ addpath([opt.root '/3rd_party/Hungarian']);
 
 if exist(opt.results, 'dir') == 0
     mkdir(opt.results);
+end
+
+if exist(opt.results_kitti, 'dir') == 0
+    mkdir(opt.results_kitti);
 end
 
 % tracking parameters

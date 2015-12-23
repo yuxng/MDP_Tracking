@@ -15,7 +15,7 @@ end
 is_show = 1;   % set is_show to 1 to show tracking results in testing
 is_save = 1;   % set is_save to 1 to save tracking result
 is_text = 0;   % set is_text to 1 to display detailed info
-is_pause = 1;  % set is_pause to 1 to debug
+is_pause = 0;  % set is_pause to 1 to debug
 
 opt = globals();
 opt.is_text = is_text;
@@ -66,7 +66,7 @@ else
     end
 
     % build the dres structure for images
-    filename = sprintf('%s/kitti_%s_%s_dres_image.mat', opt.results, seq_set, seq_name);
+    filename = sprintf('%s/kitti_%s_%s_dres_image.mat', opt.results_kitti, seq_set, seq_name);
     if exist(filename, 'file') ~= 0
         object = load(filename);
         dres_image = object.dres_image;
@@ -126,7 +126,7 @@ for fr = 1:seq_num
         figure(1);
         
         % show ground truth
-        if strcmp(seq_set, 'train') == 1
+        if strcmp(seq_set, 'train') == 1 || strcmp(seq_set, 'training') == 1
             subplot(2, 2, 1);
             show_dres(fr, dres_image.I{fr}, 'GT', dres_gt);
         end
@@ -205,22 +205,34 @@ for fr = 1:seq_num
 end
 
 % write tracking results
-filename = sprintf('%s/%s.txt', opt.results, seq_name);
-fprintf('write results: %s\n', filename);
-write_tracking_results(filename, dres_track, opt.tracked);
+if is_kitti == 0
+    filename = sprintf('%s/%s.txt', opt.results, seq_name);
+    fprintf('write results: %s\n', filename);
+    write_tracking_results(filename, dres_track, opt.tracked);
 
-% evaluation
-if strcmp(seq_set, 'train') == 1
-    benchmark_dir = fullfile(opt.mot, opt.mot2d, seq_set, filesep);
-    metrics = evaluateTracking({seq_name}, opt.results, benchmark_dir);
+    % evaluation
+    if strcmp(seq_set, 'train') == 1
+        benchmark_dir = fullfile(opt.mot, opt.mot2d, seq_set, filesep);
+        metrics = evaluateTracking({seq_name}, opt.results, benchmark_dir);
+    else
+        metrics = [];
+    end
+
+    % save results
+    if is_save
+        filename = sprintf('%s/%s_results.mat', opt.results, seq_name);
+        save(filename, 'dres_track', 'metrics');
+    end
 else
-    metrics = [];
-end
-
-% save results
-if is_save
-    filename = sprintf('%s/%s_results.mat', opt.results, seq_name);
-    save(filename, 'dres_track', 'metrics');
+    filename = sprintf('%s/%s.txt', opt.results_kitti, seq_name);
+    fprintf('write results: %s\n', filename);
+    write_tracking_results_kitti(filename, dres_track, opt.tracked);
+    
+    % save results
+    if is_save
+        filename = sprintf('%s/kitti_%s_%s_results.mat', opt.results_kitti, seq_set, seq_name);
+        save(filename, 'dres_track');
+    end    
 end
 
 
@@ -268,6 +280,10 @@ else  % active
     dres_one.h = dres.h(ind);
     dres_one.r = dres.r(ind);
     dres_one.state = tracker.state;
+    if isfield(dres, 'type')
+        dres_one.type = {dres.type{ind}};
+    end    
+    
     tracker.dres = dres_one;
 end
 
