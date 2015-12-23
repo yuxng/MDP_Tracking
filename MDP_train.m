@@ -6,9 +6,13 @@
 % --------------------------------------------------------
 %
 % training MDP
-function tracker = MDP_train(seq_idx, tracker)
+function tracker = MDP_train(seq_idx, tracker, is_kitti)
 
-is_show = 0;   % set is_show to 1 to show tracking results in training
+if nargin < 3
+    is_kitti = 0;
+end
+
+is_show = 1;   % set is_show to 1 to show tracking results in training
 is_save = 1;   % set is_save to 1 to save trained tracker
 is_text = 0;   % set is_text to 1 to display detailed info in training
 is_pause = 0;  % set is_pause to 1 to debug
@@ -16,29 +20,51 @@ is_pause = 0;  % set is_pause to 1 to debug
 opt = globals();
 opt.is_show = is_show;
 
-seq_name = opt.mot2d_train_seqs{seq_idx};
-seq_num = opt.mot2d_train_nums(seq_idx);
-seq_set = 'train';
-
 if is_show
     close all;
 end
 
-% build the dres structure for images
-filename = sprintf('%s/%s_dres_image.mat', opt.results, seq_name);
-if exist(filename, 'file') ~= 0
-    object = load(filename);
-    dres_image = object.dres_image;
-    fprintf('load images from file %s done\n', filename);
-else
-    dres_image = read_dres_image(opt, seq_set, seq_name, seq_num);
-    fprintf('read images done\n');
-    save(filename, 'dres_image', '-v7.3');
-end
+if is_kitti == 0
+    seq_name = opt.mot2d_train_seqs{seq_idx};
+    seq_num = opt.mot2d_train_nums(seq_idx);
+    seq_set = 'train';
 
-% generate training data
-I = dres_image.Igray{1};
-[dres_train, dres_det, labels] = generate_training_data(seq_idx, dres_image, opt);
+    % build the dres structure for images
+    filename = sprintf('%s/%s_dres_image.mat', opt.results, seq_name);
+    if exist(filename, 'file') ~= 0
+        object = load(filename);
+        dres_image = object.dres_image;
+        fprintf('load images from file %s done\n', filename);
+    else
+        dres_image = read_dres_image(opt, seq_set, seq_name, seq_num);
+        fprintf('read images done\n');
+        save(filename, 'dres_image', '-v7.3');
+    end
+
+    % generate training data
+    I = dres_image.Igray{1};
+    [dres_train, dres_det, labels] = generate_training_data(seq_idx, dres_image, opt);
+else
+    seq_name = opt.kitti_train_seqs{seq_idx};
+    seq_num = opt.kitti_train_nums(seq_idx);
+    seq_set = 'training';
+
+    % build the dres structure for images
+    filename = sprintf('%s/kitti_%s_%s_dres_image.mat', opt.results, seq_set, seq_name);
+    if exist(filename, 'file') ~= 0
+        object = load(filename);
+        dres_image = object.dres_image;
+        fprintf('load images from file %s done\n', filename);
+    else
+        dres_image = read_dres_image_kitti(opt, seq_set, seq_name, seq_num);
+        fprintf('read images done\n');
+        save(filename, 'dres_image', '-v7.3');
+    end
+    
+    % generate training data
+    I = dres_image.Igray{1};
+    [dres_train, dres_det, labels] = generate_training_data_kitti(seq_idx, dres_image, opt);    
+end
 
 % for debugging
 % dres_train = {dres_train{6}};
@@ -297,6 +323,10 @@ fprintf('Finish training %s\n', seq_name);
 
 % save model
 if is_save
-    filename = sprintf('%s/%s_tracker.mat', opt.results, seq_name);
+    if is_kitti == 0
+        filename = sprintf('%s/%s_tracker.mat', opt.results, seq_name);
+    else
+        filename = sprintf('%s/kitti_%s_%s_tracker.mat', opt.results, seq_set, seq_name);
+    end
     save(filename, 'tracker');
 end

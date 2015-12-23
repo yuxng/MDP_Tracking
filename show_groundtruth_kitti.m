@@ -7,7 +7,7 @@
 function show_groundtruth_kitti
 
 opt = globals();
-seq_idx = 2;
+seq_idx = 1;
 seq_name = opt.kitti_train_seqs{seq_idx};
 seq_num = opt.kitti_train_nums(seq_idx);
 seq_set = 'training';

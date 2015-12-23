@@ -41,6 +41,12 @@ dres.w = C{9}-C{7}+1;
 dres.h = C{10}-C{8}+1;
 if ncols == 17
     dres.r = zeros(size(C{1}));
+    % substraction
+    index = find(dres.id > 0);
+    dres = sub(dres, index);    
 else
     dres.r = C{18};
+    % substraction
+    index = find(dres.r > 0);
+    dres = sub(dres, index);      
 end

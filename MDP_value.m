@@ -28,6 +28,10 @@ if tracker.state == 2
         dres_one.id = tracker.target_id;
     end
     
+    if isfield(tracker.dres, 'type')
+        dres_one.type = tracker.dres.type{1};
+    end
+    
     % compute qscore
     qscore = 0;
     if f(1) == 1 && f(2) > tracker.threshold_box
@@ -94,6 +98,10 @@ elseif tracker.state == 3
         dres_one.h = tracker.bb(4) - tracker.bb(2);
         dres_one.r = 1;
         dres_one.state = 2;
+        
+        if isfield(tracker.dres, 'type')
+            dres_one.type = tracker.dres.type{1};
+        end        
         
         if tracker.dres.fr(end) == frame_id
             dres = tracker.dres;
