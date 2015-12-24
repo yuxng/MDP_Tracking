@@ -6,23 +6,18 @@
 % --------------------------------------------------------
 %
 % cross_validation on the KITTI benchmark
-function KITTI_cross_validation
+function KITTI_test
 
 % set is_train to 0 if testing trained trackers only
 is_train = 1;
 is_kitti = 1;
 opt = globals();
 
-kitti_train_seqs = {'0000', '0001', '0002', '0003', '0004', '0005', ...
-    '0006', '0007', '0008', '0009', '0010', '0011', '0012', '0013', '0014', ...
-    '0015', '0016', '0017', '0018', '0019', '0020'};
-
 % training and testing pairs
-% moving cars, parking cars, pedestrians
-seq_idx_train = {{1, 4, 5, 6}      , {2, 3}     , {13, 14, 15}};
-seq_idx_test  = {{7, 9, 11, 19, 21}, {8, 10, 12}, {16, 17, 18, 20}};
-
-seq_set_test = 'training';
+% cars, pedestrians
+seq_idx_train = {{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 19, 21}, {13, 14, 15, 16, 17, 18, 20}};
+seq_idx_test  = {{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18}, {19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29}};
+seq_set_test = 'testing';
 N = numel(seq_idx_train);
 
 % for each training-testing pair
@@ -37,14 +32,14 @@ for i = 1:N
         
         % online training
         for j = 1:num
-            fprintf('Online training on sequence: %s\n', kitti_train_seqs{idx_train{j}});
+            fprintf('Online training on sequence: %s\n', opt.kitti_train_seqs{idx_train{j}});
             tracker = MDP_train(idx_train{j}, tracker, is_kitti);
         end
         fprintf('%d training examples after online training\n', size(tracker.f_occluded, 1));
         
     else
         % load tracker from file
-        filename = sprintf('%s/kitti_training_%s_tracker.mat', opt.results_kitti, kitti_train_seqs{idx_train{end}});
+        filename = sprintf('%s/kitti_training_%s_tracker.mat', opt.results_kitti, opt.kitti_train_seqs{idx_train{end}});
         object = load(filename);
         tracker = object.tracker;
         fprintf('load tracker from file %s\n', filename);
@@ -55,24 +50,7 @@ for i = 1:N
     % number of testing sequences
     num = numel(idx_test);
     for j = 1:num
-        fprintf('Testing on sequence: %s\n', kitti_train_seqs{idx_test{j}});
+        fprintf('Testing on sequence: %s\n', opt.kitti_test_seqs{idx_test{j}});
         MDP_test(idx_test{j}, seq_set_test, tracker, is_kitti);
     end    
 end
-
-% evaluation
-filename = sprintf('%s/evaluate_tracking.seqmap', opt.results_kitti);
-fid = fopen(filename, 'w');
-for i = 1:N
-    idx_test = seq_idx_test{i};
-    % number of testing sequences
-    num = numel(idx_test);
-    for j = 1:num
-        seq_idx = idx_test{j};
-        seq_name = opt.kitti_train_seqs{seq_idx};
-        seq_num = opt.kitti_train_nums(seq_idx);        
-        fprintf(fid, '%s empty %06d %06d\n', seq_name, 0, seq_num);
-    end
-end
-fclose(fid);
-system('python evaluate_tracking_kitti.py results_kitti');

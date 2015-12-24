@@ -28,9 +28,9 @@ else
     else
         index = find(dres.fr == frame_id);
     end
+    ids = unique(dres.id);
 end
 
-ids = unique(dres.id);
 for i = 1:numel(index)
     ind = index(i);
     

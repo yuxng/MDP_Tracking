@@ -12,7 +12,7 @@ if nargin < 4
     is_kitti = 0;
 end
 
-is_show = 1;   % set is_show to 1 to show tracking results in testing
+is_show = 0;   % set is_show to 1 to show tracking results in testing
 is_save = 1;   % set is_save to 1 to save tracking result
 is_text = 0;   % set is_text to 1 to display detailed info
 is_pause = 0;  % set is_pause to 1 to debug
@@ -229,12 +229,14 @@ else
     write_tracking_results_kitti(filename, dres_track, opt.tracked);
     
     % evaluation
-    % write a temporal seqmap file
-    filename = sprintf('%s/evaluate_tracking.seqmap', opt.results_kitti);
-    fid = fopen(filename, 'w');
-    fprintf(fid, '%s empty %06d %06d\n', seq_name, 0, seq_num);
-    fclose(fid);
-    system('python evaluate_tracking_kitti.py results_kitti');
+    if strcmp(seq_set, 'training') == 1
+        % write a temporal seqmap file
+        filename = sprintf('%s/evaluate_tracking.seqmap', opt.results_kitti);
+        fid = fopen(filename, 'w');
+        fprintf(fid, '%s empty %06d %06d\n', seq_name, 0, seq_num);
+        fclose(fid);
+        system('python evaluate_tracking_kitti.py results_kitti');
+    end
     
     % save results
     if is_save
@@ -242,7 +244,6 @@ else
         save(filename, 'dres_track');
     end    
 end
-
 
 % sort trackers according to number of tracked frames
 function index = sort_trackers(trackers)

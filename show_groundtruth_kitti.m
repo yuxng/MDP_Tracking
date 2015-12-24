@@ -4,10 +4,9 @@
 % Licensed under The MIT License [see LICENSE for details]
 % Written by Yu Xiang
 % --------------------------------------------------------
-function show_groundtruth_kitti
+function show_groundtruth_kitti(seq_idx)
 
 opt = globals();
-seq_idx = 1;
 seq_name = opt.kitti_train_seqs{seq_idx};
 seq_num = opt.kitti_train_nums(seq_idx);
 seq_set = 'training';
@@ -44,5 +43,5 @@ for fr = 1:seq_num
     subplot(1, 2, 2);
     show_dres(fr, dres_image.I{fr}, 'Detections', dres_det);
     
-    pause;
+    pause(0.1);
 end
