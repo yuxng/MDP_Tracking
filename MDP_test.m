@@ -228,6 +228,14 @@ else
     fprintf('write results: %s\n', filename);
     write_tracking_results_kitti(filename, dres_track, opt.tracked);
     
+    % evaluation
+    % write a temporal seqmap file
+    filename = sprintf('%s/evaluate_tracking.seqmap', opt.results_kitti);
+    fid = fopen(filename, 'w');
+    fprintf(fid, '%s empty %06d %06d\n', seq_name, 0, seq_num);
+    fclose(fid);
+    system('python evaluate_tracking_kitti.py results_kitti');
+    
     % save results
     if is_save
         filename = sprintf('%s/kitti_%s_%s_results.mat', opt.results_kitti, seq_set, seq_name);
