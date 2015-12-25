@@ -23,6 +23,12 @@ for i = 1:num_det
     ratios(i) = min(ratio, 1/ratio);
 end
 
-index_det = find(distances < tracker.threshold_dis & ratios > tracker.threshold_ratio);
+if isfield(tracker.dres, 'type')
+    cls = tracker.dres.type{end};
+    cls_index = strcmp(cls, dres_det.type);
+    index_det = find(distances < tracker.threshold_dis & ratios > tracker.threshold_ratio & cls_index == 1);
+else
+    index_det = find(distances < tracker.threshold_dis & ratios > tracker.threshold_ratio);
+end
 dres_det.ratios = ratios;
 dres_det.distances = distances;

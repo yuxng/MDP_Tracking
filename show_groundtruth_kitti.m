@@ -7,9 +7,16 @@
 function show_groundtruth_kitti(seq_idx)
 
 opt = globals();
-seq_name = opt.kitti_train_seqs{seq_idx};
-seq_num = opt.kitti_train_nums(seq_idx);
-seq_set = 'training';
+% seq_set = 'training';
+seq_set = 'testing';
+
+if strcmp(seq_set, 'training') == 1
+    seq_name = opt.kitti_train_seqs{seq_idx};
+    seq_num = opt.kitti_train_nums(seq_idx);
+else
+    seq_name = opt.kitti_test_seqs{seq_idx};
+    seq_num = opt.kitti_test_nums(seq_idx);
+end
 
 % build the dres structure for images
 filename = sprintf('%s/kitti_%s_%s_dres_image.mat', opt.results_kitti, seq_set, seq_name);
@@ -28,8 +35,12 @@ filename = fullfile(opt.kitti, seq_set, 'det_02', [seq_name '.txt']);
 dres_det = read_kitti2dres(filename);
 
 % read ground truth
-filename = fullfile(opt.kitti, seq_set, 'label_02', [seq_name '.txt']);
-dres_gt = read_kitti2dres(filename);
+if strcmp(seq_set, 'training') == 1
+    filename = fullfile(opt.kitti, seq_set, 'label_02', [seq_name '.txt']);
+    dres_gt = read_kitti2dres(filename);
+else
+    dres_gt = [];
+end
 
 figure(1);
 for fr = 1:seq_num

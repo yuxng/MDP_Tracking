@@ -48,6 +48,9 @@ for i = 1:numel(index)
         c = cmap(index_color,:);
     else
         c = 'g';
+        if isfield(dres, 'type') && strcmp(dres.type{ind}, 'Pedestrian')
+            c = 'y';
+        end
         str = sprintf('%.2f', r);
     end
     if isfield(dres, 'occluded') && dres.occluded(ind) > 0

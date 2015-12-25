@@ -20,6 +20,9 @@ is_pause = 0;  % set is_pause to 1 to debug
 opt = globals();
 opt.is_text = is_text;
 opt.exit_threshold = 0.7;
+if is_kitti
+    opt.max_occlusion = 10;
+end
 
 if is_show
     close all;
