@@ -54,5 +54,5 @@ for fr = 1:seq_num
     subplot(1, 2, 2);
     show_dres(fr, dres_image.I{fr}, 'Detections', dres_det);
     
-    pause(0.1);
+    pause();
 end

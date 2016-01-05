@@ -72,7 +72,7 @@ end
 % intialize tracker
 if nargin < 2 || isempty(tracker) == 1
     fprintf('initialize tracker from scratch\n');
-    tracker = MDP_initialize(I, dres_det, labels, opt);
+    tracker = MDP_initialize(I, dres_det, labels, opt, is_kitti);
 else
     % continuous training
     fprintf('continuous training\n');    
@@ -84,10 +84,22 @@ else
     
     % update weights of active state
     factive = MDP_feature_active(tracker, dres_det);
-    index = labels ~= 0;    
-    tracker.factive = [tracker.factive; factive(index,:)];
-    tracker.lactive = [tracker.lactive; labels(index)];
-    tracker.w_active = svmtrain(tracker.lactive, tracker.factive, '-c 1 -q');    
+    if is_kitti == 0
+        index = labels ~= 0;    
+        tracker.factive = [tracker.factive; factive(index,:)];
+        tracker.lactive = [tracker.lactive; labels(index)];
+        tracker.w_active = svmtrain(tracker.lactive, tracker.factive, '-c 1 -q');
+    else
+        for i = 1:numel(opt.kitti_types)
+            cls = opt.kitti_types{i};
+            index = find(strcmp(cls, dres_det.type) == 1 & labels ~= 0);
+            if isempty(index) == 0
+                tracker.factive{i} = [tracker.factive{i}; factive(index,:)];
+                tracker.lactive{i} = [tracker.lactive{i}; labels(index)];
+                tracker.w_active{i} = svmtrain(tracker.lactive{i}, tracker.factive{i}, '-c 1 -q');            
+            end
+        end        
+    end
 end
 
 % for each training sequence

@@ -51,6 +51,9 @@ for i = 1:numel(index)
         if isfield(dres, 'type') && strcmp(dres.type{ind}, 'Pedestrian')
             c = 'y';
         end
+        if isfield(dres, 'type') && strcmp(dres.type{ind}, 'Cyclist')
+            c = 'm';
+        end        
         str = sprintf('%.2f', r);
     end
     if isfield(dres, 'occluded') && dres.occluded(ind) > 0

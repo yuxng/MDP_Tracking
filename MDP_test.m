@@ -12,17 +12,14 @@ if nargin < 4
     is_kitti = 0;
 end
 
-is_show = 0;   % set is_show to 1 to show tracking results in testing
+is_show = 1;   % set is_show to 1 to show tracking results in testing
 is_save = 1;   % set is_save to 1 to save tracking result
 is_text = 0;   % set is_text to 1 to display detailed info
-is_pause = 0;  % set is_pause to 1 to debug
+is_pause = 1;  % set is_pause to 1 to debug
 
 opt = globals();
 opt.is_text = is_text;
 opt.exit_threshold = 0.7;
-if is_kitti
-    opt.max_occlusion = 10;
-end
 
 if is_show
     close all;
@@ -119,9 +116,16 @@ for fr = 1:seq_num
     dres = sub(dres_det, index);
     
     % nms
-%     boxes = [dres.x dres.y dres.x+dres.w dres.y+dres.h dres.r];
-%     index = nms_new(boxes, 0.6);
-%     dres = sub(dres, index);
+    if is_kitti
+        boxes = [dres.x dres.y dres.x+dres.w dres.y+dres.h dres.r];
+        index = nms_new(boxes, 0.6);
+        dres = sub(dres, index);
+
+        % only keep cars and pedestrians
+        ind = strcmp('Car', dres.type) | strcmp('Pedestrian', dres.type);
+        index = find(ind == 1);
+        dres = sub(dres, index);
+    end
     
     dres = MDP_crop_image_box(dres, dres_image.Igray{fr}, tracker);
     
@@ -170,7 +174,13 @@ for fr = 1:seq_num
         dres_one = sub(dres, index(i));
         f = MDP_feature_active(tracker, dres_one);
         % prediction
-        label = svmpredict(1, f, tracker.w_active, '-q');
+        if is_kitti == 0
+            label = svmpredict(1, f, tracker.w_active, '-q');
+        else
+            cls = dres_one.type{1};
+            index_cls = strcmp(cls, opt.kitti_types) == 1;
+            label = svmpredict(1, f, tracker.w_active{index_cls}, '-q');
+        end
         % make a decision
         if label < 0
             continue;

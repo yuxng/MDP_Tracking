@@ -6,12 +6,16 @@
 % --------------------------------------------------------
 %
 % testing MDP
-function metrics = MDP_test_hungarian(seq_idx, seq_set, tracker)
+function metrics = MDP_test_hungarian(seq_idx, seq_set, tracker, is_kitti)
 
-is_show = 0;
+if nargin < 4
+    is_kitti = 0;
+end
+
+is_show = 1;
 is_save = 1;
 is_text = 0;
-is_pause = 0;
+is_pause = 1;
 
 opt = globals();
 opt.is_text = is_text;
@@ -21,35 +25,67 @@ if is_show
     close all;
 end
 
-if strcmp(seq_set, 'train') == 1
-    seq_name = opt.mot2d_train_seqs{seq_idx};
-    seq_num = opt.mot2d_train_nums(seq_idx);
+if is_kitti == 0
+    if strcmp(seq_set, 'train') == 1
+        seq_name = opt.mot2d_train_seqs{seq_idx};
+        seq_num = opt.mot2d_train_nums(seq_idx);
+    else
+        seq_name = opt.mot2d_test_seqs{seq_idx};
+        seq_num = opt.mot2d_test_nums(seq_idx);
+    end
+
+    % build the dres structure for images
+    filename = sprintf('%s/%s_dres_image.mat', opt.results, seq_name);
+    if exist(filename, 'file') ~= 0
+        object = load(filename);
+        dres_image = object.dres_image;
+        fprintf('load images from file %s done\n', filename);
+    else
+        dres_image = read_dres_image(opt, seq_set, seq_name, seq_num);
+        fprintf('read images done\n');
+        save(filename, 'dres_image', '-v7.3');
+    end
+
+    % read detections
+    filename = fullfile(opt.mot, opt.mot2d, seq_set, seq_name, 'det', 'det.txt');
+    dres_det = read_mot2dres(filename);
+
+    if strcmp(seq_set, 'train') == 1
+        % read ground truth
+        filename = fullfile(opt.mot, opt.mot2d, seq_set, seq_name, 'gt', 'gt.txt');
+        dres_gt = read_mot2dres(filename);
+        dres_gt = fix_groundtruth(seq_name, dres_gt);
+    end
 else
-    seq_name = opt.mot2d_test_seqs{seq_idx};
-    seq_num = opt.mot2d_test_nums(seq_idx);
-end
+    if strcmp(seq_set, 'training') == 1
+        seq_name = opt.kitti_train_seqs{seq_idx};
+        seq_num = opt.kitti_train_nums(seq_idx);
+    else
+        seq_name = opt.kitti_test_seqs{seq_idx};
+        seq_num = opt.kitti_test_nums(seq_idx);
+    end
 
-% build the dres structure for images
-filename = sprintf('%s/%s_dres_image.mat', opt.results, seq_name);
-if exist(filename, 'file') ~= 0
-    object = load(filename);
-    dres_image = object.dres_image;
-    fprintf('load images from file %s done\n', filename);
-else
-    dres_image = read_dres_image(opt, seq_set, seq_name, seq_num);
-    fprintf('read images done\n');
-    save(filename, 'dres_image', '-v7.3');
-end
+    % build the dres structure for images
+    filename = sprintf('%s/kitti_%s_%s_dres_image.mat', opt.results_kitti, seq_set, seq_name);
+    if exist(filename, 'file') ~= 0
+        object = load(filename);
+        dres_image = object.dres_image;
+        fprintf('load images from file %s done\n', filename);
+    else
+        dres_image = read_dres_image_kitti(opt, seq_set, seq_name, seq_num);
+        fprintf('read images done\n');
+        save(filename, 'dres_image', '-v7.3');
+    end
 
-% read detections
-filename = fullfile(opt.mot, opt.mot2d, seq_set, seq_name, 'det', 'det.txt');
-dres_det = read_mot2dres(filename);
+    % read detections
+    filename = fullfile(opt.kitti, seq_set, 'det_02', [seq_name '.txt']);
+    dres_det = read_kitti2dres(filename);    
 
-if strcmp(seq_set, 'train') == 1
-    % read ground truth
-    filename = fullfile(opt.mot, opt.mot2d, seq_set, seq_name, 'gt', 'gt.txt');
-    dres_gt = read_mot2dres(filename);
-    dres_gt = fix_groundtruth(seq_name, dres_gt);
+    if strcmp(seq_set, 'training') == 1
+        % read ground truth
+        filename = fullfile(opt.kitti, seq_set, 'label_02', [seq_name '.txt']);
+        dres_gt = read_kitti2dres(filename);
+    end
 end
 
 % load the trained model

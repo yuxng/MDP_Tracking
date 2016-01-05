@@ -49,10 +49,6 @@ else
     % substraction
     index = find(dres.r > 0);
     dres = sub(dres, index);
-    % only keep cars and pedestrians
-    ind = strcmp('Car', dres.type) | strcmp('Pedestrian', dres.type);
-    index = find(ind == 1);
-    dres = sub(dres, index);
     % remove pedestrian with wrong aspect ratios
     ratios = dres.h ./ dres.w;
     ind = ~(strcmp('Pedestrian', dres.type) & ratios < 0.9);
