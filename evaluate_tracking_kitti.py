@@ -715,7 +715,7 @@ class trackingEvaluation(object):
         self.summary()
         filename = os.path.join(self.t_sha, "stats_%s.txt" % self.cls)
         dump = open(filename, "w+")
-        print>>dump, "%.6f " * 21 \
+        print>>dump, "%.6f\n" * 21 \
                 % (self.MOTA, self.MOTP, self.MOTAL, self.MODA, self.MODP, \
                    self.recall, self.precision, self.F1, self.FAR, \
                    self.MT, self.PT, self.ML, self.tp, self.fp, self.fn, self.id_switches, self.fragments, \

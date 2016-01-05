@@ -9,7 +9,7 @@
 function KITTI_test
 
 % set is_train to 0 if testing trained trackers only
-is_train = 0;
+is_train = 1;
 is_kitti = 1;
 opt = globals();
 

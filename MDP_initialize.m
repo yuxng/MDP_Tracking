@@ -6,7 +6,7 @@
 % --------------------------------------------------------
 %
 % initialization of the tracker
-function tracker = MDP_initialize(I, dres_det, labels, opt, is_kitti)
+function tracker = MDP_initialize(I, dres_det, labels, opt)
 
 image_width = size(I,2);
 image_height = size(I,1);
@@ -22,26 +22,10 @@ tracker.fb_factor = opt.fb_factor;
 % active
 tracker.fnum_active = 6;
 factive = MDP_feature_active(tracker, dres_det);
-if is_kitti == 0
-    index = labels ~= 0;
-    tracker.factive = factive(index,:);
-    tracker.lactive = labels(index);
-    tracker.w_active = svmtrain(tracker.lactive, tracker.factive, '-c 1 -q');
-else
-    num = numel(opt.kitti_types);
-    tracker.factive = cell(num, 1);
-    tracker.lactive = cell(num, 1);
-    tracker.w_active = cell(num, 1);
-    for i = 1:num
-        cls = opt.kitti_types{i};
-        index = find(strcmp(cls, dres_det.type) == 1 & labels ~= 0);
-        if isempty(index) == 0
-            tracker.factive{i} = factive(index,:);
-            tracker.lactive{i} = labels(index);
-            tracker.w_active{i} = svmtrain(tracker.lactive{i}, tracker.factive{i}, '-c 1 -q');            
-        end
-    end
-end
+index = labels ~= 0;
+tracker.factive = factive(index,:);
+tracker.lactive = labels(index);
+tracker.w_active = svmtrain(tracker.lactive, tracker.factive, '-c 1 -q');
 
 % initial state
 tracker.prev_state = 1;

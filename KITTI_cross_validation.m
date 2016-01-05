@@ -15,8 +15,10 @@ opt = globals();
 
 % training and testing pairs
 % moving cars, parking cars, pedestrians
-seq_idx_train = {{1, 2, 3, 4, 5, 6}, {13, 14, 15}};
-seq_idx_test  = {{7, 8, 9, 10, 11, 12, 19, 21}, {16, 17, 18, 20}};
+seq_idx_train = {{1, 2, 3, 4, 5, 6, 13, 14, 15}};
+seq_idx_test  = {{7, 8, 9, 10, 11, 12, 16, 17, 18, 19, 20, 21}};
+
+% seq_idx_test  = {{18}};
 
 seq_set_test = 'training';
 N = numel(seq_idx_train);
