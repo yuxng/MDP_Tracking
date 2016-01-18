@@ -39,13 +39,18 @@ If you find MDP_Tracking useful in your research, please consider citing:
 
 1. Download the KITTI tracking benchmark (data, development kit and detections) from http://www.cvlibs.net/datasets/kitti/eval_tracking.php
 
-2. Set the path of the KITTI tracking dataset in global.m
+2. Check out the kitti branch
+    ```Shell
+    git checkout kitti
+    ```
 
-3. Run compile.m. OpenCV is needed.
+3. Set the path of the KITTI tracking dataset in global.m
 
-4. For validataion, use KITTI_cross_validation.m
+4. Run compile.m. OpenCV is needed.
 
-5. For testing, use KITTI_test.m
+5. For validataion, use KITTI_cross_validation.m
+
+6. For testing, use KITTI_test.m
 
 ### Contact
 
