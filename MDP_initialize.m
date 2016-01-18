@@ -55,6 +55,7 @@ tracker.min_vnorm = opt.min_vnorm;
 tracker.overlap_box = opt.overlap_box;
 tracker.patchsize = opt.patchsize;
 tracker.weight_tracking = opt.weight_tracking;
+tracker.weight_detection = opt.weight_detection;
 tracker.weight_association = opt.weight_association;
 
 % display results or not

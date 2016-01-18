@@ -24,7 +24,7 @@ J = dres_image.Igray{frame_id};
 ctrack = apply_motion_prediction(frame_id, tracker);
 w = tracker.dres.w(end);
 h = tracker.dres.h(end);
-BB3 = [ctrack(1)-w/2; ctrack(2)-h/2; ctrack(1)+w/2; ctrack(2)+h/2]; 
+BB3 = [ctrack(1)-w/2; ctrack(2)-h/2; ctrack(1)+w/2; ctrack(2)+h/2];
 [J_crop, BB3_crop, bb_crop, s] = LK_crop_image_box(J, BB3, tracker);
 
 num_det = numel(dres_det.x);
@@ -108,7 +108,8 @@ if tracker.overlaps(ind) > tracker.overlap_box
     index = tracker.indexes(ind);
     bb_det = [dres_det.x(index); dres_det.y(index); ...
         dres_det.x(index)+dres_det.w(index); dres_det.y(index)+dres_det.h(index)];
-    tracker.bb = mean([repmat(tracker.bbs{ind}, 1, tracker.weight_tracking) bb_det], 2);
+    tracker.bb = mean([repmat(tracker.bbs{ind}, 1, tracker.weight_tracking) ...
+        repmat(bb_det, 1, tracker.weight_detection)], 2);
 else
     tracker.bb = tracker.bbs{ind};
 end

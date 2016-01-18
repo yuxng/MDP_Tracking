@@ -35,7 +35,7 @@ else
                     o = w * h / (area(ii) + area(jj) - w*h);
                     o1 = w * h / area(ii);
                     o2 = w * h / area(jj);
-                    if o > overlap || o1 > 0.85 || o2 > 0.85
+                    if o > overlap || o1 > 0.95 || o2 > 0.95
                         pick(ii) = 0;
                         break;
                     end

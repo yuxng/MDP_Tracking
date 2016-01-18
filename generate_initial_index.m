@@ -43,12 +43,24 @@ end
 if num_track
     o1 = zeros(num_det, 1);
     o2 = zeros(num_det, 1);
+    o3 = zeros(num_det, 1);
     for i = 1:num_det
         [o, oo] = calc_overlap(dres_det, i, dres_track, 1:num_track);
         o1(i) = max(o);
         o2(i) = sum(oo);
+        o3(i) = max(oo);
     end
-    index_det = find(o1 < 0.5 & o2 < 0.5);
+    
+    if isfield(dres_det, 'type')
+        type = dres_det.type;
+        index_det_people = find(o1 < 0.6 & o3 < 0.6 & ...
+            (strcmp(type, 'Pedestrian') | strcmp(type, 'Cyclist')));
+        index_det_car = find(o1 < 0.6 & o3 < 0.95 & ...
+            strcmp(type, 'Car'));
+        index_det = sort([index_det_people; index_det_car]);
+    else
+        index_det = find(o1 < 0.5 & o2 < 0.5);
+    end
 else
     index_det = 1:num_det;
 end

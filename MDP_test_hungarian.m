@@ -12,17 +12,24 @@ if nargin < 4
     is_kitti = 0;
 end
 
-is_show = 1;
+is_show = 0;
 is_save = 1;
 is_text = 0;
-is_pause = 1;
+is_pause = 0;
 
 opt = globals();
 opt.is_text = is_text;
 opt.exit_threshold = 0.7;
 
+if is_kitti == 1
+    opt.max_occlusion = 20;
+    opt.tracked = 10;
+    opt.threshold_dis = 1;
+    tracker.threshold_dis = opt.threshold_dis;
+end
+
 if is_show
-    close all;
+%     close all;
 end
 
 if is_kitti == 0
@@ -116,9 +123,16 @@ for fr = 1:seq_num
     dres = sub(dres_det, index);
     
     % nms
-%     boxes = [dres.x dres.y dres.x+dres.w dres.y+dres.h dres.r];
-%     index = nms_new(boxes, 0.6);
-%     dres = sub(dres, index);
+    if is_kitti
+        boxes = [dres.x dres.y dres.x+dres.w dres.y+dres.h dres.r];
+        index = nms_new(boxes, 0.6);
+        dres = sub(dres, index);
+
+        % only keep cars and pedestrians
+        ind = strcmp('Car', dres.type) | strcmp('Pedestrian', dres.type);
+        index = find(ind == 1);
+        dres = sub(dres, index);
+    end
     
     dres = MDP_crop_image_box(dres, dres_image.Igray{fr}, tracker);
     
@@ -132,8 +146,8 @@ for fr = 1:seq_num
         end
 
         % show detections
-        subplot(2, 2, 2);
-        show_dres(fr, dres_image.I{fr}, 'Detections', dres_det);
+%         subplot(2, 2, 2);
+        show_dres(fr, dres_image.I{fr}, 'Detections', dres);
     end
     
     % separate trackers into the first and the second class
@@ -233,6 +247,9 @@ for fr = 1:seq_num
                 dres_one.h = trackers{ind}.bb(4) - trackers{ind}.bb(2);
                 dres_one.r = 1;
                 dres_one.state = 2;
+                if isfield(trackers{ind}.dres, 'type')
+                    dres_one.type = {trackers{ind}.dres.type{1}};
+                end    
 
                 if trackers{ind}.dres.fr(end) == fr
                     dres_tmp = trackers{ind}.dres;
@@ -272,14 +289,15 @@ for fr = 1:seq_num
     
     dres_track = generate_results(trackers);
     if is_show
-        figure(1);
+        figure(2);
 
         % show tracking results
-        subplot(2, 2, 3);
+%         subplot(2, 2, 3);
         show_dres(fr, dres_image.I{fr}, 'Tracking', dres_track, 2);
 
         % show lost targets
-        subplot(2, 2, 4);
+%         subplot(2, 2, 4);
+        figure(3);
         show_dres(fr, dres_image.I{fr}, 'Lost', dres_track, 3);
 
         if is_pause
@@ -291,22 +309,44 @@ for fr = 1:seq_num
 end
 
 % write tracking results
-filename = sprintf('%s/%s.txt', opt.results, seq_name);
-fprintf('write results: %s\n', filename);
-write_tracking_results(filename, dres_track, opt.tracked);
+if is_kitti == 0
+    filename = sprintf('%s/%s.txt', opt.results, seq_name);
+    fprintf('write results: %s\n', filename);
+    write_tracking_results(filename, dres_track, opt.tracked);
 
-% evaluation
-if strcmp(seq_set, 'train') == 1
-    benchmark_dir = fullfile(opt.mot, opt.mot2d, seq_set, filesep);
-    metrics = evaluateTracking({seq_name}, opt.results, benchmark_dir);
+    % evaluation
+    if strcmp(seq_set, 'train') == 1
+        benchmark_dir = fullfile(opt.mot, opt.mot2d, seq_set, filesep);
+        metrics = evaluateTracking({seq_name}, opt.results, benchmark_dir);
+    else
+        metrics = [];
+    end
+
+    % save results
+    if is_save
+        filename = sprintf('%s/%s_results.mat', opt.results, seq_name);
+        save(filename, 'dres_track', 'metrics');
+    end
 else
-    metrics = [];
-end
-
-% save results
-if is_save
-    filename = sprintf('%s/%s_results.mat', opt.results, seq_name);
-    save(filename, 'dres_track', 'metrics');
+    filename = sprintf('%s/%s.txt', opt.results_kitti, seq_name);
+    fprintf('write results: %s\n', filename);
+    write_tracking_results_kitti(filename, dres_track, opt.tracked);
+    
+    % evaluation
+    if strcmp(seq_set, 'training') == 1
+        % write a temporal seqmap file
+        filename = sprintf('%s/evaluate_tracking.seqmap', opt.results_kitti);
+        fid = fopen(filename, 'w');
+        fprintf(fid, '%s empty %06d %06d\n', seq_name, 0, seq_num);
+        fclose(fid);
+        system('python evaluate_tracking_kitti.py results_kitti');
+    end
+    
+    % save results
+    if is_save
+        filename = sprintf('%s/kitti_%s_%s_results.mat', opt.results_kitti, seq_set, seq_name);
+        save(filename, 'dres_track');
+    end    
 end
 
 
@@ -354,6 +394,9 @@ else  % active
     dres_one.h = dres.h(ind);
     dres_one.r = dres.r(ind);
     dres_one.state = tracker.state;
+    if isfield(dres, 'type')
+        dres_one.type = {dres.type{ind}};
+    end        
     tracker.dres = dres_one;
 end
 
@@ -466,7 +509,17 @@ for i = 1:num_track
     o(i) = 0;
     o(flag == 1) = 0;
     [mo, ind] = max(o);
-    if mo > opt.overlap_sup        
+    
+    if isfield(dres_track, 'type')
+        cls = dres_track.type{i};
+        if strcmp(cls, 'Pedestrian') == 1
+            overlap_sup = opt.overlap_sup;
+        elseif strcmp(cls, 'Car') == 1
+            overlap_sup = 0.95;
+        end
+    end
+    
+    if mo > overlap_sup        
         num1 = trackers{dres_track.id(i)}.streak_tracked;
         num2 = trackers{dres_track.id(ind)}.streak_tracked;
         o1 = max(calc_overlap(dres_track, i, dres_det, 1:num_det));

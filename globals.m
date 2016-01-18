@@ -85,7 +85,10 @@ opt.min_vnorm = 0.2;          % min allowed velocity norm in LK
 opt.overlap_box = 0.5;        % overlap with detection in LK
 opt.patchsize = [24 12];      % patch size for target appearance
 opt.weight_tracking = 1;      % weight for tracking box in tracked state
+opt.weight_detection = 1;      % weight for detection box in tracked state
 opt.weight_association = 1;   % weight for tracking box in lost state
+opt.overlap_suppress1 = 0.5;   % overlap for suppressing detections with tracked objects
+opt.overlap_suppress2 = 0.5;   % overlap for suppressing detections with tracked objects
 
 % parameters for generating training data
 opt.overlap_occ = 0.7;

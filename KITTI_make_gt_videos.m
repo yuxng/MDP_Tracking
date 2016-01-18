@@ -4,10 +4,15 @@
 % Licensed under The MIT License [see LICENSE for details]
 % Written by Yu Xiang
 % --------------------------------------------------------
-function show_groundtruth_kitti(seq_idx)
+function KITTI_make_gt_videos(seq_set, seq_idx)
+
+close all;
+hf = figure(1);
+is_save = 1;
 
 opt = globals();
-seq_set = 'training';
+
+% seq_set = 'training';
 % seq_set = 'testing';
 
 if strcmp(seq_set, 'training') == 1
@@ -31,8 +36,8 @@ else
 end
 
 % read detections
-filename = fullfile(opt.kitti, seq_set, 'det_02', [seq_name '.txt']);
-dres_det = read_kitti2dres(filename);
+% filename = fullfile(opt.kitti, seq_set, 'det_02', [seq_name '.txt']);
+% dres_det = read_kitti2dres(filename);
 
 % read ground truth
 if strcmp(seq_set, 'training') == 1
@@ -42,17 +47,24 @@ else
     dres_gt = [];
 end
 
-figure(1);
-for fr = 1:seq_num
-    fprintf('frame %d\n', fr);
-    
-    % show ground truth
-    subplot(1, 2, 1);
-    show_dres(fr, dres_image.I{fr}, 'GT', dres_gt);
+if is_save
+    file_video = sprintf('GT/kitti_%s_%s.avi', seq_set, seq_name);
+    aviobj = VideoWriter(file_video);
+    aviobj.FrameRate = 9;
+    open(aviobj);
+    fprintf('save video to %s\n', file_video);
+end
 
-    % show detections
-    subplot(1, 2, 2);
-    show_dres(fr, dres_image.I{fr}, 'Detections', dres_det);
-    
-    pause();
+for fr = 1:seq_num
+%     show_dres(fr, dres_image.I{fr}, '', dres_gt);
+    imshow(dres_image.I{fr});
+    if is_save
+        writeVideo(aviobj, getframe(hf));
+    else
+        pause;
+    end
+end
+
+if is_save
+    close(aviobj);
 end

@@ -92,6 +92,7 @@ for i = 1:numel(ids)
     
     % start with bounding overlap > opt.overlap_pos and non-occluded box
     index = find(dres.overlap > opt.overlap_pos & dres.covered == 0 & dres.area_inside > opt.exit_threshold);
+    
     if isempty(index) == 0
         index_start = index(1);
         count = count + 1;
