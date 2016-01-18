@@ -23,7 +23,7 @@ If you find MDP_Tracking useful in your research, please consider citing:
         Year = {2015}
     }
 
-### Usage
+### Usage on the 2D MOT benchmark
 
 1. Download the 2D MOT benchmark (data and development kit) from https://motchallenge.net/data/2D_MOT_2015/
 
@@ -35,7 +35,23 @@ If you find MDP_Tracking useful in your research, please consider citing:
 
 5. For testing, use MOT_test.m
 
+### Usage on the KITTI tracking dataset
+
+1. Download the KITTI tracking benchmark (data, development kit and detections) from http://www.cvlibs.net/datasets/kitti/eval_tracking.php
+
+2. Check out the kitti branch
+    ```Shell
+    git checkout kitti
+    ```
+
+3. Set the path of the KITTI tracking dataset in global.m
+
+4. Run compile.m. OpenCV is needed.
+
+5. For validataion, use KITTI_cross_validation.m
+
+6. For testing, use KITTI_test.m
+
 ### Contact
 
 If you find any bug or issue of the software, please contact yuxiang at umich dot edu
-
