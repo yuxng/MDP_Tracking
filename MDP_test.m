@@ -23,7 +23,7 @@ opt.is_text = is_text;
 if is_kitti == 1
     opt.exit_threshold = 0.5;
     opt.max_occlusion = 20;
-    opt.tracked = 10;
+    opt.tracked = 5;
 else
     opt.exit_threshold = 0.7;
 end

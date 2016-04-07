@@ -8,7 +8,7 @@
 % generate training data
 function [dres_train, dres_det, labels] = generate_training_data(seq_idx, dres_image, opt)
 
-% is_show = 0;
+is_show = 0;
 
 seq_name = opt.mot2d_train_seqs{seq_idx};
 seq_set = 'train';
@@ -100,17 +100,17 @@ for i = 1:numel(ids)
     end
     
     % show gt
-%      if is_show
-%         for j = 1:numel(dres_train{i}.fr)
-%             fr = dres_train{i}.fr(j);
-%             filename = fullfile(opt.mot, opt.mot2d, seq_set, seq_name, 'img1', sprintf('%06d.jpg', fr));
-%             disp(filename);
-%             I = imread(filename);
-%             figure(1);
-%             show_dres(fr, I, 'GT', dres_train{i});
-%             pause;
-%         end
-%     end
+     if is_show
+        for j = 1:numel(dres_train{count}.fr)
+            fr = dres_train{count}.fr(j);
+            filename = fullfile(opt.mot, opt.mot2d, seq_set, seq_name, 'img1', sprintf('%06d.jpg', fr));
+            disp(filename);
+            I = imread(filename);
+            figure(1);
+            show_dres(fr, I, 'GT', dres_train{count});
+            pause;
+        end
+    end
 end
 
 % handle occlusion by a pole in PETS09-S2L1
@@ -125,6 +125,7 @@ if strcmp(seq_name, 'PETS09-S2L1') == 1
         dres = dres_train{i};
         [~, ~, overlap] = calc_overlap(dres_pole, 1, dres, 1:numel(dres.fr));
         dres.covered = max([dres.covered, overlap'], [], 2);
+        dres.occluded(dres.covered > opt.overlap_occ) = 1;  
         dres_train{i} = dres;
     end
 end

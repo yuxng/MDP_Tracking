@@ -8,6 +8,9 @@
 % read KITTI file
 function dres = read_kitti2dres(filename)
 
+threshold_det_car = 0.4;
+threshold_det_people = 0.6;
+
 % count columns
 fid = fopen(filename, 'r');
 l = strtrim(fgetl(fid));
@@ -47,7 +50,9 @@ if ncols == 17
 else
     dres.r = C{18};
     % substraction
-    index = find(dres.r > 0);
+    index_car = find(dres.r > threshold_det_car & strcmp('Car', dres.type));
+    index_other = find(dres.r > threshold_det_people & ~strcmp('Car', dres.type));
+    index = [index_car; index_other];
     dres = sub(dres, index);
     % remove pedestrian with wrong aspect ratios
     ratios = dres.h ./ dres.w;
