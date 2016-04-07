@@ -125,6 +125,7 @@ if strcmp(seq_name, 'PETS09-S2L1') == 1
         dres = dres_train{i};
         [~, ~, overlap] = calc_overlap(dres_pole, 1, dres, 1:numel(dres.fr));
         dres.covered = max([dres.covered, overlap'], [], 2);
+        dres.occluded(dres.covered > opt.overlap_occ) = 1;
         dres_train{i} = dres;
     end
 end
