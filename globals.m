@@ -9,7 +9,7 @@ function opt = globals()
 opt.root = pwd;
 
 % path for MOT benchmark
-mot_paths = {'/home/yuxiang/Projects/Multitarget_Tracking/MOTbenchmark', ...
+mot_paths = {'/capri5/Projects/Multitarget_Tracking/MOTbenchmark', ...
     '/scail/scratch/u/yuxiang/MOTbenchmark'};
 for i = 1:numel(mot_paths)
     if exist(mot_paths{i}, 'dir')
@@ -21,6 +21,7 @@ end
 opt.mot2d = '2DMOT2015';
 opt.results = 'results';
 opt.results_kitti = 'results_kitti';
+opt.results_nthu = 'results_nthu';
 
 opt.mot2d_train_seqs = {'TUD-Stadtmitte', 'TUD-Campus', 'PETS09-S2L1', ...
     'ETH-Bahnhof', 'ETH-Sunnyday', 'ETH-Pedcross2', 'ADL-Rundle-6', ...
@@ -33,7 +34,7 @@ opt.mot2d_test_seqs = {'TUD-Crossing', 'PETS09-S2L2', 'ETH-Jelmoli', ...
 opt.mot2d_test_nums = [201, 436, 440, 1194, 219, 450, 500, 625, 209, 1059, 450];
 
 % path for KITTI tracking dataset
-kitti_paths = {'/home/yuxiang/Projects/KITTI_Tracking'};
+kitti_paths = {'/capri5/Projects/KITTI_Tracking'};
 for i = 1:numel(kitti_paths)
     if exist(kitti_paths{i}, 'dir')
         opt.kitti = kitti_paths{i};
@@ -56,6 +57,18 @@ opt.kitti_test_nums = [465, 147, 243, 257, 421, 809, 114, 215, 165, 349, 1176, .
     170, 85, 175];
 opt.kitti_types = {'Car', 'Pedestrian', 'Cyclist'};
 
+% path for NTHU dataset
+nthu_paths = {'/capri5/NTHU_Dataset', '/scail/scratch/u/yuxiang/NTHU_Dataset'};
+for i = 1:numel(nthu_paths)
+    if exist(nthu_paths{i}, 'dir')
+        opt.nthu = nthu_paths{i};
+        break;
+    end
+end
+
+% get the NTHU dataset information
+opt = get_info_nthu(opt);
+
 addpath(fullfile(opt.mot, 'devkit', 'utils'));
 addpath(fullfile(opt.kitti, 'devkit', 'matlab'));
 addpath([opt.root '/3rd_party/libsvm-3.20/matlab']);
@@ -67,6 +80,10 @@ end
 
 if exist(opt.results_kitti, 'dir') == 0
     mkdir(opt.results_kitti);
+end
+
+if exist(opt.results_nthu, 'dir') == 0
+    mkdir(opt.results_nthu);
 end
 
 % tracking parameters

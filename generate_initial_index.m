@@ -53,10 +53,8 @@ if num_track
     
     if isfield(dres_det, 'type')
         type = dres_det.type;
-        index_det_people = find(o1 < 0.6 & o3 < 0.6 & ...
-            (strcmp(type, 'Pedestrian') | strcmp(type, 'Cyclist')));
-        index_det_car = find(o1 < 0.6 & o3 < 0.95 & ...
-            strcmp(type, 'Car'));
+        index_det_people = find(o1 < 0.6 & o3 < 0.6 & ~strcmp(type, 'car'));
+        index_det_car = find(o1 < 0.6 & o3 < 0.95 & strcmp(type, 'car'));
         index_det = sort([index_det_people; index_det_car]);
     else
         index_det = find(o1 < 0.5 & o2 < 0.5);
