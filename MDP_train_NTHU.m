@@ -65,22 +65,7 @@ else
     index = labels ~= 0;    
     tracker.factive = [tracker.factive; factive(index,:)];
     tracker.lactive = [tracker.lactive; labels(index)];
-    tracker.w_active = svmtrain(tracker.lactive, tracker.factive, '-c 1 -q');
-    
-    % only store the support vectors
-    index = tracker.w_active.sv_indices;
-    tracker.factive = tracker.factive(index, :);
-    tracker.lactive = tracker.lactive(index, :);
-    
-    % keep max num of examples
-    max_num = 10000;
-    num = numel(tracker.lactive);
-    if num > max_num
-        index = randperm(num);
-        index = index(1:max_num);
-        tracker.factive = tracker.factive(index, :);
-        tracker.lactive = tracker.lactive(index, :);        
-    end
+    tracker.w_active = train(tracker.lactive, sparse(tracker.factive), '-c 1 -q -B 1');
 end
 
 % for each training sequence
@@ -239,7 +224,7 @@ while 1
                 if reward == -1
                     tracker.f_occluded(end+1,:) = f;
                     tracker.l_occluded(end+1) = label;
-                    tracker.w_occluded = svmtrain(tracker.l_occluded, tracker.f_occluded, '-c 1 -q -g 1 -b 1');
+                    tracker.w_occluded = train(tracker.l_occluded, sparse(tracker.f_occluded), '-c 1 -q -B 1');
                     if is_text
                         fprintf('training examples in occluded state %d\n', size(tracker.f_occluded,1));
                     end
@@ -326,3 +311,5 @@ if is_save
     filename = sprintf('%s/nthu_%s_%s_tracker.mat', opt.results_nthu, seq_set, seq_name);
     save(filename, 'tracker');
 end
+
+clearvars dres_image

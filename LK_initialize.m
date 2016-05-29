@@ -75,5 +75,5 @@ if isempty(tracker.w_occluded) == 1
     labels = [+1; -1];
     tracker.f_occluded = features;
     tracker.l_occluded = labels;
-    tracker.w_occluded = svmtrain(labels, features, '-c 1 -q -g 1 -b 1');
+    tracker.w_occluded = train(labels, sparse(features), '-c 1 -q -B 1');
 end

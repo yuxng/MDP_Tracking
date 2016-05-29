@@ -71,7 +71,7 @@ opt = get_info_nthu(opt);
 
 addpath(fullfile(opt.mot, 'devkit', 'utils'));
 addpath(fullfile(opt.kitti, 'devkit', 'matlab'));
-addpath([opt.root '/3rd_party/libsvm-3.20/matlab']);
+addpath([opt.root '/3rd_party/liblinear-1.96/matlab']);
 addpath([opt.root '/3rd_party/Hungarian']);
 
 if exist(opt.results, 'dir') == 0

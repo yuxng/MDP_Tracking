@@ -25,7 +25,7 @@ factive = MDP_feature_active(tracker, dres_det);
 index = labels ~= 0;
 tracker.factive = factive(index,:);
 tracker.lactive = labels(index);
-tracker.w_active = svmtrain(tracker.lactive, tracker.factive, '-c 1 -q');
+tracker.w_active = train(tracker.lactive, sparse(tracker.factive), '-c 1 -q');
 
 % initial state
 tracker.prev_state = 1;

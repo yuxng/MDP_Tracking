@@ -69,13 +69,12 @@ elseif tracker.state == 3
 
         m = size(features, 1);
         labels = -1 * ones(m, 1);
-        [labels, ~, probs] = svmpredict(labels, features, tracker.w_occluded, '-b 1 -q');
+        [labels, ~, probs] = predict(labels, sparse(features), tracker.w_occluded, '-q');
 
-        probs(flag == 0, 1) = 0;
-        probs(flag == 0, 2) = 1;
+        probs(flag == 0) = 0;
         labels(flag == 0) = -1;
 
-        [qscore, ind] = max(probs(:,1));
+        [qscore, ind] = max(probs);
         label = labels(ind);
         f = features(ind,:);
 
