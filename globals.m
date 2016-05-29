@@ -34,7 +34,7 @@ opt.mot2d_test_seqs = {'TUD-Crossing', 'PETS09-S2L2', 'ETH-Jelmoli', ...
 opt.mot2d_test_nums = [201, 436, 440, 1194, 219, 450, 500, 625, 209, 1059, 450];
 
 % path for KITTI tracking dataset
-kitti_paths = {'/capri5/Projects/KITTI_Tracking'};
+kitti_paths = {'/capri5/Projects/KITTI_Tracking', '/scail/scratch/u/yuxiang/KITTI_Tracking'};
 for i = 1:numel(kitti_paths)
     if exist(kitti_paths{i}, 'dir')
         opt.kitti = kitti_paths{i};
