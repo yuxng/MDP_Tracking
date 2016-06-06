@@ -22,6 +22,7 @@ opt.mot2d = '2DMOT2015';
 opt.results = 'results';
 opt.results_kitti = 'results_kitti';
 opt.results_nthu = 'results_nthu';
+opt.results_nissan = 'results_nissan';
 
 opt.mot2d_train_seqs = {'TUD-Stadtmitte', 'TUD-Campus', 'PETS09-S2L1', ...
     'ETH-Bahnhof', 'ETH-Sunnyday', 'ETH-Pedcross2', 'ADL-Rundle-6', ...
@@ -69,6 +70,18 @@ end
 % get the NTHU dataset information
 opt = get_info_nthu(opt);
 
+% path for NISSAN dataset
+nissan_paths = {'/capri5/NISSAN_Dataset'};
+for i = 1:numel(nissan_paths)
+    if exist(nissan_paths{i}, 'dir')
+        opt.nissan = nissan_paths{i};
+        break;
+    end
+end
+
+opt.nissan_test_seqs = {'autonomy_log_2016-04-11-12-15-46'};
+opt.nissan_test_nums = [3734];
+
 addpath(fullfile(opt.mot, 'devkit', 'utils'));
 addpath(fullfile(opt.kitti, 'devkit', 'matlab'));
 addpath([opt.root '/3rd_party/liblinear-1.96/matlab']);
@@ -84,6 +97,10 @@ end
 
 if exist(opt.results_nthu, 'dir') == 0
     mkdir(opt.results_nthu);
+end
+
+if exist(opt.results_nissan, 'dir') == 0
+    mkdir(opt.results_nissan);
 end
 
 % tracking parameters
