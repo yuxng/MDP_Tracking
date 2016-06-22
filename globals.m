@@ -9,7 +9,7 @@ function opt = globals()
 opt.root = pwd;
 
 % path for MOT benchmark
-mot_paths = {'/home/yuxiang/Projects/Multitarget_Tracking/MOTbenchmark', ...
+mot_paths = {'/capri5/Projects/Multitarget_Tracking/MOTbenchmark', ...
     '/scail/scratch/u/yuxiang/MOTbenchmark'};
 for i = 1:numel(mot_paths)
     if exist(mot_paths{i}, 'dir')
@@ -33,7 +33,7 @@ opt.mot2d_test_seqs = {'TUD-Crossing', 'PETS09-S2L2', 'ETH-Jelmoli', ...
 opt.mot2d_test_nums = [201, 436, 440, 1194, 219, 450, 500, 625, 209, 1059, 450];
 
 % path for KITTI tracking dataset
-kitti_paths = {'/home/yuxiang/Projects/KITTI_Tracking'};
+kitti_paths = {'/capri5/Projects/KITTI_Tracking'};
 for i = 1:numel(kitti_paths)
     if exist(kitti_paths{i}, 'dir')
         opt.kitti = kitti_paths{i};
