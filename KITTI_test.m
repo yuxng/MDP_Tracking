@@ -51,5 +51,5 @@ for i = 1:N
     for j = 1:num
         fprintf('Testing on sequence: %s\n', opt.kitti_test_seqs{idx_test{j}});
         MDP_test(idx_test{j}, seq_set_test, tracker, is_kitti);
-    end    
+    end
 end
