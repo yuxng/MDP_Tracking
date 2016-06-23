@@ -87,7 +87,7 @@ else
     index = labels ~= 0;    
     tracker.factive = [tracker.factive; factive(index,:)];
     tracker.lactive = [tracker.lactive; labels(index)];
-    tracker.w_active = svmtrain(tracker.lactive, tracker.factive, '-c 1 -q');
+    tracker.w_active = train(tracker.lactive, sparse(tracker.factive), '-c 1 -q -B 1');
 end
 
 % for each training sequence
@@ -241,7 +241,7 @@ while 1
                 if reward == -1
                     tracker.f_occluded(end+1,:) = f;
                     tracker.l_occluded(end+1) = label;
-                    tracker.w_occluded = svmtrain(tracker.l_occluded, tracker.f_occluded, '-c 1 -q -g 1 -b 1');
+                    tracker.w_occluded = train(tracker.l_occluded, sparse(tracker.f_occluded), '-c 1 -q -B 1');
                     if is_text
                         fprintf('training examples in occluded state %d\n', size(tracker.f_occluded,1));
                     end

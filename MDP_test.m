@@ -185,7 +185,7 @@ for fr = 1:seq_num
         dres_one = sub(dres, index(i));
         f = MDP_feature_active(tracker, dres_one);
         % prediction
-        label = svmpredict(1, f, tracker.w_active, '-q');
+        label = predict(1, sparse(f), tracker.w_active, '-q');
         % make a decision
         if label < 0
             continue;
