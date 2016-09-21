@@ -35,7 +35,7 @@ If you find MDP_Tracking useful in your research, please consider citing:
 
 5. For testing, use MOT_test.m
 
-Important: make sure libsvm-3.20 in the 3rd_party directory is used. Other versions of libsvm may not be compatible wit the code.
+Important: make sure libsvm-3.20 in the 3rd_party directory is used. Other versions of libsvm may not be compatible with the code.
 
 ### Usage on the KITTI tracking dataset
 
