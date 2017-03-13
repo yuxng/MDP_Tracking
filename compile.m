@@ -9,7 +9,7 @@
 % change the include and lib path if necessary
 function compile
 
-include = ' -I/usr/local/include/opencv/ -I/usr/local/include/';
+include = ' -I/usr/local/include/opencv/ -I/usr/local/include/ -I/usr/include/opencv/';
 lib = ' -lopencv_core -lopencv_highgui -lopencv_imgproc -lopencv_video';
 eval(['mex lk.cpp -O' include lib]);
 

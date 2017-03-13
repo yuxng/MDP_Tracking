@@ -35,6 +35,8 @@ If you find MDP_Tracking useful in your research, please consider citing:
 
 5. For testing, use MOT_test.m
 
+We provide our own detection using SubCNN [1] on the 2D MOT 2015 dataset [here](https://drive.google.com/open?id=0B4WdmTHU8V7VeVlISVhMNjQ3N1k).
+
 Important: make sure libsvm-3.20 in the 3rd_party directory is used. Other versions of libsvm may not be compatible with the code.
 
 ### Usage on the KITTI tracking dataset
@@ -53,6 +55,12 @@ Important: make sure libsvm-3.20 in the 3rd_party directory is used. Other versi
 5. For validataion, use KITTI_cross_validation.m
 
 6. For testing, use KITTI_test.m
+
+We provide our own detection using SubCNN [1] on the KITTI tracking dataset [here](https://drive.google.com/open?id=0B4WdmTHU8V7Vd29GeFBqdl9yQXM).
+
+### References
+
+[1] Y. Xiang, W. Choi, Y. Lin and S. Savarese. Subcategory-aware Convolutional Neural Networks for Object Proposals and Detection. In IEEE Winter Conference on Applications of Computer Vision (WACV), 2017.
 
 ### Contact
 
